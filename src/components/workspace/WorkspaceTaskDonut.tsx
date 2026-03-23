@@ -63,7 +63,7 @@ export default function WorkspaceTaskDonut() {
                   ))}
                 </Pie>
                 <Tooltip
-                  formatter={(value: number) => [`${value} ${t("nav.actions").toLowerCase()}`, ""]}
+                  formatter={(value: any) => [`${value} ${t("nav.actions").toLowerCase()}`, ""]}
                   contentStyle={{
                     borderRadius: 12,
                     border: "1px solid var(--tyro-border)",

@@ -23,7 +23,7 @@ const createWizardSchema = (t: TFunction) =>
     name: z.string().min(3, t("validation.minChars")),
     description: z.string().optional().default(""),
     source: z.enum(["Türkiye", "Kurumsal", "International"], {
-      required_error: t("validation.sourceRequired"),
+      message: t("validation.sourceRequired"),
     }),
     department: z.string().default(""),
     owner: z.string().min(1, t("validation.ownerRequired")),
@@ -107,7 +107,7 @@ export default function HedefAksiyonWizard({ onClose }: Props) {
     handleSubmit,
     formState: { errors },
   } = useForm<WizardFormData>({
-    resolver: zodResolver(schema),
+    resolver: zodResolver(schema) as any,
     defaultValues: {
       name: "",
       description: "",
@@ -252,7 +252,7 @@ export default function HedefAksiyonWizard({ onClose }: Props) {
           {isLastStep ? (
             <Button
               color="secondary"
-              onPress={handleSubmit(onSubmit)}
+              onPress={() => handleSubmit(onSubmit)()}
               startContent={<Wand2 size={14} />}
               className="rounded-button font-semibold relative overflow-hidden group"
             >

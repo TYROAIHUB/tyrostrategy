@@ -53,7 +53,7 @@ export default function HedefForm({ hedef, onSuccess }: HedefFormProps) {
     handleSubmit,
     formState: { errors },
   } = useForm<HedefFormData>({
-    resolver: zodResolver(hedefSchema),
+    resolver: zodResolver(hedefSchema) as any,
     defaultValues: {
       name: hedef?.name ?? "",
       description: hedef?.description ?? "",
@@ -80,7 +80,7 @@ export default function HedefForm({ hedef, onSuccess }: HedefFormProps) {
         updateHedef(hedef.id, payload);
         toast.success(t("toast.objectiveUpdated"), `"${data.name}" ${t("toast.updatedSuccessfully")}.`);
       } else {
-        addHedef(payload);
+        addHedef({ ...payload, progress: 0 });
         toast.success(t("toast.objectiveCreated"), `"${data.name}" ${t("toast.createdSuccessfully")}.`);
       }
       onSuccess();
@@ -95,7 +95,7 @@ export default function HedefForm({ hedef, onSuccess }: HedefFormProps) {
   const sourceOptions = getSourceOptions(t);
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-5">
+    <form onSubmit={handleSubmit(onSubmit) as any} className="flex flex-col gap-5">
       <Controller
         name="name"
         control={control}

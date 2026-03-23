@@ -5,13 +5,11 @@ import { Plus, Trash2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { departments } from "@/config/departments";
 import { toCalendarDate, fromCalendarDate } from "@/lib/utils";
-import type { WizardFormData } from "../HedefAksiyonWizard";
-
 const allUsers = departments.flatMap((d) => d.users.map((u) => u.name));
 
 interface Props {
-  control: Control<WizardFormData>;
-  errors: FieldErrors<WizardFormData>;
+  control: Control<any>;
+  errors: FieldErrors<any>;
 }
 
 export default function StepAksiyonlar({ control, errors }: Props) {
@@ -58,8 +56,8 @@ export default function StepAksiyonlar({ control, errors }: Props) {
                     <Input
                       {...f}
                       placeholder={t("forms.action.namePlaceholder")}
-                      isInvalid={!!errors.aksiyonlar?.[index]?.name}
-                      errorMessage={errors.aksiyonlar?.[index]?.name?.message}
+                      isInvalid={!!(errors.aksiyonlar as any)?.[index]?.name}
+                      errorMessage={(errors.aksiyonlar as any)?.[index]?.name?.message}
                       variant="bordered"
                       size="sm"
                       classNames={{ inputWrapper: "border-tyro-border" }}
@@ -104,8 +102,8 @@ export default function StepAksiyonlar({ control, errors }: Props) {
                       variant="bordered"
                       size="sm"
                       placeholder={t("forms.action.assigneePlaceholder")}
-                      isInvalid={!!errors.aksiyonlar?.[index]?.owner}
-                      errorMessage={errors.aksiyonlar?.[index]?.owner?.message}
+                      isInvalid={!!(errors.aksiyonlar as any)?.[index]?.owner}
+                      errorMessage={(errors.aksiyonlar as any)?.[index]?.owner?.message}
                       classNames={{ base: "w-full" }}
                       allowsCustomValue
                     >
@@ -129,7 +127,7 @@ export default function StepAksiyonlar({ control, errors }: Props) {
                       <DatePicker
                         value={toCalendarDate(f.value)}
                         onChange={(date) => f.onChange(fromCalendarDate(date))}
-                        isInvalid={!!errors.aksiyonlar?.[index]?.startDate}
+                        isInvalid={!!(errors.aksiyonlar as any)?.[index]?.startDate}
                         variant="bordered"
                         size="sm"
                         granularity="day"
@@ -148,7 +146,7 @@ export default function StepAksiyonlar({ control, errors }: Props) {
                       <DatePicker
                         value={toCalendarDate(f.value)}
                         onChange={(date) => f.onChange(fromCalendarDate(date))}
-                        isInvalid={!!errors.aksiyonlar?.[index]?.endDate}
+                        isInvalid={!!(errors.aksiyonlar as any)?.[index]?.endDate}
                         variant="bordered"
                         size="sm"
                         granularity="day"
@@ -173,8 +171,8 @@ export default function StepAksiyonlar({ control, errors }: Props) {
         {t("wizard.addAction")}
       </Button>
 
-      {errors.aksiyonlar?.root && (
-        <p className="text-xs text-tyro-danger">{errors.aksiyonlar.root.message}</p>
+      {(errors.aksiyonlar as any)?.root && (
+        <p className="text-xs text-tyro-danger">{(errors.aksiyonlar as any).root.message}</p>
       )}
     </div>
   );

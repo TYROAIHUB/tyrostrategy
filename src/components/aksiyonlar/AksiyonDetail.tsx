@@ -29,17 +29,12 @@ export default function AksiyonDetail({
     _setMode(m);
     onModeChange?.(m);
   };
-  const sidebarTheme = useSidebarTheme();
+  void useSidebarTheme();
   const getAksiyonById = useDataStore((s) => s.getAksiyonById);
   const getHedefById = useDataStore((s) => s.getHedefById);
 
   const currentAksiyon = getAksiyonById(aksiyon.id) ?? aksiyon;
   const hedef = getHedefById(currentAksiyon.hedefId);
-
-  const _btnStyle = {
-    backgroundColor: sidebarTheme.accentColor ?? sidebarTheme.bg,
-    color: "#ffffff",
-  };
 
   if (mode === "editing") {
     return (

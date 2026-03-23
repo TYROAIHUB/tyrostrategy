@@ -21,7 +21,7 @@ const STATUS_COLORS: Record<string, string> = {
 type Tab = "hedef" | "aksiyon";
 
 /* ── Radial Gauge (compact) ── */
-function RadialGauge({ value, total, avgProgress, color }: { value: number; total: number; avgProgress: number; color: string }) {
+function RadialGauge({ value, total, avgProgress: _avgProgress, color }: { value: number; total: number; avgProgress: number; color: string }) {
   const pct = total > 0 ? (value / total) * 100 : 0;
   return (
     <div className="relative w-[70px] h-[70px] shrink-0">

@@ -5,8 +5,8 @@ interface TyroLogoProps {
   accentColor?: string;
   themeId?: string;
   themeColors?: {
-    gradientStart: string;
-    gradientEnd: string;
+    gradStart: string;
+    gradEnd: string;
     fillA: string;
     fillB: string;
     fillC: string;

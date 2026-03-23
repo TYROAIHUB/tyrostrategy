@@ -2,10 +2,8 @@ import { useWatch, type Control } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { Target, User, Calendar, Users, MapPin, FolderTree } from "lucide-react";
 import { useDataStore } from "@/stores/dataStore";
-import type { WizardFormData } from "../HedefAksiyonWizard";
-
 interface Props {
-  control: Control<WizardFormData>;
+  control: Control<any>;
 }
 
 function formatDate(d: string): string {
@@ -86,7 +84,7 @@ export default function StepReview({ control }: Props) {
           </span>
         </div>
         <div className="divide-y divide-tyro-border">
-          {data.aksiyonlar?.map((a, i) => (
+          {data.aksiyonlar?.map((a: any, i: number) => (
             <div key={i} className="px-4 py-3 flex items-start gap-3">
               <div className="w-6 h-6 rounded-full bg-tyro-navy/10 flex items-center justify-center text-[10px] font-bold text-tyro-navy shrink-0 mt-0.5">
                 {i + 1}

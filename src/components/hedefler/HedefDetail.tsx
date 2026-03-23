@@ -106,7 +106,7 @@ export default function HedefDetail({
           aksiyon={freshAksiyon}
           onBackToParent={() => { setSelectedAksiyon(null); setMode("detail"); }}
           parentLabel={t("detail.backToObjective")}
-          onModeChange={(m) => {
+          onModeChange={(_m) => {
             onModeChange?.("aksiyonDetail");
           }}
         />

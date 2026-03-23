@@ -4,13 +4,11 @@ import { useTranslation } from "react-i18next";
 import { departments } from "@/config/departments";
 import { useDataStore } from "@/stores/dataStore";
 import { toCalendarDate, fromCalendarDate } from "@/lib/utils";
-import type { WizardFormData } from "../HedefAksiyonWizard";
-
 const allUsers = departments.flatMap((d) => d.users.map((u) => u.name));
 
 interface Props {
-  control: Control<WizardFormData>;
-  errors: FieldErrors<WizardFormData>;
+  control: Control<any>;
+  errors: FieldErrors<any>;
 }
 
 export default function StepOwnershipDates({ control, errors }: Props) {
@@ -35,7 +33,7 @@ export default function StepOwnershipDates({ control, errors }: Props) {
               size="sm"
               placeholder={t("forms.objective.ownerPlaceholder")}
               isInvalid={!!errors.owner}
-              errorMessage={errors.owner?.message}
+              errorMessage={errors.owner?.message as string}
               classNames={{ base: "w-full" }}
               allowsCustomValue
             >
@@ -114,7 +112,7 @@ export default function StepOwnershipDates({ control, errors }: Props) {
                 value={toCalendarDate(field.value)}
                 onChange={(date) => field.onChange(fromCalendarDate(date))}
                 isInvalid={!!errors.startDate}
-                errorMessage={errors.startDate?.message}
+                errorMessage={errors.startDate?.message as string}
                 variant="bordered"
                 size="sm"
                 granularity="day"
@@ -135,7 +133,7 @@ export default function StepOwnershipDates({ control, errors }: Props) {
                 value={toCalendarDate(field.value)}
                 onChange={(date) => field.onChange(fromCalendarDate(date))}
                 isInvalid={!!errors.endDate}
-                errorMessage={errors.endDate?.message}
+                errorMessage={errors.endDate?.message as string}
                 variant="bordered"
                 size="sm"
                 granularity="day"

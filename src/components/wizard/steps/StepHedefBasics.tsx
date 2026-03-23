@@ -3,11 +3,9 @@ import { Input, Textarea, Select, SelectItem } from "@heroui/react";
 import { useTranslation } from "react-i18next";
 import { getSourceOptions } from "@/lib/constants";
 import { departmentNames } from "@/config/departments";
-import type { WizardFormData } from "../HedefAksiyonWizard";
-
 interface Props {
-  control: Control<WizardFormData>;
-  errors: FieldErrors<WizardFormData>;
+  control: Control<any>;
+  errors: FieldErrors<any>;
 }
 
 export default function StepHedefBasics({ control, errors }: Props) {
@@ -28,7 +26,7 @@ export default function StepHedefBasics({ control, errors }: Props) {
               {...field}
               placeholder={t("forms.objective.namePlaceholder")}
               isInvalid={!!errors.name}
-              errorMessage={errors.name?.message}
+              errorMessage={errors.name?.message as string}
               variant="bordered"
               size="sm"
               classNames={{ inputWrapper: "border-tyro-border" }}
@@ -75,7 +73,7 @@ export default function StepHedefBasics({ control, errors }: Props) {
               variant="bordered"
               size="sm"
               isInvalid={!!errors.source}
-              errorMessage={errors.source?.message}
+              errorMessage={errors.source?.message as string}
               classNames={{ trigger: "border-tyro-border" }}
               placeholder={t("forms.objective.sourcePlaceholder")}
             >

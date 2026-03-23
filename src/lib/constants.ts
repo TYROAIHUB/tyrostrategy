@@ -48,7 +48,7 @@ export function getStatusOptions(t: TFunction): { key: EntityStatus; label: stri
 }
 
 /** Get translated source options for form selects */
-export function getSourceOptions(t: TFunction): { key: Source; label: string }[] {
+export function getSourceOptions(_t: TFunction): { key: Source; label: string }[] {
   return [
     { key: "Türkiye", label: "Türkiye" },
     { key: "Kurumsal", label: "Kurumsal" },

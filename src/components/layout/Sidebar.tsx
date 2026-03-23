@@ -165,8 +165,8 @@ function SidebarContent({ collapsed, onNavigate, pinned, onTogglePin }: { collap
             accentColor={theme.isDark ? theme.accentColorLight : undefined}
             themeId={theme.id}
             themeColors={(theme.scope === "full" || theme.id === "arctic") ? {
-              gradientStart: theme.logoGradientStart,
-              gradientEnd: theme.logoGradientEnd,
+              gradStart: theme.logoGradientStart,
+              gradEnd: theme.logoGradientEnd,
               fillA: theme.logoFillA,
               fillB: theme.logoFillB,
               fillC: theme.logoFillC,

@@ -119,7 +119,7 @@ function DeadlineRow({ item, onClick, showExpand, t }: DeadlineRowProps) {
           })}
           {children.length > 5 && (
             <p className="text-[9px] text-tyro-text-muted pt-0.5">
-              {t("workspace.andMore", { count: children.length - 5 })}
+              {(t as any)("workspace.andMore", { count: children.length - 5 })}
             </p>
           )}
         </div>
@@ -130,7 +130,7 @@ function DeadlineRow({ item, onClick, showExpand, t }: DeadlineRowProps) {
 
 export default function UpcomingDeadlines() {
   const { t } = useTranslation();
-  const navigate = useNavigate();
+  void useNavigate();
   const { upcomingDeadlines } = useMyWorkspace();
   const [isModalOpen, setIsModalOpen] = useState(false);
 

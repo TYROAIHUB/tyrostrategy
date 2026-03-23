@@ -117,7 +117,7 @@ export interface KanbanColumn {
 export interface TreeNode {
   id: string;
   name: string;
-  type: "plan" | "hedef" | "aksiyon";
+  type: "plan" | "hedef" | "aksiyon" | "proje" | "gorev";
   progress?: number;
   status?: string;
   children?: TreeNode[];
