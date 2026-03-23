@@ -1,0 +1,581 @@
+@import "tailwindcss";
+@config "../../tailwind.config.ts";
+
+/* ===== CSS Variables (for JS access & non-Tailwind usage) ===== */
+:root {
+  --tyro-navy: #1e3a5f;
+  --tyro-navy-light: #2a4f7f;
+  --tyro-navy-dark: #142842;
+  --tyro-gold: #c8922a;
+  --tyro-gold-light: #e0ad3e;
+  --tyro-gold-muted: rgba(200, 146, 42, 0.2);
+  --tyro-success: #10b981;
+  --tyro-warning: #f59e0b;
+  --tyro-danger: #ef4444;
+  --tyro-info: #3b82f6;
+  --tyro-bg: #fcfcfd;
+  --tyro-surface: #ffffff;
+  --tyro-border: #e2e8f0;
+  --tyro-text-primary: #0f172a;
+  --tyro-text-secondary: #64748b;
+  --tyro-text-muted: #94a3b8;
+}
+
+/* Pull-to-refresh overscroll visual feedback */
+main {
+  overscroll-behavior-y: contain;
+}
+
+/* ===== Body Defaults ===== */
+body {
+  font-family: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  background: var(--tyro-bg);
+  color: var(--tyro-text-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ===== Glassmorphism ===== */
+@layer components {
+  .glass-card {
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(230, 235, 245, 0.6);
+    border-radius: 16px;
+    box-shadow: 0 1px 3px rgba(30, 58, 95, 0.04), 0 8px 32px rgba(30, 58, 95, 0.06);
+  }
+
+  .glass-elevated {
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(230, 235, 245, 0.7);
+    border-radius: 20px;
+    box-shadow: 0 2px 6px rgba(30, 58, 95, 0.05), 0 20px 60px rgba(30, 58, 95, 0.1);
+  }
+}
+
+/* ===== Tabular Numbers ===== */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ===== Scrollbar ===== */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--tyro-border);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--tyro-text-muted);
+}
+
+/* ===== Gradient border mask (frosted-enterprise theme) ===== */
+.grad-border-mask {
+  padding: 1px;
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+}
+
+/* ===== Fluid Blob Animation (for liquid-fluid theme) ===== */
+@keyframes fluid-move {
+  0% { transform: translate(0, 0) rotate(0deg) scale(1); }
+  33% { transform: translate(50px, -30px) rotate(120deg) scale(1.1); }
+  66% { transform: translate(-30px, 40px) rotate(240deg) scale(0.95); }
+  100% { transform: translate(20px, -20px) rotate(360deg) scale(1.05); }
+}
+
+/* ===== Mesh Blob Animation (for mesh-aurora theme) ===== */
+@keyframes mesh-blob {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  25% { transform: translate(20px, -30px) scale(1.15); }
+  50% { transform: translate(-15px, 15px) scale(0.9); }
+  75% { transform: translate(25px, 20px) scale(1.08); }
+}
+
+/* ===== Expandable Icon Buttons ===== */
+.btn-expandable {
+  padding: 0 10px;
+  height: 34px;
+  border-radius: 10px;
+  overflow: hidden;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  transition: gap 0.3s ease, padding 0.3s ease;
+}
+.btn-expandable span {
+  max-width: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition: max-width 0.35s cubic-bezier(0.4,0,0.2,1), opacity 0.25s ease;
+}
+.btn-expandable:hover {
+  gap: 6px;
+  padding: 0 16px 0 12px;
+}
+.btn-expandable:hover span {
+  max-width: 140px;
+  opacity: 1;
+  transition: max-width 0.35s cubic-bezier(0.4,0,0.2,1), opacity 0.25s ease 0.1s;
+}
+
+/* ===== Wizard Confetti Animation ===== */
+@keyframes confetti-fall {
+  0% { transform: translateY(-10px) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(120vh) rotate(720deg); opacity: 0; }
+}
+.animate-confetti-fall {
+  animation: confetti-fall var(--duration, 3s) ease-in forwards;
+  animation-delay: var(--delay, 0s);
+}
+
+/* ===== Reduced Motion ===== */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ===== Table column half-height separator ===== */
+.col-separator th {
+  position: relative;
+}
+.col-separator th + th::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 25%;
+  height: 50%;
+  width: 1px;
+  background: rgba(0, 0, 0, 0.06);
+  pointer-events: none;
+}
+
+/* ===== Sticky columns for horizontal scroll ===== */
+.sticky-grid table {
+  min-width: 900px;
+}
+.sticky-grid th:first-child,
+.sticky-grid td:first-child {
+  position: sticky;
+  left: 0;
+  z-index: 5;
+  background: inherit;
+}
+.sticky-grid th:last-child,
+.sticky-grid td:last-child {
+  position: sticky;
+  right: 0;
+  z-index: 5;
+  background: inherit;
+}
+/* Scroll shadow indicators */
+.sticky-grid {
+  position: relative;
+}
+.sticky-grid::before,
+.sticky-grid::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 20px;
+  pointer-events: none;
+  z-index: 6;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.sticky-grid::before {
+  left: 0;
+  background: linear-gradient(to right, rgba(0,0,0,0.03), transparent);
+}
+.sticky-grid::after {
+  right: 0;
+  background: linear-gradient(to left, rgba(0,0,0,0.03), transparent);
+}
+
+/* ===== Mobile glassmorphism performance ===== */
+@media (max-width: 768px) {
+  .glass-card,
+  .glass-elevated {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+  .glass-card {
+    background: rgba(255, 255, 255, 0.95);
+  }
+  .glass-elevated {
+    background: rgba(255, 255, 255, 0.98);
+  }
+}
+
+/* ===== Dark mode overrides ===== */
+.dark {
+  --tyro-bg: #0a0f1a;
+  --tyro-surface: #111827;
+  --tyro-border: #1e293b;
+  --tyro-text-primary: #f1f5f9;
+  --tyro-text-secondary: #94a3b8;
+  --tyro-text-muted: #64748b;
+}
+
+.dark .glass-card {
+  background: rgba(17, 24, 39, 0.7);
+  border-color: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+.dark .glass-elevated {
+  background: rgba(17, 24, 39, 0.85);
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+}
+
+@media (max-width: 768px) {
+  .dark .glass-card {
+    background: rgba(17, 24, 39, 0.95);
+  }
+  .dark .glass-elevated {
+    background: rgba(17, 24, 39, 0.98);
+  }
+}
+
+/* ===== Responsive typography ===== */
+:root {
+  --tyro-text-page-title: clamp(1.25rem, 2vw, 1.75rem);
+  --tyro-text-kpi: clamp(1.75rem, 3vw, 2.25rem);
+}
+
+/* ════════════════════════════════════════════
+   FULL APP THEME OVERRIDES
+   When [data-full-theme] is set, override hardcoded
+   bg-white, glass-card, table, and other patterns
+   to follow the theme CSS variables.
+   ════════════════════════════════════════════ */
+
+/* --- Cards & surfaces: bg-white → theme surface --- */
+.app-full-theme .glass-card {
+  background: var(--app-glass-bg, var(--tyro-surface));
+  border-color: var(--app-glass-border, var(--tyro-border));
+  box-shadow: var(--app-card-shadow, 0 1px 3px rgba(0,0,0,0.04));
+  border-radius: var(--app-card-radius, 16px);
+}
+.app-full-theme .glass-elevated {
+  background: var(--app-glass-elevated-bg, var(--tyro-surface));
+  border-color: var(--app-glass-border, var(--tyro-border));
+  box-shadow: var(--app-card-shadow, 0 2px 6px rgba(0,0,0,0.05));
+  border-radius: var(--app-card-radius, 20px);
+}
+
+/* --- Table headers --- */
+.app-full-theme th,
+.app-full-theme thead tr {
+  background: var(--tyro-navy) !important;
+  color: #fff !important;
+}
+.app-full-theme .col-separator th + th::before {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+/* --- Table rows & cells --- */
+.app-full-dark td,
+.app-full-dark tr {
+  border-color: var(--tyro-border);
+}
+.app-full-dark tbody tr {
+  background: transparent;
+}
+.app-full-dark tbody tr:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+/* --- Pagination --- */
+.app-full-theme [data-slot="pagination"] button,
+.app-full-theme nav[aria-label] button {
+  color: var(--tyro-text-secondary);
+  border-color: var(--tyro-border);
+}
+.app-full-theme [data-slot="pagination"] button[aria-current="true"],
+.app-full-theme nav[aria-label] button[aria-current="true"],
+.app-full-theme [data-slot="pagination"] .bg-tyro-navy {
+  background: var(--tyro-navy) !important;
+  color: #fff !important;
+}
+
+/* --- Input & search fields --- */
+.app-full-dark input,
+.app-full-dark textarea,
+.app-full-dark select {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: var(--tyro-border);
+  color: var(--tyro-text-primary);
+}
+.app-full-dark input::placeholder,
+.app-full-dark textarea::placeholder {
+  color: var(--tyro-text-muted);
+}
+
+/* --- Checkboxes --- */
+.app-full-theme input[type="checkbox"] {
+  accent-color: var(--tyro-navy);
+}
+
+/* --- HeroUI theme variable overrides for dark full themes --- */
+.app-full-dark {
+  --heroui-content1: var(--heroui-override-content1, 215 28% 14%);
+  --heroui-content2: var(--heroui-override-content2, 215 28% 18%);
+  --heroui-content3: var(--heroui-override-content3, 215 28% 22%);
+  --heroui-content4: var(--heroui-override-content4, 215 28% 26%);
+  --heroui-default-50: 215 28% 12%;
+  --heroui-default-100: 215 28% 16%;
+  --heroui-default-200: 215 28% 20%;
+  --heroui-default-300: 215 28% 28%;
+  --heroui-default-foreground: 210 40% 94%;
+  --heroui-foreground: 210 40% 94%;
+  --heroui-background: 215 40% 8%;
+  --heroui-divider: 215 25% 20%;
+}
+/* Light full themes also need content overrides */
+.app-full-theme:not(.app-full-dark) {
+  --heroui-content1: var(--heroui-override-content1, 0 0% 100%);
+  --heroui-content2: var(--heroui-override-content2, 220 14% 96%);
+}
+
+/* --- HeroUI slot-based overrides for full dark themes --- */
+.app-full-dark [data-slot="base"],
+.app-full-dark [data-slot="trigger"] {
+  background: rgba(255, 255, 255, 0.06) !important;
+  border-color: var(--tyro-border) !important;
+  color: var(--tyro-text-primary) !important;
+}
+
+/* --- HeroUI Table specific overrides --- */
+.app-full-dark .bg-content1 {
+  background-color: var(--tyro-surface) !important;
+}
+.app-full-dark .bg-content2 {
+  background-color: rgba(255, 255, 255, 0.06) !important;
+}
+.app-full-dark .bg-default-100 {
+  background-color: rgba(255, 255, 255, 0.06) !important;
+}
+.app-full-dark .bg-default-200 {
+  background-color: rgba(255, 255, 255, 0.08) !important;
+}
+.app-full-dark .shadow-small {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important;
+}
+/* Table header text in dark theme */
+.app-full-dark th[data-sortable] {
+  color: var(--tyro-text-secondary) !important;
+}
+.app-full-dark [role="row"]:hover td {
+  background-color: rgba(255, 255, 255, 0.04) !important;
+}
+/* Table cell default text */
+.app-full-dark [role="gridcell"],
+.app-full-dark [role="cell"] {
+  color: var(--tyro-text-primary);
+}
+
+/* --- HeroUI Input/Select/Dropdown for full dark themes --- */
+.app-full-dark [data-slot="input-wrapper"] {
+  background: rgba(255, 255, 255, 0.06) !important;
+  border-color: var(--tyro-border) !important;
+}
+.app-full-dark [data-slot="innerWrapper"] input {
+  color: var(--tyro-text-primary) !important;
+}
+.app-full-dark [data-slot="label"] {
+  color: var(--tyro-text-secondary) !important;
+}
+.app-full-dark [data-slot="value"] {
+  color: var(--tyro-text-primary) !important;
+}
+.app-full-dark [data-slot="description"] {
+  color: var(--tyro-text-muted) !important;
+}
+
+/* --- All bg-white surfaces in full themes --- */
+.app-full-dark .bg-white {
+  background-color: var(--tyro-surface) !important;
+}
+.app-full-theme:not(.app-full-dark) .bg-white {
+  background-color: var(--tyro-surface) !important;
+}
+
+/* --- Hardcoded table header backgrounds --- */
+.app-full-dark .bg-\[\\#f4f4f5\],
+.app-full-dark .bg-\[\\#f4f4f5\]\/50 {
+  background-color: rgba(255, 255, 255, 0.06) !important;
+}
+
+/* --- HeroUI popover/dropdown/listbox menus in dark full themes --- */
+.app-full-dark [data-slot="popover"],
+.app-full-dark [data-slot="content"],
+.app-full-dark [data-slot="listbox"] {
+  background: var(--tyro-surface) !important;
+  border-color: var(--tyro-border) !important;
+  color: var(--tyro-text-primary) !important;
+}
+.app-full-dark [data-slot="listboxwrapper"] {
+  background: var(--tyro-surface) !important;
+}
+
+/* --- Dark theme base text color (only for unclassed elements) --- */
+.app-full-dark {
+  color: var(--tyro-text-primary);
+}
+
+/* --- Hover backgrounds in dark themes --- */
+.app-full-dark .hover\:bg-tyro-bg:hover {
+  background-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* --- HeroUI Button overrides for dark full themes --- */
+.app-full-dark button[data-variant="bordered"] {
+  border-color: var(--tyro-border) !important;
+  color: var(--tyro-text-primary) !important;
+}
+.app-full-dark button[data-variant="flat"] {
+  background: rgba(255, 255, 255, 0.06) !important;
+  color: var(--tyro-text-primary) !important;
+}
+.app-full-dark button[data-variant="light"] {
+  color: var(--tyro-text-primary) !important;
+}
+.app-full-dark button[data-variant="light"]:hover {
+  background: rgba(255, 255, 255, 0.06) !important;
+}
+/* Primary buttons use theme navy */
+.app-full-theme button[data-variant="solid"][data-color="primary"],
+.app-full-theme [data-slot="cursor"] {
+  background-color: var(--tyro-navy) !important;
+  color: #fff !important;
+}
+
+/* --- HeroUI Chip/Badge in dark themes --- */
+.app-full-dark [data-slot="chip"] {
+  color: var(--tyro-text-primary) !important;
+}
+
+/* --- HeroUI Modal/Popover surfaces --- */
+.app-full-dark [role="dialog"],
+.app-full-dark [role="listbox"],
+.app-full-dark [data-slot="menu"] {
+  background: var(--tyro-surface) !important;
+  color: var(--tyro-text-primary) !important;
+}
+.app-full-dark [role="option"]:hover {
+  background: rgba(255, 255, 255, 0.06) !important;
+}
+.app-full-dark [role="option"] {
+  color: var(--tyro-text-primary) !important;
+}
+
+/* --- HeroUI Pagination cursor override --- */
+.app-full-theme .bg-tyro-navy {
+  background-color: var(--tyro-navy) !important;
+}
+
+/* --- HeroUI DatePicker / Calendar for dark full themes --- */
+.app-full-dark [data-slot="calendar-content"],
+.app-full-dark [data-slot="grid"],
+.app-full-dark [data-slot="header"],
+.app-full-dark [data-slot="grid-header"],
+.app-full-dark [data-slot="grid-body"],
+.app-full-dark [data-slot="cell"] button {
+  color: var(--tyro-text-primary) !important;
+}
+.app-full-dark [data-slot="cell"] button:hover {
+  background: rgba(255, 255, 255, 0.08) !important;
+}
+.app-full-dark [data-slot="cell"] button[data-selected="true"] {
+  background: var(--tyro-navy) !important;
+  color: #fff !important;
+}
+.app-full-dark [data-slot="header-wrapper"] {
+  background: var(--tyro-surface) !important;
+}
+.app-full-dark [data-slot="prev-button"],
+.app-full-dark [data-slot="next-button"],
+.app-full-dark [data-slot="title"] {
+  color: var(--tyro-text-primary) !important;
+}
+
+/* --- HeroUI Tooltip for dark full themes --- */
+.app-full-dark [data-slot="tooltip"] {
+  background: var(--tyro-surface) !important;
+  color: var(--tyro-text-primary) !important;
+}
+
+/* --- Bordered inputs focus ring in full themes --- */
+.app-full-theme [data-slot="input-wrapper"]:focus-within {
+  border-color: var(--tyro-navy) !important;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--tyro-navy) 15%, transparent) !important;
+}
+
+/* --- HeroUI Dropdown/Select menu items --- */
+.app-full-dark [data-slot="menuitem"],
+.app-full-dark [role="menuitem"] {
+  color: var(--tyro-text-primary) !important;
+}
+.app-full-dark [data-slot="menuitem"]:hover,
+.app-full-dark [role="menuitem"]:hover {
+  background: rgba(255, 255, 255, 0.06) !important;
+}
+.app-full-dark [data-slot="selectedIcon"] {
+  color: var(--tyro-navy) !important;
+}
+
+/* --- HeroUI default backgrounds — catch-all for remaining surfaces --- */
+.app-full-dark .bg-default-50 {
+  background-color: rgba(255, 255, 255, 0.04) !important;
+}
+
+/* --- KanbanView card backgrounds for dark themes --- */
+.app-full-dark .glass-card,
+.app-full-dark .glass-elevated {
+  background: var(--app-glass-bg, rgba(255, 255, 255, 0.06)) !important;
+  border-color: var(--app-glass-border, var(--tyro-border)) !important;
+}
+
+/* --- Status badges keep their semantic colors (untouched) --- */
+
+/* --- Scrollbar for dark full themes --- */
+.app-full-dark ::-webkit-scrollbar-thumb {
+  background: var(--tyro-border);
+}
+.app-full-dark ::-webkit-scrollbar-thumb:hover {
+  background: var(--tyro-text-muted);
+}
+
+/* --- Mobile: disable glass blur in full themes too --- */
+@media (max-width: 768px) {
+  .app-full-theme .glass-card,
+  .app-full-theme .glass-elevated {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+}
+
+/* Stronger table row hover */
+tr[data-hover=true]:not([data-selected=true]) {
+  background-color: var(--tyro-bg) !important;
+  transition: background-color 0.15s ease;
+}

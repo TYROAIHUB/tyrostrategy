@@ -1,0 +1,142 @@
+import type { KanbanColumn } from "@/types";
+
+export const kanbanColumns: KanbanColumn[] = [
+  {
+    id: "yapilacak",
+    title: "Yapılacak",
+    color: "var(--tyro-info)",
+    cards: [
+      {
+        id: "k1",
+        title: "Faz2 - Deodorizasyon Ünitesinin Rafineriye Dön. & Yenilenebilir Yağ Tankları",
+        description: "Kurumsal - 5 görev",
+        priority: "low",
+        assignee: "Yiğit Karacı",
+        assigneeInitials: "YK",
+        deadline: "2027-06-01",
+        progress: 0,
+        tags: ["Kurumsal"],
+      }
+    ],
+  },
+  {
+    id: "devam-eden",
+    title: "Devam Eden",
+    color: "var(--tyro-success)",
+    cards: [
+      {
+        id: "k2",
+        title: "Muş Sulama Sistemi devreye alınması ve verimli kullanma",
+        description: "Türkiye - 23 görev",
+        priority: "medium",
+        assignee: "Recep Mergen",
+        assigneeInitials: "RM",
+        deadline: "2025-05-25",
+        progress: 96,
+        tags: ["Türkiye"],
+      },
+      {
+        id: "k3",
+        title: "2 adet 8330 dwt'lik Deniz-Nehir tipi gemi inşa projesi",
+        description: "Kurumsal - 4 görev",
+        priority: "medium",
+        assignee: "İdris İlhan Telci",
+        assigneeInitials: "İİ",
+        deadline: "2026-03-31",
+        progress: 75,
+        tags: ["Kurumsal"],
+      },
+      {
+        id: "k4",
+        title: "Carbon Trading",
+        description: "International - 7 görev",
+        priority: "medium",
+        assignee: "Kemal Yıldız",
+        assigneeInitials: "KY",
+        deadline: "2027-04-01",
+        progress: 29,
+        tags: ["International"],
+      },
+      {
+        id: "k5",
+        title: "Yıldız Muş Arazisi Tarımsal Mekanizasyon Projesi",
+        description: "Türkiye - 4 görev",
+        priority: "medium",
+        assignee: "Recep Mergen",
+        assigneeInitials: "RM",
+        deadline: "2026-07-01",
+        progress: 100,
+        tags: ["Türkiye"],
+      }
+    ],
+  },
+  {
+    id: "risk-altinda",
+    title: "Risk Altında",
+    color: "var(--tyro-warning)",
+    cards: [
+      {
+        id: "k6",
+        title: "Antep fıstığının Çin pazarına girmesi",
+        description: "Türkiye - 6 görev",
+        priority: "critical",
+        assignee: "Ozan Yeşilyer",
+        assigneeInitials: "OY",
+        deadline: "2025-01-01",
+        progress: 83,
+        tags: ["Türkiye"],
+      },
+      {
+        id: "k7",
+        title: "Çiftlik Yönetimi FarmERP",
+        description: "Kurumsal - 9 görev",
+        priority: "high",
+        assignee: "Kerime İkizler",
+        assigneeInitials: "Kİ",
+        deadline: "2026-12-31",
+        progress: 0,
+        tags: ["Kurumsal"],
+      },
+      {
+        id: "k8",
+        title: "Investment in Sugar Refinery Plant in Venezuela",
+        description: "International - 6 görev",
+        priority: "high",
+        assignee: "Nevzat Çakmak",
+        assigneeInitials: "NÇ",
+        deadline: "2027-08-31",
+        progress: 17,
+        tags: ["International"],
+      },
+      {
+        id: "k9",
+        title: "Faz 2 - Rejeneratif Tarım (2025-2026 Sezonu)",
+        description: "Türkiye - 3 görev",
+        priority: "high",
+        assignee: "Recep Mergen",
+        assigneeInitials: "RM",
+        deadline: "2026-12-31",
+        progress: 33,
+        tags: ["Türkiye"],
+      }
+    ],
+  },
+  {
+    id: "tamamlandi",
+    title: "Tamamlandı",
+    color: "var(--tyro-navy)",
+    cards: [
+      {
+        id: "k10",
+        title: "Tiryaki LTIP programının global düzeyde hayata geçirilmesi",
+        description: "Kurumsal - 4 görev",
+        priority: "low",
+        assignee: "Tarkan Ferhat Yılmaz",
+        assigneeInitials: "TF",
+        deadline: "2025-11-20",
+        progress: 100,
+        tags: ["Kurumsal"],
+      }
+    ],
+  }
+];

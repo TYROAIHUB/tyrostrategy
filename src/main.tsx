@@ -1,0 +1,73 @@
+import "@/lib/i18n";
+import { StrictMode } from "react";
+import { createRoot } from "react-dom/client";
+import { PublicClientApplication, EventType } from "@azure/msal-browser";
+import type { AuthenticationResult } from "@azure/msal-browser";
+import { MsalProvider } from "@azure/msal-react";
+import { HeroUIProvider } from "@heroui/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { msalConfig } from "@/lib/auth/msalConfig";
+import App from "./App";
+import "./styles/globals.css";
+
+// Global error handlers — prevent silent failures
+window.addEventListener("unhandledrejection", (event) => {
+  console.error("[Unhandled Promise Rejection]", event.reason);
+});
+
+window.addEventListener("error", (event) => {
+  console.error("[Global Error]", event.error);
+});
+
+// Apply saved theme before render to prevent flash
+const savedTheme = localStorage.getItem("tyro-theme");
+if (savedTheme === "dark") {
+  document.documentElement.classList.add("dark");
+}
+
+// MSAL instance OUTSIDE component tree
+const msalInstance = new PublicClientApplication(msalConfig);
+
+msalInstance.addEventCallback((event) => {
+  if (
+    event.eventType === EventType.LOGIN_SUCCESS &&
+    (event.payload as AuthenticationResult)?.account
+  ) {
+    msalInstance.setActiveAccount(
+      (event.payload as AuthenticationResult).account
+    );
+  }
+});
+
+msalInstance.initialize().then(() => {
+  msalInstance
+    .handleRedirectPromise()
+    .then((response) => {
+      if (response?.account) {
+        msalInstance.setActiveAccount(response.account);
+      }
+    })
+    .catch(console.error);
+});
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000,
+      gcTime: 10 * 60 * 1000,
+      retry: 1,
+    },
+  },
+});
+
+createRoot(document.getElementById("root")!).render(
+  <StrictMode>
+    <MsalProvider instance={msalInstance}>
+      <QueryClientProvider client={queryClient}>
+        <HeroUIProvider>
+          <App />
+        </HeroUIProvider>
+      </QueryClientProvider>
+    </MsalProvider>
+  </StrictMode>
+);

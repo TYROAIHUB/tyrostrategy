@@ -1,0 +1,401 @@
+{
+  "nav": {
+    "home": "Home",
+    "kpi": "KPI",
+    "objectives": "Objectives",
+    "actions": "Actions",
+    "gantt": "Gantt",
+    "wbs": "WBS",
+    "strategyMap": "T-Map",
+    "users": "Users",
+    "settings": "Settings",
+    "security": "Security",
+    "profile": "Profile",
+    "logout": "Sign Out",
+    "theme": "Theme",
+    "sidebarTheme": "Sidebar Theme",
+    "appTheme": "App Theme",
+    "strategicHQ": "HQ",
+    "tAlignment": "T-Align"
+  },
+  "sections": {
+    "mainMenu": "Main Menu",
+    "data": "Data",
+    "views": "Views",
+    "system": "System"
+  },
+  "status": {
+    "onTrack": "On Track",
+    "achieved": "Achieved",
+    "behind": "Behind",
+    "atRisk": "At Risk",
+    "notStarted": "Not Started"
+  },
+  "common": {
+    "search": "Search...",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "new": "New",
+    "detail": "Detail",
+    "goBack": "Go Back",
+    "viewAll": "View All",
+    "noResults": "No results found",
+    "loading": "Loading...",
+    "filter": "Filter",
+    "view": "View",
+    "status": "Status",
+    "columns": "Columns",
+    "all": "All",
+    "yes": "Yes",
+    "no": "No",
+    "ok": "OK",
+    "confirm": "Confirm",
+    "description": "Description",
+    "startDate": "Start Date",
+    "endDate": "End Date",
+    "controlDate": "Control Date",
+    "progress": "Progress",
+    "responsible": "Responsible",
+    "owner": "Owner",
+    "source": "Source",
+    "department": "Department",
+    "participants": "Participants",
+    "leader": "Leader",
+    "participant": "Participant",
+    "add": "Add",
+    "create": "Create",
+    "list": "List",
+    "kanban": "Kanban",
+    "refreshPage": "Refresh Page",
+    "errorOccurred": "An error occurred",
+    "errorDescription": "An unexpected error occurred. You can try refreshing the page.",
+    "tryAgain": "Try Again",
+    "more": "more",
+    "showLess": "Show less",
+    "createdBy": "Created By",
+    "createdAt": "Created At",
+    "completedAt": "Completed At"
+  },
+  "roles": {
+    "admin": "Admin",
+    "projectLeader": "Objective Leader",
+    "user": "User"
+  },
+  "pages": {
+    "objectives": {
+      "title": "Objectives",
+      "subtitle": "Manage your strategic objectives"
+    },
+    "actions": {
+      "title": "Actions",
+      "subtitle": "Manage and track your actions"
+    },
+    "gantt": {
+      "title": "Gantt Timeline",
+      "subtitle": "View your objectives and actions on a timeline",
+      "quarter": "Quarter",
+      "year": "Year",
+      "all": "All",
+      "noActions": "No actions found in selected period."
+    },
+    "wbs": {
+      "title": "WBS",
+      "subtitle": "View the work breakdown structure"
+    },
+    "strategyMap": {
+      "title": "Strategy Map",
+      "subtitle": "Visualize the corporate strategic objective hierarchy",
+      "companyName": "Company Name",
+      "strategicTheme": "Strategic Theme",
+      "showActions": "Show actions",
+      "hideActions": "Hide actions",
+      "noObjectives": "No objectives under this theme"
+    },
+    "tAlignment": {
+      "title": "T-Align",
+      "subtitle": "Visualize relationships between objectives"
+    },
+    "strategicHQ": {
+      "title": "HQ",
+      "subtitle": "Corporate strategic overview"
+    },
+    "users": {
+      "title": "Users",
+      "subtitle": "User management"
+    },
+    "settings": {
+      "title": "Settings",
+      "subtitle": "Manage application settings"
+    },
+    "security": {
+      "title": "Security",
+      "subtitle": "Role-based access management"
+    },
+    "notFound": {
+      "title": "Page Not Found",
+      "subtitle": "The page you are looking for does not exist.",
+      "goHome": "Go to Home Page"
+    }
+  },
+  "forms": {
+    "objective": {
+      "name": "Objective Name",
+      "namePlaceholder": "Enter objective name",
+      "description": "Description",
+      "descriptionPlaceholder": "Enter objective description (optional)",
+      "owner": "Owner",
+      "ownerPlaceholder": "Select owner",
+      "source": "Source",
+      "sourcePlaceholder": "Select source",
+      "status": "Status",
+      "statusPlaceholder": "Select status",
+      "responsible": "Responsible",
+      "responsiblePlaceholder": "Select responsible person",
+      "startDate": "Start Date",
+      "endDate": "End Date",
+      "participants": "Participants",
+      "participantsPlaceholder": "Select participants",
+      "department": "Department",
+      "departmentPlaceholder": "Select department",
+      "reviewDate": "Review Date",
+      "parentObjective": "Parent Objective",
+      "parentObjectivePlaceholder": "Select parent objective (optional)",
+      "standalone": "Standalone Objective"
+    },
+    "action": {
+      "name": "Action Name",
+      "namePlaceholder": "Enter action name",
+      "objective": "Objective",
+      "objectivePlaceholder": "Select objective",
+      "assignee": "Assignee",
+      "assigneePlaceholder": "Select assignee",
+      "progress": "Progress"
+    }
+  },
+  "validation": {
+    "minChars": "Enter at least 3 characters",
+    "ownerRequired": "Owner is required",
+    "sourceRequired": "Source is required",
+    "statusRequired": "Status is required",
+    "startDateRequired": "Start date is required",
+    "endDateRequired": "End date is required",
+    "actionNameRequired": "Action name is required",
+    "assigneeRequired": "Assignee is required",
+    "objectiveRequired": "Please select an objective"
+  },
+  "toast": {
+    "objectiveCreated": "Objective created",
+    "objectiveUpdated": "Objective updated",
+    "objectiveDeleted": "Objective deleted",
+    "actionCreated": "Action created",
+    "actionUpdated": "Action updated",
+    "actionDeleted": "Action deleted",
+    "createdSuccessfully": "created successfully",
+    "updatedSuccessfully": "updated successfully",
+    "operationFailed": "Operation failed",
+    "unexpectedError": "An unexpected error occurred.",
+    "permissionsSaved": "Permission settings saved",
+    "resetToDefaults": "Reset to default settings"
+  },
+  "workspace": {
+    "welcome": "Welcome",
+    "goodMorning": "Good morning",
+    "goodAfternoon": "Good afternoon",
+    "goodEvening": "Good evening",
+    "myObjectives": "My Objectives",
+    "myActions": "My Actions",
+    "completed": "Completed",
+    "delayedOrRisky": "Delayed / At Risk",
+    "upcomingDates": "Upcoming Dates",
+    "actionStatus": "Action Status",
+    "individualProgress": "Individual Progress",
+    "objectivesCount": "objectives",
+    "actionsCompleted": "actions completed",
+    "actionsNeedAttention": "actions need attention",
+    "leader": "Leader",
+    "participant": "Participant",
+    "today": "Today",
+    "andMore": "and {{count}} more...",
+    "noDeadlines": "No upcoming deadlines",
+    "deadlineCount": "{{count}} upcoming deadlines",
+    "noObjectives": "No assigned objectives",
+    "moreObjectives": "and {{count}} more objectives →",
+    "noActions": "No actions yet",
+    "overall": "Overall",
+    "personalKPI": "Personal Performance",
+    "avgProgress": "avg. progress",
+    "onTrackActions": "On Track",
+    "notStarted": "not started",
+    "lateOrRisk": "Late / At Risk",
+    "late": "late",
+    "atRisk": "at risk",
+    "sourceDistribution": "Source Distribution",
+    "objectiveProgress": "Objective Progress",
+    "actionProgress": "Action Progress",
+    "statusDistribution": "Status Distribution"
+  },
+  "login": {
+    "welcome": "Welcome",
+    "selectUser": "Select a user to continue",
+    "login": "Sign In",
+    "strategicManagement": "Strategic Management",
+    "platform": "Platform",
+    "heroDescription": "Track your corporate objectives, manage your actions, and make strategic decisions together with your team.",
+    "strategicPlanning": "Strategic Planning",
+    "strategicPlanningDesc": "Objective and action management",
+    "kpiDashboard": "KPI Dashboard",
+    "kpiDashboardDesc": "Real-time metrics",
+    "teamManagement": "Strategic Views",
+    "teamManagementDesc": "Gantt, WBS & Strategy Map",
+    "corporateSecurity": "Corporate Security",
+    "corporateSecurityDesc": "SSO with Microsoft Entra ID",
+    "demoMode": "Demo mode is active. Corporate SSO login will be available once Azure AD is configured."
+  },
+  "dashboard": {
+    "title": "KPI Dashboard",
+    "overallProgress": "Overall Progress",
+    "sourceDistribution": "Action Distribution by Source",
+    "sourceSubtitle": "Turkey, Corporate and International operations",
+    "completed": "Completed",
+    "inProgress": "In Progress",
+    "pending": "Pending",
+    "objectiveStatusBreakdown": "Objective Status Breakdown",
+    "recentActivities": "Recent Activities",
+    "summaryGood": "{{count}} active objectives on track. Action completion rate {{rate}}%.",
+    "summaryWarning": "{{activeCount}} active objectives tracked, {{delayedCount}} actions need attention. Overall completion {{rate}}%."
+  },
+  "security": {
+    "pageAccess": "Page Access",
+    "dataOperations": "Data Operations",
+    "customRules": "Custom Rules",
+    "create": "Create",
+    "edit": "Edit",
+    "delete": "Delete",
+    "editOwnRecordsOnly": "Edit Own Records Only",
+    "viewOwnDataOnly": "View Own Data Only",
+    "resetToDefaults": "Reset to Defaults",
+    "deleteRulesTitle": "Tyro Deletion Rules",
+    "deleteRuleObjective": "Objectives with sub-actions cannot be deleted — delete the actions first",
+    "deleteRulesNote": "These rules always apply regardless of permission settings",
+    "fullAccess": "Full system access",
+    "ownObjectivesAndActions": "Own objectives and actions",
+    "assignedActionsOnly": "Assigned actions only"
+  },
+  "profile": {
+    "title": "Profile",
+    "language": "Language",
+    "turkish": "Türkçe",
+    "english": "English",
+    "fullName": "Full Name",
+    "titleLabel": "Title",
+    "email": "Email",
+    "department": "Department",
+    "selectDepartment": "Select department",
+    "authRole": "Authorization Role",
+    "selectRole": "Select role",
+    "totalObjectives": "Total Objectives",
+    "activeActions": "Active Actions",
+    "completedLabel": "Completed"
+  },
+  "settings": {
+    "title": "Settings",
+    "general": "General",
+    "appName": "Application Name",
+    "notifications": "Notifications",
+    "emailNotifications": "Email Notifications",
+    "emailNotificationsDesc": "Receive emails for important updates",
+    "browserNotifications": "Browser Notifications",
+    "browserNotificationsDesc": "Enable browser push notifications",
+    "integration": "Integration",
+    "azureAdStatus": "Azure AD Status",
+    "demoMode": "Demo Mode",
+    "dataverseConnection": "Dataverse Connection",
+    "notConfigured": "Not Configured",
+    "about": "About",
+    "version": "Version"
+  },
+  "users": {
+    "title": "Users"
+  },
+  "grid": {
+    "toggleColumns": "Toggle columns",
+    "selected": "Selected",
+    "records": "records",
+    "perPage": "Per page",
+    "showing": "Showing",
+    "deleteConfirm": "Are you sure you want to delete this record?"
+  },
+  "confirm": {
+    "deleteObjective": "Are you sure you want to delete this objective? This action cannot be undone.",
+    "deleteAction": "Are you sure you want to delete this action? This action cannot be undone.",
+    "confirm": "Confirm",
+    "cancel": "Cancel"
+  },
+  "search": {
+    "placeholder": "Search commands or pages...",
+    "pages": "Pages",
+    "objectives": "Objectives",
+    "actions": "Actions",
+    "navigate": "navigate",
+    "open": "open",
+    "close": "close"
+  },
+  "dates": {
+    "daysLate": "d late",
+    "daysLeft": "d left",
+    "day": "day",
+    "late": "late"
+  },
+  "footer": {
+    "poweredBy": "Powered by",
+    "allRightsReserved": "All rights reserved"
+  },
+  "detail": {
+    "backToObjective": "Back to Objective",
+    "addObjective": "Add Objective",
+    "addAction": "Add Action",
+    "objectiveDetail": "Objective Detail",
+    "actionDetail": "Action Detail",
+    "editObjective": "Edit Objective",
+    "editAction": "Edit Action",
+    "noActionsYet": "No actions added yet.",
+    "parentObjective": "Parent Objective",
+    "relatedObjectives": "Related Objectives"
+  },
+  "karargah": {
+    "tablo": "Table"
+  },
+  "tAlignment": {
+    "horizontal": "Horizontal",
+    "vertical": "Vertical",
+    "autoLayout": "Auto Layout",
+    "fitView": "Fit View",
+    "parentObjective": "Parent Objective",
+    "childObjective": "Child Objective",
+    "standalone": "Standalone",
+    "actions": "actions"
+  },
+  "wizard": {
+    "title": "Goal-Action Wizard",
+    "triggerButton": "Create Goal",
+    "step1Title": "Goal Details",
+    "step2Title": "Ownership & Dates",
+    "step3Title": "Actions",
+    "step4Title": "Review & Confirm",
+    "next": "Next",
+    "back": "Back",
+    "submit": "Create",
+    "addAction": "Add Action",
+    "removeAction": "Remove Action",
+    "minOneAction": "At least one action is required",
+    "successTitle": "Goal Created Successfully!",
+    "successActions": "{{count}} actions added",
+    "goToWorkspace": "Back to Workspace",
+    "goToDetail": "View Detail",
+    "reviewHedef": "Goal Summary",
+    "reviewAksiyonlar": "Actions Summary",
+    "actionNumber": "Action {{number}}"
+  }
+}

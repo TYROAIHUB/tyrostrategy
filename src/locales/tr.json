@@ -1,0 +1,401 @@
+{
+  "nav": {
+    "home": "Anasayfa",
+    "kpi": "KPI",
+    "objectives": "Hedefler",
+    "actions": "Aksiyonlar",
+    "gantt": "Gantt",
+    "wbs": "WBS",
+    "strategyMap": "T-Map",
+    "users": "Kullanıcılar",
+    "settings": "Ayarlar",
+    "security": "Güvenlik",
+    "profile": "Profil",
+    "logout": "Çıkış Yap",
+    "theme": "Tema",
+    "sidebarTheme": "Menü Teması",
+    "appTheme": "Uygulama Teması",
+    "strategicHQ": "Karargah",
+    "tAlignment": "T-Align"
+  },
+  "sections": {
+    "mainMenu": "Ana Menü",
+    "data": "Veriler",
+    "views": "Görünümler",
+    "system": "Sistem"
+  },
+  "status": {
+    "onTrack": "Yolunda",
+    "achieved": "Tamamlandı",
+    "behind": "Gecikmeli",
+    "atRisk": "Risk Altında",
+    "notStarted": "Başlanmadı"
+  },
+  "common": {
+    "search": "Ara...",
+    "save": "Kaydet",
+    "cancel": "İptal",
+    "delete": "Sil",
+    "edit": "Düzenle",
+    "new": "Yeni",
+    "detail": "Detay",
+    "goBack": "Geri Dön",
+    "viewAll": "Tümünü Gör",
+    "noResults": "Sonuç bulunamadı",
+    "loading": "Yükleniyor...",
+    "filter": "Filtrele",
+    "view": "Görünüm",
+    "status": "Durum",
+    "columns": "Kolonlar",
+    "all": "Tümü",
+    "yes": "Evet",
+    "no": "Hayır",
+    "ok": "Tamam",
+    "confirm": "Onayla",
+    "description": "Açıklama",
+    "startDate": "Başlangıç Tarihi",
+    "endDate": "Bitiş Tarihi",
+    "controlDate": "Kontrol Tarihi",
+    "progress": "İlerleme",
+    "responsible": "Sorumlu",
+    "owner": "Hedef Sahibi",
+    "source": "Kaynak",
+    "department": "Departman",
+    "participants": "Katılımcılar",
+    "leader": "Lider",
+    "participant": "Katılımcı",
+    "add": "Ekle",
+    "create": "Oluştur",
+    "list": "Liste",
+    "kanban": "Kanban",
+    "refreshPage": "Sayfayı Yenile",
+    "errorOccurred": "Bir hata oluştu",
+    "errorDescription": "Beklenmeyen bir hata meydana geldi. Sayfayı yenileyerek tekrar deneyebilirsiniz.",
+    "tryAgain": "Tekrar Dene",
+    "more": "daha",
+    "showLess": "Daha az göster",
+    "createdBy": "Oluşturan",
+    "createdAt": "Oluşturulma",
+    "completedAt": "Tamamlanma"
+  },
+  "roles": {
+    "admin": "Admin",
+    "projectLeader": "Hedef Lideri",
+    "user": "Kullanıcı"
+  },
+  "pages": {
+    "objectives": {
+      "title": "Hedefler",
+      "subtitle": "Stratejik hedeflerinizi yönetin"
+    },
+    "actions": {
+      "title": "Aksiyonlar",
+      "subtitle": "Aksiyonlarınızı yönetin ve takip edin"
+    },
+    "gantt": {
+      "title": "Gantt Zaman Çizelgesi",
+      "subtitle": "Hedef ve aksiyonlarınızı zaman çizelgesinde görüntüleyin",
+      "quarter": "Çeyrek",
+      "year": "Yıl",
+      "all": "Tümü",
+      "noActions": "Seçili dönemde aksiyon bulunamadı."
+    },
+    "wbs": {
+      "title": "WBS",
+      "subtitle": "İş kırılım yapısını görüntüleyin"
+    },
+    "strategyMap": {
+      "title": "Strateji Haritası",
+      "subtitle": "Kurumsal stratejik hedef hiyerarşisini görselleştirin",
+      "companyName": "Şirket Adı",
+      "strategicTheme": "Stratejik Tema",
+      "showActions": "Aksiyonları göster",
+      "hideActions": "Aksiyonları gizle",
+      "noObjectives": "Bu tema altında hedef bulunmuyor"
+    },
+    "tAlignment": {
+      "title": "T-Align",
+      "subtitle": "Hedefler arası ilişkileri görselleştirin"
+    },
+    "strategicHQ": {
+      "title": "Karargah",
+      "subtitle": "Kurumsal stratejik genel görünüm"
+    },
+    "users": {
+      "title": "Kullanıcılar",
+      "subtitle": "Kullanıcı yönetimi"
+    },
+    "settings": {
+      "title": "Ayarlar",
+      "subtitle": "Uygulama ayarlarını yönetin"
+    },
+    "security": {
+      "title": "Güvenlik",
+      "subtitle": "Rol bazlı yetki yönetimi"
+    },
+    "notFound": {
+      "title": "Sayfa Bulunamadı",
+      "subtitle": "Aradığınız sayfa mevcut değil.",
+      "goHome": "Ana Sayfaya Dön"
+    }
+  },
+  "forms": {
+    "objective": {
+      "name": "Hedef Adı",
+      "namePlaceholder": "Hedef adını giriniz",
+      "description": "Açıklama",
+      "descriptionPlaceholder": "Hedef açıklaması giriniz (isteğe bağlı)",
+      "owner": "Hedef Sahibi",
+      "ownerPlaceholder": "Hedef sahibi seçiniz",
+      "source": "Kaynak",
+      "sourcePlaceholder": "Kaynak seçiniz",
+      "status": "Durum",
+      "statusPlaceholder": "Durum seçiniz",
+      "responsible": "Sorumlu",
+      "responsiblePlaceholder": "Sorumlu seçiniz",
+      "startDate": "Başlangıç Tarihi",
+      "endDate": "Bitiş Tarihi",
+      "participants": "Katılımcılar",
+      "participantsPlaceholder": "Katılımcı seçiniz",
+      "department": "Departman",
+      "departmentPlaceholder": "Departman seçiniz",
+      "reviewDate": "Kontrol Tarihi",
+      "parentObjective": "Ana Hedef",
+      "parentObjectivePlaceholder": "Ana hedef seçiniz (isteğe bağlı)",
+      "standalone": "Bağımsız Hedef"
+    },
+    "action": {
+      "name": "Aksiyon Adı",
+      "namePlaceholder": "Aksiyon adını giriniz",
+      "objective": "Hedef",
+      "objectivePlaceholder": "Hedef seçiniz",
+      "assignee": "Atanan Kişi",
+      "assigneePlaceholder": "Atanan kişi seçiniz",
+      "progress": "İlerleme"
+    }
+  },
+  "validation": {
+    "minChars": "En az 3 karakter giriniz",
+    "ownerRequired": "Hedef sahibi zorunludur",
+    "sourceRequired": "Kaynak zorunludur",
+    "statusRequired": "Durum zorunludur",
+    "startDateRequired": "Başlangıç tarihi zorunludur",
+    "endDateRequired": "Bitiş tarihi zorunludur",
+    "actionNameRequired": "Aksiyon adı zorunludur",
+    "assigneeRequired": "Atanan kişi zorunludur",
+    "objectiveRequired": "Hedef seçiniz"
+  },
+  "toast": {
+    "objectiveCreated": "Hedef oluşturuldu",
+    "objectiveUpdated": "Hedef güncellendi",
+    "objectiveDeleted": "Hedef silindi",
+    "actionCreated": "Aksiyon oluşturuldu",
+    "actionUpdated": "Aksiyon güncellendi",
+    "actionDeleted": "Aksiyon silindi",
+    "createdSuccessfully": "başarıyla oluşturuldu",
+    "updatedSuccessfully": "başarıyla güncellendi",
+    "operationFailed": "İşlem başarısız",
+    "unexpectedError": "Beklenmeyen bir hata oluştu.",
+    "permissionsSaved": "Yetki ayarları kaydedildi",
+    "resetToDefaults": "Varsayılan ayarlara geri dönüldü"
+  },
+  "workspace": {
+    "welcome": "Hoş geldin",
+    "goodMorning": "Günaydın",
+    "goodAfternoon": "İyi günler",
+    "goodEvening": "İyi akşamlar",
+    "myObjectives": "Hedeflerim",
+    "myActions": "Aksiyonlarım",
+    "completed": "Tamamlanan",
+    "delayedOrRisky": "Geciken / Riskli",
+    "upcomingDates": "Yaklaşan Tarihler",
+    "actionStatus": "Aksiyon Durumu",
+    "individualProgress": "Bireysel İlerleme",
+    "objectivesCount": "hedefiniz var",
+    "actionsCompleted": "aksiyon tamamlandı",
+    "actionsNeedAttention": "aksiyon dikkat gerektiriyor",
+    "leader": "Lider",
+    "participant": "Katılımcı",
+    "today": "Bugün",
+    "andMore": "ve {{count}} daha...",
+    "noDeadlines": "Yaklaşan deadline yok",
+    "deadlineCount": "{{count}} yaklaşan deadline",
+    "noObjectives": "Atanmış hedef yok",
+    "moreObjectives": "ve {{count}} hedef daha →",
+    "noActions": "Henüz aksiyon yok",
+    "overall": "Genel",
+    "personalKPI": "Bireysel Performans",
+    "avgProgress": "ort. ilerleme",
+    "onTrackActions": "Yolunda",
+    "notStarted": "başlanmadı",
+    "lateOrRisk": "Geciken / Riskli",
+    "late": "geciken",
+    "atRisk": "riskli",
+    "sourceDistribution": "Kaynak Dağılımı",
+    "objectiveProgress": "Hedef İlerlemesi",
+    "actionProgress": "Aksiyon İlerlemesi",
+    "statusDistribution": "Durum Dağılımı"
+  },
+  "login": {
+    "welcome": "Hoş Geldiniz",
+    "selectUser": "Devam etmek için kullanıcı seçin",
+    "login": "Giriş Yap",
+    "strategicManagement": "Stratejik Yönetim",
+    "platform": "Platformu",
+    "heroDescription": "Kurumsal hedeflerinizi takip edin, aksiyonlarınızı yönetin, ekibinizle birlikte stratejik kararlar alın.",
+    "strategicPlanning": "Stratejik Planlama",
+    "strategicPlanningDesc": "Hedef ve aksiyon yönetimi",
+    "kpiDashboard": "KPI Dashboard",
+    "kpiDashboardDesc": "Gerçek zamanlı metrikler",
+    "teamManagement": "Stratejik Görünümler",
+    "teamManagementDesc": "Gantt, WBS ve Strateji Haritası",
+    "corporateSecurity": "Kurumsal Güvenlik",
+    "corporateSecurityDesc": "Microsoft Entra ID ile SSO",
+    "demoMode": "Demo modu aktif. Azure AD yapılandırıldığında kurumsal SSO ile giriş yapılacaktır."
+  },
+  "dashboard": {
+    "title": "KPI Dashboard",
+    "overallProgress": "Genel İlerleme",
+    "sourceDistribution": "Kaynak Bazlı Aksiyon Dağılımı",
+    "sourceSubtitle": "Türkiye, Kurumsal ve International operasyonları",
+    "completed": "Tamamlanan",
+    "inProgress": "Devam Eden",
+    "pending": "Bekleyen",
+    "objectiveStatusBreakdown": "Hedef Durum Dağılımı",
+    "recentActivities": "Son Aktiviteler",
+    "summaryGood": "{{count}} aktif hedef yolunda ilerliyor. Aksiyon tamamlanma oranı %{{rate}}.",
+    "summaryWarning": "{{activeCount}} aktif hedef takipte, {{delayedCount}} aksiyon dikkat gerektiriyor. Genel tamamlanma %{{rate}}."
+  },
+  "security": {
+    "pageAccess": "Sayfa Erişimi",
+    "dataOperations": "Veri İşlemleri",
+    "customRules": "Özel Kurallar",
+    "create": "Oluştur",
+    "edit": "Düzenle",
+    "delete": "Sil",
+    "editOwnRecordsOnly": "Sadece Kendi Kayıtlarını Düzenle",
+    "viewOwnDataOnly": "Sadece Kendi Verilerini Görsün",
+    "resetToDefaults": "Varsayılanlara Sıfırla",
+    "deleteRulesTitle": "Tyro Silme Kuralları",
+    "deleteRuleObjective": "Alt aksiyonu olan hedefler silinemez — önce aksiyonlar silinmelidir",
+    "deleteRulesNote": "Bu kurallar yetki ayarlarından bağımsız olarak her zaman geçerlidir",
+    "fullAccess": "Tüm sisteme tam erişim",
+    "ownObjectivesAndActions": "Kendi hedefleri ve aksiyonları",
+    "assignedActionsOnly": "Sadece atanmış aksiyonlar"
+  },
+  "profile": {
+    "title": "Profil",
+    "language": "Dil",
+    "turkish": "Türkçe",
+    "english": "English",
+    "fullName": "Ad Soyad",
+    "titleLabel": "Ünvan",
+    "email": "E-posta",
+    "department": "Departman",
+    "selectDepartment": "Departman seçiniz",
+    "authRole": "Yetki Rolü",
+    "selectRole": "Rol seçiniz",
+    "totalObjectives": "Toplam Hedef",
+    "activeActions": "Aktif Aksiyon",
+    "completedLabel": "Tamamlanan"
+  },
+  "settings": {
+    "title": "Ayarlar",
+    "general": "Genel",
+    "appName": "Uygulama Adı",
+    "notifications": "Bildirimler",
+    "emailNotifications": "E-posta Bildirimleri",
+    "emailNotificationsDesc": "Önemli güncellemeler için e-posta alın",
+    "browserNotifications": "Tarayıcı Bildirimleri",
+    "browserNotificationsDesc": "Anlık bildirimler için tarayıcı izni verin",
+    "integration": "Entegrasyon",
+    "azureAdStatus": "Azure AD Durumu",
+    "demoMode": "Demo Modu",
+    "dataverseConnection": "Dataverse Bağlantısı",
+    "notConfigured": "Yapılandırılmadı",
+    "about": "Hakkında",
+    "version": "Versiyon"
+  },
+  "users": {
+    "title": "Kullanıcılar"
+  },
+  "grid": {
+    "toggleColumns": "Kolonu göster/gizle",
+    "selected": "Seçili",
+    "records": "kayıt",
+    "perPage": "Sayfa başına",
+    "showing": "Gösterilen",
+    "deleteConfirm": "Bu kaydı silmek istediğinize emin misiniz?"
+  },
+  "confirm": {
+    "deleteObjective": "Bu hedefi silmek istediğinize emin misiniz? Bu işlem geri alınamaz.",
+    "deleteAction": "Bu aksiyonu silmek istediğinize emin misiniz? Bu işlem geri alınamaz.",
+    "confirm": "Onayla",
+    "cancel": "İptal"
+  },
+  "search": {
+    "placeholder": "Komut veya sayfa ara...",
+    "pages": "Sayfalar",
+    "objectives": "Hedefler",
+    "actions": "Aksiyonlar",
+    "navigate": "gezin",
+    "open": "aç",
+    "close": "kapat"
+  },
+  "dates": {
+    "daysLate": "g gecikmiş",
+    "daysLeft": "g kaldı",
+    "day": "gün",
+    "late": "gecikmiş"
+  },
+  "footer": {
+    "poweredBy": "Powered by",
+    "allRightsReserved": "Tüm hakları saklıdır"
+  },
+  "detail": {
+    "backToObjective": "Hedef Detayına Dön",
+    "addObjective": "Hedef Ekle",
+    "addAction": "Aksiyon Ekle",
+    "objectiveDetail": "Hedef Detayı",
+    "actionDetail": "Aksiyon Detayı",
+    "editObjective": "Hedef Düzenle",
+    "editAction": "Aksiyon Düzenle",
+    "noActionsYet": "Henüz aksiyon eklenmemiş.",
+    "parentObjective": "Ana Hedef",
+    "relatedObjectives": "İlişkili Hedefler"
+  },
+  "karargah": {
+    "tablo": "Tablo"
+  },
+  "tAlignment": {
+    "horizontal": "Yatay",
+    "vertical": "Dikey",
+    "autoLayout": "Otomatik Yerleştir",
+    "fitView": "Sığdır",
+    "parentObjective": "Ana Hedef",
+    "childObjective": "Alt Hedef",
+    "standalone": "Bağımsız",
+    "actions": "aksiyon"
+  },
+  "wizard": {
+    "title": "Hedef-Aksiyon Sihirbazı",
+    "triggerButton": "Hedef Oluştur",
+    "step1Title": "Hedef Bilgileri",
+    "step2Title": "Sahiplik & Tarihler",
+    "step3Title": "Aksiyonlar",
+    "step4Title": "Özet & Onay",
+    "next": "Devam",
+    "back": "Geri",
+    "submit": "Oluştur",
+    "addAction": "Aksiyon Ekle",
+    "removeAction": "Aksiyonu Kaldır",
+    "minOneAction": "En az bir aksiyon eklemelisiniz",
+    "successTitle": "Hedef Başarıyla Oluşturuldu!",
+    "successActions": "{{count}} aksiyon eklendi",
+    "goToWorkspace": "Karargah'a Dön",
+    "goToDetail": "Detaya Git",
+    "reviewHedef": "Hedef Özeti",
+    "reviewAksiyonlar": "Aksiyonlar Özeti",
+    "actionNumber": "Aksiyon {{number}}"
+  }
+}
