@@ -7,7 +7,7 @@ interface AuthGuardProps {
   children: ReactNode;
 }
 
-const isMockAuth = import.meta.env.VITE_MOCK_AUTH === "true";
+const isMockAuth = import.meta.env.VITE_MOCK_AUTH === "true" || !import.meta.env.VITE_AZURE_CLIENT_ID;
 
 export function AuthGuard({ children }: AuthGuardProps) {
   const isAuthenticated = useIsAuthenticated();

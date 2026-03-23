@@ -26,29 +26,32 @@ if (savedTheme === "dark") {
 }
 
 // MSAL instance OUTSIDE component tree
+const hasRealAuth = !!import.meta.env.VITE_AZURE_CLIENT_ID;
 const msalInstance = new PublicClientApplication(msalConfig);
 
-msalInstance.addEventCallback((event) => {
-  if (
-    event.eventType === EventType.LOGIN_SUCCESS &&
-    (event.payload as AuthenticationResult)?.account
-  ) {
-    msalInstance.setActiveAccount(
-      (event.payload as AuthenticationResult).account
-    );
-  }
-});
+if (hasRealAuth) {
+  msalInstance.addEventCallback((event) => {
+    if (
+      event.eventType === EventType.LOGIN_SUCCESS &&
+      (event.payload as AuthenticationResult)?.account
+    ) {
+      msalInstance.setActiveAccount(
+        (event.payload as AuthenticationResult).account
+      );
+    }
+  });
 
-msalInstance.initialize().then(() => {
-  msalInstance
-    .handleRedirectPromise()
-    .then((response) => {
-      if (response?.account) {
-        msalInstance.setActiveAccount(response.account);
-      }
-    })
-    .catch(console.error);
-});
+  msalInstance.initialize().then(() => {
+    msalInstance
+      .handleRedirectPromise()
+      .then((response) => {
+        if (response?.account) {
+          msalInstance.setActiveAccount(response.account);
+        }
+      })
+      .catch(console.error);
+  });
+}
 
 const queryClient = new QueryClient({
   defaultOptions: {
