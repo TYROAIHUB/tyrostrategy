@@ -25,7 +25,7 @@ export default function OfflineBanner() {
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: -40, opacity: 0 }}
           transition={{ duration: 0.2 }}
-          className="fixed top-0 left-0 right-0 z-[100] flex items-center justify-center gap-2 py-2 bg-tyro-warning text-white text-sm font-medium shadow-lg"
+          className="fixed top-0 left-0 right-0 z-[90] flex items-center justify-center gap-2 py-2 bg-tyro-warning text-white text-sm font-medium shadow-lg"
         >
           <WifiOff size={16} />
           <span>Internet bağlantınız kesildi. Bazı özellikler çalışmayabilir.</span>

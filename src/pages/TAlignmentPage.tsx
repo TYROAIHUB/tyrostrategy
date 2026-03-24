@@ -137,7 +137,7 @@ function AlignmentNode({ data }: NodeProps<Node<AlignmentNodeData>>) {
       {/* Source + Status */}
       <div className="flex items-center gap-2 mt-1">
         <span
-          className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full"
+          className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full"
           style={{
             backgroundColor: isParent ? "rgba(255,255,255,0.2)" : sc.bg,
             color: isParent ? "#fff" : sc.text,
@@ -146,7 +146,7 @@ function AlignmentNode({ data }: NodeProps<Node<AlignmentNodeData>>) {
           {hedef.source}
         </span>
         <span
-          className="text-[9px] font-semibold flex items-center gap-1"
+          className="text-[10px] font-semibold flex items-center gap-1"
           style={{ color: isParent ? "rgba(255,255,255,0.8)" : "#64748b" }}
         >
           <span
@@ -181,7 +181,7 @@ function AlignmentNode({ data }: NodeProps<Node<AlignmentNodeData>>) {
 
       {/* Action count */}
       <div
-        className="text-[9px] font-medium mt-1"
+        className="text-[10px] font-medium mt-1"
         style={{ color: isParent ? "rgba(255,255,255,0.6)" : "#94a3b8" }}
       >
         {actionCount} {t("tAlignment.actions")}

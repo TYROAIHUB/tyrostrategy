@@ -90,7 +90,7 @@ export default function MyProgressWidget() {
                 <span className="text-[20px] font-extrabold tabular-nums text-tyro-text-primary leading-none">
                   {rings[hoveredRing].progress}%
                 </span>
-                <span className="text-[9px] font-semibold text-tyro-text-muted mt-1">
+                <span className="text-[10px] font-semibold text-tyro-text-muted mt-1">
                   {rings[hoveredRing].label}
                 </span>
               </motion.div>
@@ -106,7 +106,7 @@ export default function MyProgressWidget() {
                 <span className="text-[18px] font-extrabold tabular-nums text-tyro-text-primary leading-none">
                   {ws.overallProgress}%
                 </span>
-                <span className="text-[8px] font-semibold text-tyro-text-muted mt-1 uppercase tracking-wider">
+                <span className="text-[10px] font-semibold text-tyro-text-muted mt-1 uppercase tracking-wider">
                   {t("workspace.overall")}
                 </span>
               </motion.div>

@@ -125,7 +125,7 @@ export default function ToastContainer() {
   const toasts = useToastStore((s) => s.toasts);
 
   return (
-    <div className="fixed top-4 right-4 z-[9999] flex flex-col gap-2.5 pointer-events-none">
+    <div className="fixed top-4 right-4 z-[80] flex flex-col gap-2.5 pointer-events-none">
       <AnimatePresence mode="popLayout">
         {toasts.map((t) => (
           <ToastItem key={t.id} toast={t} />

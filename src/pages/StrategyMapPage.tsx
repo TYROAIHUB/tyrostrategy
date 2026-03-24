@@ -234,7 +234,7 @@ function ActionNode({ name, progress, status, onClick }: { name: string; progres
               style={{ width: `${progress}%` }}
             />
           </div>
-          <span className="text-[8px] font-bold tabular-nums text-tyro-text-muted">%{progress}</span>
+          <span className="text-[10px] font-bold tabular-nums text-tyro-text-muted">%{progress}</span>
         </div>
       </div>
     </div>

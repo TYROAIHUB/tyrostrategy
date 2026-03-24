@@ -49,7 +49,7 @@ export default function SlidingPanel({
         <>
           {/* Backdrop */}
           <motion.div
-            className="fixed top-0 left-0 z-40 h-screen w-screen bg-black/15 backdrop-blur-[2px]"
+            className="fixed top-0 left-0 z-[60] h-screen w-screen bg-black/15 backdrop-blur-[2px]"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -58,7 +58,7 @@ export default function SlidingPanel({
 
           {/* Panel — full-screen on mobile, capped width on desktop */}
           <motion.div
-            className="fixed top-0 right-0 z-50 h-screen w-full flex flex-col bg-tyro-surface shadow-tyro-lg border-l border-tyro-border sm:rounded-l-[20px] overflow-hidden"
+            className="fixed top-0 right-0 z-[70] h-screen w-full flex flex-col bg-tyro-surface shadow-tyro-lg border-l border-tyro-border sm:rounded-l-[20px] overflow-hidden"
             style={{ maxWidth: `min(100vw, ${maxWidth}px)` }}
             initial={{ x: "100%" }}
             animate={{ x: 0 }}

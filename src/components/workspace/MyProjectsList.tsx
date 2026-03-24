@@ -36,7 +36,7 @@ function RadialGauge({ value, total, avgProgress: _avgProgress, color }: { value
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
         <span className="text-[14px] font-extrabold tabular-nums text-tyro-text-primary leading-none">{value}</span>
-        <span className="text-[8px] text-tyro-text-muted">/ {total}</span>
+        <span className="text-[10px] text-tyro-text-muted">/ {total}</span>
       </div>
     </div>
   );
@@ -104,7 +104,7 @@ function ProgressCard({ item, onClick, showParent }: {
             strokeLinecap="round"
           />
         </svg>
-        <span className="absolute inset-0 flex items-center justify-center text-[9px] font-bold tabular-nums" style={{ color: pColor }}>
+        <span className="absolute inset-0 flex items-center justify-center text-[10px] font-bold tabular-nums" style={{ color: pColor }}>
           {item.progress}
         </span>
       </div>
@@ -112,7 +112,7 @@ function ProgressCard({ item, onClick, showParent }: {
       {/* Info */}
       <div className="min-w-0 flex-1">
         {showParent && item.parentName && (
-          <p className="text-[9px] font-medium text-tyro-navy/40 truncate leading-tight mb-0.5">{item.parentName}</p>
+          <p className="text-[10px] font-medium text-tyro-navy/40 truncate leading-tight mb-0.5">{item.parentName}</p>
         )}
         <p className="text-[12px] font-semibold text-tyro-text-primary truncate group-hover:text-tyro-navy transition-colors leading-snug">{item.name}</p>
         <div className="flex items-center gap-2 mt-0.5">
@@ -124,7 +124,7 @@ function ProgressCard({ item, onClick, showParent }: {
             <span className="text-[10px] text-tyro-text-muted">{formatDate(item.endDate)}</span>
           )}
           {item.aksiyonCount !== undefined && (
-            <span className="text-[9px] text-tyro-text-muted">{item.aksiyonCount} aks.</span>
+            <span className="text-[10px] text-tyro-text-muted">{item.aksiyonCount} aks.</span>
           )}
         </div>
       </div>

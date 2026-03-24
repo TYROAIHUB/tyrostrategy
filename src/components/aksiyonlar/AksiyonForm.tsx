@@ -321,7 +321,7 @@ export default function AksiyonForm({ aksiyon, defaultHedefId, onSuccess }: Aksi
               <label className="text-[11px] font-semibold text-tyro-text-secondary">
                 {t("forms.objective.status")}<span className="text-tyro-danger ml-0.5">*</span>
                 {isStatusLocked && (
-                  <span className="ml-1.5 text-[9px] text-tyro-text-muted font-normal">(otomatik)</span>
+                  <span className="ml-1.5 text-[10px] text-tyro-text-muted font-normal">(otomatik)</span>
                 )}
               </label>
               {field.value && <StatusBadge status={field.value as EntityStatus} />}

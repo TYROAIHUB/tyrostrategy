@@ -114,7 +114,7 @@ function MasterListCard({
         {/* Row 2: Owner + Source badge */}
         <div className="flex items-center gap-1.5 mb-0.5">
           <span className="text-[10px] text-tyro-text-muted truncate">{hedef.owner}</span>
-          <span className="text-[9px] px-1.5 py-0.5 rounded bg-tyro-border/20 text-tyro-text-muted font-medium shrink-0">
+          <span className="text-[10px] px-1.5 py-0.5 rounded bg-tyro-border/20 text-tyro-text-muted font-medium shrink-0">
             {hedef.source}
           </span>
         </div>
@@ -125,13 +125,14 @@ function MasterListCard({
         </span>
 
         {/* Expand toggle */}
-        <button
-          type="button"
+        <div
+          role="button"
+          tabIndex={-1}
           onClick={(e) => { e.stopPropagation(); setExpanded((v) => !v); }}
           className="w-full flex items-center justify-center gap-1 mt-1 py-0.5 text-tyro-text-muted hover:text-tyro-gold transition-colors cursor-pointer"
         >
           <ChevronDown size={11} className={`transition-transform duration-200 ${expanded ? "rotate-180" : ""}`} />
-        </button>
+        </div>
 
         {/* Expanded details */}
         <AnimatePresence>
@@ -145,24 +146,24 @@ function MasterListCard({
             >
               <div className="pt-2 mt-1 border-t border-tyro-border/15 grid grid-cols-2 gap-x-3 gap-y-1.5">
                 <div>
-                  <span className="text-[8px] uppercase tracking-wider text-tyro-text-muted/60 block">{t("common.department", "Departman")}</span>
+                  <span className="text-[10px] uppercase tracking-wider text-tyro-text-muted/60 block">{t("common.department", "Departman")}</span>
                   <span className="text-[10px] text-tyro-text-secondary font-medium">{hedef.department || "—"}</span>
                 </div>
                 <div>
-                  <span className="text-[8px] uppercase tracking-wider text-tyro-text-muted/60 block">{t("forms.objective.reviewDate", "Kontrol")}</span>
+                  <span className="text-[10px] uppercase tracking-wider text-tyro-text-muted/60 block">{t("forms.objective.reviewDate", "Kontrol")}</span>
                   <span className="text-[10px] text-tyro-text-secondary font-medium">{hedef.reviewDate ? formatDate(hedef.reviewDate) : "—"}</span>
                 </div>
                 <div>
-                  <span className="text-[8px] uppercase tracking-wider text-tyro-text-muted/60 block">{t("nav.actions", "Aksiyonlar")}</span>
+                  <span className="text-[10px] uppercase tracking-wider text-tyro-text-muted/60 block">{t("nav.actions", "Aksiyonlar")}</span>
                   <span className="text-[10px] text-tyro-text-secondary font-medium">{aksiyonCount} aksiyon</span>
                 </div>
                 <div>
-                  <span className="text-[8px] uppercase tracking-wider text-tyro-text-muted/60 block">{t("common.status", "Durum")}</span>
+                  <span className="text-[10px] uppercase tracking-wider text-tyro-text-muted/60 block">{t("common.status", "Durum")}</span>
                   <StatusBadge status={hedef.status} showTooltip={false} />
                 </div>
                 {hedef.tags && hedef.tags.length > 0 && (
                   <div className="col-span-2">
-                    <span className="text-[8px] uppercase tracking-wider text-tyro-text-muted/60 block mb-0.5">{t("forms.objective.tags", "Etiketler")}</span>
+                    <span className="text-[10px] uppercase tracking-wider text-tyro-text-muted/60 block mb-0.5">{t("forms.objective.tags", "Etiketler")}</span>
                     <div className="flex flex-wrap gap-1">
                       {hedef.tags.map((tag) => (
                         <TagChip key={tag} name={tag} size="sm" />
@@ -210,7 +211,7 @@ function QuickProgressButtons({
             key={step}
             type="button"
             onClick={(e) => { e.stopPropagation(); onChange(step); }}
-            className={`relative min-w-[34px] h-[24px] rounded-lg text-[9px] font-bold tabular-nums cursor-pointer transition-all ${
+            className={`relative min-w-[34px] h-[24px] rounded-lg text-[10px] font-bold tabular-nums cursor-pointer transition-all ${
               isExact
                 ? chipBg(step, true) + " scale-110"
                 : isPassed
@@ -359,14 +360,14 @@ function DetailPanel({
               {/* Parent Objective */}
               {parentHedefName && (
                 <div className="border-t border-tyro-border/15 px-3 py-2">
-                  <span className="text-[9px] uppercase tracking-wider text-tyro-text-muted/60 block mb-0.5">{t("forms.objective.parentObjective", "Ana Hedef")}</span>
+                  <span className="text-[10px] uppercase tracking-wider text-tyro-text-muted/60 block mb-0.5">{t("forms.objective.parentObjective", "Ana Hedef")}</span>
                   <p className="text-[11px] text-tyro-text-primary font-medium">{parentHedefName}</p>
                 </div>
               )}
               {/* Participants */}
               {hedef.participants && hedef.participants.length > 0 && (
                 <div className="border-t border-tyro-border/15 px-3 py-2">
-                  <span className="text-[9px] uppercase tracking-wider text-tyro-text-muted/60 block mb-1">{t("forms.objective.participants", "Katılımcılar")}</span>
+                  <span className="text-[10px] uppercase tracking-wider text-tyro-text-muted/60 block mb-1">{t("forms.objective.participants", "Katılımcılar")}</span>
                   <p className="text-[11px] text-tyro-text-secondary">{hedef.participants.join(", ")}</p>
                 </div>
               )}
@@ -376,7 +377,7 @@ function DetailPanel({
                 <div className="border-t border-tyro-border/15 px-3 py-2 flex gap-4">
                   {hedef.createdBy && (
                     <div>
-                      <span className="text-[9px] uppercase tracking-wider text-tyro-text-muted/60 block">{t("common.createdBy", "Oluşturan")}</span>
+                      <span className="text-[10px] uppercase tracking-wider text-tyro-text-muted/60 block">{t("common.createdBy", "Oluşturan")}</span>
                       <span className="text-[10px] text-tyro-text-secondary">{hedef.createdBy}{hedef.createdAt ? ` · ${formatDate(hedef.createdAt)}` : ""}</span>
                     </div>
                   )}

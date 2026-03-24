@@ -608,7 +608,7 @@ function KanbanView({
                     {/* Owner */}
                     <div className="flex items-center gap-1.5 mt-2">
                       <div className="w-5 h-5 rounded-full bg-tyro-navy/10 flex items-center justify-center">
-                        <span className="text-[9px] font-bold text-tyro-navy">
+                        <span className="text-[10px] font-bold text-tyro-navy">
                           {aksiyon.owner
                             .split(" ")
                             .map((w) => w[0])
@@ -918,11 +918,11 @@ function GanttView({
                       <div className="shrink-0 flex items-center gap-2 px-2" style={{ width: LABEL_COL_W }}>
                         <span className="w-2 h-2 rounded-full shrink-0 mt-1" style={{ backgroundColor: color }} />
                         <div className="flex flex-col truncate flex-1 leading-tight" title={`${hedefler.find((h) => h.id === task.hedefId)?.name ?? ""} \u203A ${task.name}`}>
-                          <span className="text-[9px] text-tyro-text-muted truncate">{hedefler.find((h) => h.id === task.hedefId)?.name}</span>
+                          <span className="text-[10px] text-tyro-text-muted truncate">{hedefler.find((h) => h.id === task.hedefId)?.name}</span>
                           <span className="text-[11px] text-tyro-text-secondary truncate">{task.name}</span>
                         </div>
                         {isClipped && (
-                          <span className="text-[9px] font-bold text-tyro-text-muted bg-tyro-bg px-1.5 py-0.5 rounded shrink-0">
+                          <span className="text-[10px] font-bold text-tyro-text-muted bg-tyro-bg px-1.5 py-0.5 rounded shrink-0">
                             {clippedYear}\u203A
                           </span>
                         )}
@@ -959,7 +959,7 @@ function GanttView({
                             style={{ width: `${100 - task.progress}%` }}
                           />
                           {width > 4 && (
-                            <span className="relative z-10 px-2 text-[9px] font-bold text-white truncate">
+                            <span className="relative z-10 px-2 text-[10px] font-bold text-white truncate">
                               %{task.progress}
                             </span>
                           )}

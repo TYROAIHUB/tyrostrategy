@@ -74,8 +74,8 @@ function DeadlineRow({ item, onClick, showExpand, t }: DeadlineRowProps) {
         {/* Content */}
         <div className="flex-1 min-w-0 overflow-hidden">
           <div className="flex items-center gap-1.5 mb-0.5">
-            <span className={`text-[8px] sm:text-[9px] font-bold uppercase tracking-wider ${tc.color}`}>{tc.label}</span>
-            <span className={`text-[8px] sm:text-[9px] font-bold px-1 sm:px-1.5 py-0.5 rounded-full ${urg.bg} ${urg.color}`}>
+            <span className={`text-[10px] sm:text-[10px] font-bold uppercase tracking-wider ${tc.color}`}>{tc.label}</span>
+            <span className={`text-[10px] sm:text-[10px] font-bold px-1 sm:px-1.5 py-0.5 rounded-full ${urg.bg} ${urg.color}`}>
               {urg.text}
             </span>
           </div>
@@ -90,10 +90,10 @@ function DeadlineRow({ item, onClick, showExpand, t }: DeadlineRowProps) {
                 style={{ width: `${item.progress}%`, backgroundColor: pColor }}
               />
             </div>
-            <span className="text-[9px] sm:text-[10px] font-bold tabular-nums" style={{ color: pColor }}>
+            <span className="text-[10px] sm:text-[10px] font-bold tabular-nums" style={{ color: pColor }}>
               %{item.progress}
             </span>
-            <span className="text-[9px] sm:text-[10px] text-tyro-text-muted">
+            <span className="text-[10px] sm:text-[10px] text-tyro-text-muted">
               {new Date(item.endDate).toLocaleDateString("tr-TR", { day: "2-digit", month: "short" })}
             </span>
           </div>
@@ -110,15 +110,15 @@ function DeadlineRow({ item, onClick, showExpand, t }: DeadlineRowProps) {
             return (
               <div key={i} className="flex items-center gap-2 py-1.5 sm:py-2">
                 <p className="text-[10px] sm:text-[11px] font-medium text-tyro-text-secondary truncate flex-1 min-w-0">{child.name}</p>
-                <span className="text-[9px] font-bold tabular-nums shrink-0 w-7 text-right" style={{ color: cPColor }}>%{child.progress}</span>
-                <span className={`hidden sm:inline text-[9px] font-semibold px-1.5 py-0.5 rounded-full ${cUrg.bg} ${cUrg.color} shrink-0`}>
+                <span className="text-[10px] font-bold tabular-nums shrink-0 w-7 text-right" style={{ color: cPColor }}>%{child.progress}</span>
+                <span className={`hidden sm:inline text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${cUrg.bg} ${cUrg.color} shrink-0`}>
                   {cUrg.text}
                 </span>
               </div>
             );
           })}
           {children.length > 5 && (
-            <p className="text-[9px] text-tyro-text-muted pt-0.5">
+            <p className="text-[10px] text-tyro-text-muted pt-0.5">
               {(t as any)("workspace.andMore", { count: children.length - 5 })}
             </p>
           )}

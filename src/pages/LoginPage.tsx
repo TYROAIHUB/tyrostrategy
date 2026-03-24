@@ -291,7 +291,7 @@ export default function LoginPage() {
                   <div className="w-10 h-10 rounded-xl bg-white/10 backdrop-blur-sm flex items-center justify-center">
                     <f.icon size={16} className="text-tyro-gold" />
                   </div>
-                  <span className="text-[9px] text-white/50 font-medium text-center leading-tight max-w-[64px]">
+                  <span className="text-[10px] text-white/50 font-medium text-center leading-tight max-w-[64px]">
                     {f.title}
                   </span>
                 </div>

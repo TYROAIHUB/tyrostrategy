@@ -84,7 +84,7 @@ export default function MultiRingWidget() {
                 <span className="text-[18px] font-extrabold tabular-nums text-tyro-text-primary leading-none">
                   {rings[hoveredRing].progress}%
                 </span>
-                <span className="text-[9px] font-semibold text-tyro-text-muted mt-0.5">
+                <span className="text-[10px] font-semibold text-tyro-text-muted mt-0.5">
                   {rings[hoveredRing].label}
                 </span>
               </motion.div>

@@ -354,7 +354,7 @@ function SidebarContent({ collapsed, onNavigate, pinned, onTogglePin }: { collap
                         <div className="px-3 pt-1.5 pb-2">
                           {/* Sidebar-only themes */}
                           <p
-                            className="text-[9px] font-bold uppercase tracking-wider mb-1.5"
+                            className="text-[10px] font-bold uppercase tracking-wider mb-1.5"
                             style={{ color: "var(--sb-text-muted)" }}
                           >
                             {t("nav.sidebarTheme")}
@@ -398,7 +398,7 @@ function SidebarContent({ collapsed, onNavigate, pinned, onTogglePin }: { collap
 
                           {/* Full app themes */}
                           <p
-                            className="text-[9px] font-bold uppercase tracking-wider mb-1.5"
+                            className="text-[10px] font-bold uppercase tracking-wider mb-1.5"
                             style={{ color: "var(--sb-text-muted)" }}
                           >
                             {t("nav.appTheme")}
