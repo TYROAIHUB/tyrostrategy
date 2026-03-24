@@ -62,9 +62,11 @@ function MasterListCard({
   const offset = circumference - (hedef.progress / 100) * circumference;
 
   return (
-    <button
-      type="button"
+    <div
+      role="button"
+      tabIndex={0}
       onClick={onClick}
+      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onClick(); } }}
       className={`w-full text-left rounded-xl border transition-all duration-200 cursor-pointer group relative ${
         isSelected
           ? "bg-tyro-navy/[0.04] border-tyro-navy/20 shadow-[0_2px_8px_rgba(30,58,95,0.1)] translate-x-1"
@@ -176,7 +178,7 @@ function MasterListCard({
           )}
         </AnimatePresence>
       </div>
-    </button>
+    </div>
   );
 }
 
