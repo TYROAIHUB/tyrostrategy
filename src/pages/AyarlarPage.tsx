@@ -49,7 +49,7 @@ export default function AyarlarPage() {
       return;
     }
     addTagDefinition({ name: trimmed, color: newTagColor });
-    toast.success(t("settings.tagCreated"), `"${trimmed}" etiketi oluşturuldu.`);
+    toast.success(t("settings.tagCreated"), { message: trimmed });
     setNewTagName("");
     setNewTagColor(DEFAULT_TAG_COLOR);
   };
@@ -62,7 +62,7 @@ export default function AyarlarPage() {
     setConfirmMessage(msg);
     setConfirmAction(() => () => {
       deleteTagDefinition(id);
-      toast.success(t("settings.tagDeleted"), `"${name}" etiketi silindi.`);
+      toast.success(t("settings.tagDeleted"), { message: name });
     });
     setConfirmOpen(true);
   };
@@ -85,8 +85,12 @@ export default function AyarlarPage() {
       }
       renameTag(oldName, trimmed);
     }
-    const detail = trimmed !== oldName ? `"${oldName}" → "${trimmed}"` : `"${trimmed}" rengi güncellendi.`;
-    toast.success(t("settings.tagUpdated"), detail);
+    toast.success(t("settings.tagUpdated"), {
+      message: trimmed,
+      details: trimmed !== oldName
+        ? [{ label: "Eski Ad", value: oldName }, { label: "Yeni Ad", value: trimmed }]
+        : [{ label: "Değişiklik", value: "Renk güncellendi" }],
+    });
     setEditingId(null);
   };
 
@@ -253,7 +257,7 @@ export default function AyarlarPage() {
                       {tag.name}
                     </span>
                     {usageCount > 0 && (
-                      <span className="text-[10px] text-tyro-text-muted shrink-0">
+                      <span className="text-[11px] text-tyro-text-muted shrink-0">
                         {usageCount} hedef
                       </span>
                     )}
@@ -355,7 +359,7 @@ export default function AyarlarPage() {
             <div className="flex items-center gap-2">
               <Tag size={15} />
               <span>{t("settings.tagManagement")}</span>
-              <span className="ml-0.5 text-[10px] bg-tyro-gold/15 text-tyro-gold px-1.5 py-0.5 rounded-full font-bold">
+              <span className="ml-0.5 text-[11px] bg-tyro-gold/15 text-tyro-gold px-1.5 py-0.5 rounded-full font-bold">
                 {tagDefinitions.length}
               </span>
             </div>

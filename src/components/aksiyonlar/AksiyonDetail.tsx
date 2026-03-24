@@ -124,7 +124,7 @@ export default function AksiyonDetail({
       {/* Progress Bar */}
       <div className="rounded-xl bg-tyro-surface/60 border border-tyro-border/20 shadow-[0_1px_3px_rgba(0,0,0,0.04)] backdrop-blur-sm overflow-hidden p-3 mb-1">
         <div className="flex items-center justify-between mb-2">
-          <span className="text-[10px] font-medium uppercase tracking-wider text-tyro-text-muted/70">
+          <span className="text-[11px] font-medium uppercase tracking-wider text-tyro-text-muted">
             {t("common.progress")}
           </span>
           <span className="text-[13px] font-bold tabular-nums" style={{ color: progressColor(currentAksiyon.progress) }}>
@@ -145,7 +145,7 @@ export default function AksiyonDetail({
       {/* Info Grid */}
       <div className="rounded-xl bg-tyro-surface/60 border border-tyro-border/20 shadow-[0_1px_3px_rgba(0,0,0,0.04)] backdrop-blur-sm overflow-hidden divide-y divide-tyro-border/20">
         <div className="px-3 py-2.5">
-          <span className="text-[10px] font-medium uppercase tracking-wider text-tyro-text-muted/70 block mb-1">
+          <span className="text-[11px] font-medium uppercase tracking-wider text-tyro-text-muted block mb-1">
             {t("common.owner")}
           </span>
           <p className="text-[12px] font-medium text-tyro-text-primary">
@@ -154,7 +154,7 @@ export default function AksiyonDetail({
         </div>
         <div className="grid grid-cols-2 divide-x divide-tyro-border/20">
           <div className="px-3 py-2.5">
-            <span className="text-[10px] font-medium uppercase tracking-wider text-tyro-text-muted/70 block mb-1">
+            <span className="text-[11px] font-medium uppercase tracking-wider text-tyro-text-muted block mb-1">
               {t("common.startDate")}
             </span>
             <p className="text-[12px] font-medium text-tyro-text-primary">
@@ -162,7 +162,7 @@ export default function AksiyonDetail({
             </p>
           </div>
           <div className="px-3 py-2.5">
-            <span className="text-[10px] font-medium uppercase tracking-wider text-tyro-text-muted/70 block mb-1">
+            <span className="text-[11px] font-medium uppercase tracking-wider text-tyro-text-muted block mb-1">
               {t("common.endDate")}
             </span>
             <p className="text-[12px] font-medium text-tyro-text-primary">
@@ -174,7 +174,7 @@ export default function AksiyonDetail({
         {currentAksiyon.createdBy && (
           <div className="grid grid-cols-2 divide-x divide-tyro-border/20">
             <div className="px-3 py-2.5">
-              <span className="text-[10px] font-medium uppercase tracking-wider text-tyro-text-muted/70 block mb-1">
+              <span className="text-[11px] font-medium uppercase tracking-wider text-tyro-text-muted block mb-1">
                 {t("common.createdBy")}
               </span>
               <p className="text-[12px] font-medium text-tyro-text-primary">
@@ -182,7 +182,7 @@ export default function AksiyonDetail({
               </p>
             </div>
             <div className="px-3 py-2.5">
-              <span className="text-[10px] font-medium uppercase tracking-wider text-tyro-text-muted/70 block mb-1">
+              <span className="text-[11px] font-medium uppercase tracking-wider text-tyro-text-muted block mb-1">
                 {t("common.createdAt")}
               </span>
               <p className="text-[12px] font-medium text-tyro-text-primary">
@@ -194,7 +194,7 @@ export default function AksiyonDetail({
 
         {currentAksiyon.completedAt && (
           <div className="px-3 py-2.5">
-            <span className="text-[10px] font-medium uppercase tracking-wider text-tyro-text-muted/70 block mb-1">
+            <span className="text-[11px] font-medium uppercase tracking-wider text-tyro-text-muted block mb-1">
               {t("common.completedAt")}
             </span>
             <p className="text-[12px] font-medium text-tyro-success">

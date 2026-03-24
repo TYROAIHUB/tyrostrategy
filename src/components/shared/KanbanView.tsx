@@ -50,7 +50,7 @@ export default function KanbanView<T>({
               <span className="text-sm font-semibold text-tyro-text-primary">
                 {col.label}
               </span>
-              <span className="ml-auto flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-tyro-surface px-1.5 text-[10px] font-semibold text-tyro-text-muted">
+              <span className="ml-auto flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-tyro-surface px-1.5 text-[11px] font-semibold text-tyro-text-muted">
                 {colItems.length}
               </span>
             </div>

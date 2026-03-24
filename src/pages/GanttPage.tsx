@@ -243,7 +243,7 @@ export default function GanttPage() {
                 <div className="flex items-start gap-2 mb-2">
                   <span className="w-2.5 h-2.5 rounded-full shrink-0 mt-1" style={{ backgroundColor: color }} />
                   <div className="flex-1 min-w-0">
-                    <p className="text-[10px] font-medium text-tyro-text-muted truncate">{hedefler.find((h) => h.id === task.hedefId)?.name}</p>
+                    <p className="text-[11px] font-medium text-tyro-text-muted truncate">{hedefler.find((h) => h.id === task.hedefId)?.name}</p>
                     <p className="text-sm font-semibold text-tyro-text-primary leading-snug">{task.name}</p>
                     <p className="text-[11px] text-tyro-text-muted mt-0.5">
                       {new Date(task.startDate).toLocaleDateString(i18n.language === "en" ? "en-US" : "tr-TR", { day: "2-digit", month: "short", year: "numeric" })}
@@ -280,7 +280,7 @@ export default function GanttPage() {
                 {timeLabels.map((tl, i) => (
                   <span
                     key={i}
-                    className="absolute text-[10px] font-semibold text-tyro-text-muted whitespace-nowrap"
+                    className="absolute text-[11px] font-semibold text-tyro-text-muted whitespace-nowrap"
                     style={{ left: `${tl.pct}%`, bottom: 4 }}
                   >
                     {tl.label}
@@ -312,11 +312,11 @@ export default function GanttPage() {
                         style={{ backgroundColor: color }}
                       />
                       <div className="flex flex-col truncate flex-1 leading-tight" title={`${hedefler.find((h) => h.id === task.hedefId)?.name ?? ""} › ${task.name}`}>
-                        <span className="text-[10px] text-tyro-text-muted truncate">{hedefler.find((h) => h.id === task.hedefId)?.name}</span>
+                        <span className="text-[11px] text-tyro-text-muted truncate">{hedefler.find((h) => h.id === task.hedefId)?.name}</span>
                         <span className="text-[11px] text-tyro-text-secondary truncate">{task.name}</span>
                       </div>
                       {isClipped && (
-                        <span className="text-[10px] font-bold text-tyro-text-muted bg-tyro-bg px-1.5 py-0.5 rounded shrink-0">
+                        <span className="text-[11px] font-bold text-tyro-text-muted bg-tyro-bg px-1.5 py-0.5 rounded shrink-0">
                           {clippedYear}›
                         </span>
                       )}
@@ -353,7 +353,7 @@ export default function GanttPage() {
                           style={{ width: `${100 - task.progress}%` }}
                         />
                         {width > 4 && (
-                          <span className="relative z-10 px-2 text-[10px] font-bold text-white truncate">
+                          <span className="relative z-10 px-2 text-[11px] font-bold text-white truncate">
                             %{task.progress}
                           </span>
                         )}

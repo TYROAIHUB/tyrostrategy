@@ -194,13 +194,13 @@ export default function AksiyonlarPage() {
         return (
           <div className="relative flex items-center gap-2 justify-center">
             <Tooltip content={t("common.detail")} size="sm">
-              <button className="text-lg text-default-400 cursor-pointer active:opacity-50" onClick={(e) => { e.stopPropagation(); setSelectedAksiyon(aksiyon); setPanelMode("detail"); }}>
+              <button className="text-lg text-tyro-text-muted cursor-pointer active:opacity-50" onClick={(e) => { e.stopPropagation(); setSelectedAksiyon(aksiyon); setPanelMode("detail"); }}>
                 <Eye size={16} />
               </button>
             </Tooltip>
             {canEditAksiyon(aksiyon.id) && (
             <Tooltip content={t("common.edit")} size="sm">
-              <button className="text-lg text-default-400 cursor-pointer active:opacity-50" onClick={(e) => { e.stopPropagation(); openEdit(aksiyon); }}>
+              <button className="text-lg text-tyro-text-muted cursor-pointer active:opacity-50" onClick={(e) => { e.stopPropagation(); openEdit(aksiyon); }}>
                 <Pencil size={16} />
               </button>
             </Tooltip>
@@ -223,7 +223,7 @@ export default function AksiyonlarPage() {
   const topContent = useMemo(() => (
     <div className={`flex items-center justify-between${selectedKeys.size > 0 ? " sticky top-14 lg:top-0 z-20 bg-tyro-bg/95 backdrop-blur-sm py-2 -mx-1 px-1 rounded-lg" : ""}`}>
       <div className="flex items-center gap-3">
-        <span className="text-default-400 text-xs">{filtered.length} {t("grid.records")}</span>
+        <span className="text-tyro-text-muted text-xs">{filtered.length} {t("grid.records")}</span>
         {selectedKeys.size > 0 && (
           <>
             <span className="text-xs font-semibold text-tyro-navy">
@@ -243,10 +243,10 @@ export default function AksiyonlarPage() {
           </>
         )}
       </div>
-      <label className="flex items-center gap-1 text-default-400 text-xs">
+      <label className="flex items-center gap-1 text-tyro-text-muted text-xs">
         {t("grid.perPage")}:
         <select
-          className="bg-transparent outline-none focus-visible:ring-2 focus-visible:ring-tyro-navy/30 rounded text-default-400 text-xs cursor-pointer"
+          className="bg-transparent outline-none focus-visible:ring-2 focus-visible:ring-tyro-navy/30 rounded text-tyro-text-muted text-xs cursor-pointer"
           value={rowsPerPage}
           onChange={(e) => { setRowsPerPage(Number(e.target.value)); setPage(1); }}
         >
@@ -271,7 +271,7 @@ export default function AksiyonlarPage() {
         classNames={{ cursor: "bg-tyro-navy", base: "overflow-x-auto" }}
         style={{ "--heroui-primary": hexToHSL(sidebarTheme.accentColor), "--heroui-primary-foreground": "0 0% 100%" } as React.CSSProperties}
       />
-      <span className="text-xs text-default-400 shrink-0">
+      <span className="text-xs text-tyro-text-muted shrink-0">
         {sorted.length > 0 ? `${(page - 1) * rowsPerPage + 1} - ${Math.min(page * rowsPerPage, sorted.length)} / ${sorted.length}` : "0 / 0"}
       </span>
     </div>
@@ -289,7 +289,7 @@ export default function AksiyonlarPage() {
           aria-label={t("common.search")}
           placeholder={t("common.search")}
           size="sm"
-          startContent={<Search size={16} className="text-default-300" />}
+          startContent={<Search size={16} className="text-tyro-text-muted" />}
           value={search}
           variant="bordered"
           onClear={() => setSearch("")}
@@ -460,7 +460,7 @@ export default function AksiyonlarPage() {
                 <div className="flex-1 h-1.5 rounded-full bg-default-100 overflow-hidden">
                   <div className="h-full rounded-full transition-all duration-500" style={{ width: `${a.progress}%`, background: progressColor(a.progress) }} />
                 </div>
-                <span className="text-[10px] font-medium text-tyro-text-secondary">%{a.progress}</span>
+                <span className="text-[11px] font-medium text-tyro-text-secondary">%{a.progress}</span>
               </div>
             </div>
           )}

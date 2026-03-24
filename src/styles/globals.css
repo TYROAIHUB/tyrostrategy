@@ -18,7 +18,44 @@
   --tyro-border: #e2e8f0;
   --tyro-text-primary: #0f172a;
   --tyro-text-secondary: #64748b;
-  --tyro-text-muted: #94a3b8;
+  --tyro-text-muted: #6b7280;
+}
+
+/* ===== Moving Border Animation ===== */
+@keyframes moving-border {
+  0% { --border-angle: 0deg; }
+  100% { --border-angle: 360deg; }
+}
+
+@property --border-angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+
+.moving-border {
+  --status-color: #10b981;
+  border: 2px solid transparent;
+  background:
+    linear-gradient(var(--tyro-surface), var(--tyro-surface)) padding-box,
+    conic-gradient(
+      from var(--border-angle),
+      transparent 25%,
+      var(--status-color) 50%,
+      transparent 75%
+    ) border-box;
+  animation: moving-border 3s linear infinite;
+}
+
+.dark .moving-border {
+  background:
+    linear-gradient(var(--tyro-surface), var(--tyro-surface)) padding-box,
+    conic-gradient(
+      from var(--border-angle),
+      transparent 25%,
+      var(--status-color) 50%,
+      transparent 75%
+    ) border-box;
 }
 
 /* Pull-to-refresh overscroll visual feedback */
@@ -271,8 +308,8 @@ body {
   --tyro-surface: #111827;
   --tyro-border: #1e293b;
   --tyro-text-primary: #f1f5f9;
-  --tyro-text-secondary: #94a3b8;
-  --tyro-text-muted: #64748b;
+  --tyro-text-secondary: #cbd5e1;
+  --tyro-text-muted: #9ca3af;
 }
 
 .dark .glass-card {

@@ -85,7 +85,7 @@ function CompanyNode({ hedefCount, aksiyonCount, overallProgress, theme }: {
             {" "}
             <span style={{ color: theme.brandStrategy }}>Agro</span>
           </span>
-          <span className="text-[10px] font-medium mt-0.5" style={{ color: theme.textSecondary }}>
+          <span className="text-[11px] font-medium mt-0.5" style={{ color: theme.textSecondary }}>
             {hedefCount} hedef · {aksiyonCount} aksiyon
           </span>
         </div>
@@ -160,7 +160,7 @@ function ThemeNode({ source, count, progress }: { source: Source; count: number;
       </div>
       <div>
         <p className="text-[13px] font-bold" style={{ color: colors.text }}>{source}</p>
-        <p className="text-[10px] font-medium" style={{ color: colors.text, opacity: 0.7 }}>{count} hedef</p>
+        <p className="text-[11px] font-medium" style={{ color: colors.text, opacity: 0.7 }}>{count} hedef</p>
       </div>
     </motion.div>
   );
@@ -195,10 +195,10 @@ function ObjectiveNode({ hedef, onClick, expanded, onToggleExpand, aksiyonCount 
         {/* Owner + Date */}
         <div className="flex items-center justify-between gap-2">
           {hedef.owner && (
-            <span className="text-[10px] text-tyro-text-secondary truncate flex-1">{hedef.owner}</span>
+            <span className="text-[11px] text-tyro-text-secondary truncate flex-1">{hedef.owner}</span>
           )}
           {hedef.endDate && (
-            <span className="text-[10px] text-tyro-text-muted shrink-0">{formatDate(hedef.endDate)}</span>
+            <span className="text-[11px] text-tyro-text-muted shrink-0">{formatDate(hedef.endDate)}</span>
           )}
         </div>
       </div>
@@ -207,7 +207,7 @@ function ObjectiveNode({ hedef, onClick, expanded, onToggleExpand, aksiyonCount 
         <button
           type="button"
           onClick={(e) => { e.stopPropagation(); onToggleExpand(); }}
-          className="flex items-center gap-1 mt-1 px-2.5 py-1 rounded-full text-[10px] font-medium text-tyro-text-muted hover:text-tyro-navy hover:bg-tyro-bg/60 transition-colors cursor-pointer"
+          className="flex items-center gap-1 mt-1 px-2.5 py-1 rounded-full text-[11px] font-medium text-tyro-text-muted hover:text-tyro-navy hover:bg-tyro-bg/60 transition-colors cursor-pointer"
         >
           {expanded ? <ChevronUp size={11} /> : <ChevronDown size={11} />}
           {aksiyonCount} aksiyon
@@ -226,7 +226,7 @@ function ActionNode({ name, progress, status, onClick }: { name: string; progres
     >
       <ListChecks size={12} className="text-tyro-text-muted shrink-0" />
       <div className="min-w-0 flex-1">
-        <p className="text-[10px] font-medium text-tyro-text-secondary truncate">{name}</p>
+        <p className="text-[11px] font-medium text-tyro-text-secondary truncate">{name}</p>
         <div className="flex items-center gap-1.5 mt-0.5">
           <div className="flex-1 h-1 rounded-full bg-tyro-bg overflow-hidden">
             <div
@@ -234,7 +234,7 @@ function ActionNode({ name, progress, status, onClick }: { name: string; progres
               style={{ width: `${progress}%` }}
             />
           </div>
-          <span className="text-[10px] font-bold tabular-nums text-tyro-text-muted">%{progress}</span>
+          <span className="text-[11px] font-bold tabular-nums text-tyro-text-muted">%{progress}</span>
         </div>
       </div>
     </div>

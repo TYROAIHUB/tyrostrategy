@@ -163,7 +163,7 @@ export default function HedefDetail({
       {/* Progress Bar */}
       <div className="rounded-xl bg-tyro-surface/60 border border-tyro-border/20 shadow-[0_1px_3px_rgba(0,0,0,0.04)] backdrop-blur-sm overflow-hidden p-3 mb-1">
         <div className="flex items-center justify-between mb-2">
-          <span className="text-[10px] font-medium uppercase tracking-wider text-tyro-text-muted/70">
+          <span className="text-[11px] font-medium uppercase tracking-wider text-tyro-text-muted">
             {t("common.progress")}
           </span>
           <span className="text-[13px] font-bold tabular-nums" style={{ color: progressColor(currentHedef.progress) }}>
@@ -185,7 +185,7 @@ export default function HedefDetail({
       <div className="rounded-xl bg-tyro-surface/60 border border-tyro-border/20 shadow-[0_1px_3px_rgba(0,0,0,0.04)] backdrop-blur-sm overflow-hidden divide-y divide-tyro-border/20">
         <div className="grid grid-cols-2 divide-x divide-tyro-border/20">
           <div className="px-3 py-2.5">
-            <span className="text-[10px] font-medium uppercase tracking-wider text-tyro-text-muted/70 block mb-1">
+            <span className="text-[11px] font-medium uppercase tracking-wider text-tyro-text-muted block mb-1">
               {t("common.owner")}
             </span>
             <p className="text-[12px] font-medium text-tyro-text-primary truncate">
@@ -193,7 +193,7 @@ export default function HedefDetail({
             </p>
           </div>
           <div className="px-3 py-2.5">
-            <span className="text-[10px] font-medium uppercase tracking-wider text-tyro-text-muted/70 block mb-1">
+            <span className="text-[11px] font-medium uppercase tracking-wider text-tyro-text-muted block mb-1">
               {t("common.source")}
             </span>
             <p className="text-[12px] font-medium text-tyro-text-primary">
@@ -203,7 +203,7 @@ export default function HedefDetail({
         </div>
         <div className="grid grid-cols-2 divide-x divide-tyro-border/20">
           <div className="px-3 py-2.5">
-            <span className="text-[10px] font-medium uppercase tracking-wider text-tyro-text-muted/70 block mb-1">
+            <span className="text-[11px] font-medium uppercase tracking-wider text-tyro-text-muted block mb-1">
               {t("common.startDate")}
             </span>
             <p className="text-[12px] font-medium text-tyro-text-primary">
@@ -211,7 +211,7 @@ export default function HedefDetail({
             </p>
           </div>
           <div className="px-3 py-2.5">
-            <span className="text-[10px] font-medium uppercase tracking-wider text-tyro-text-muted/70 block mb-1">
+            <span className="text-[11px] font-medium uppercase tracking-wider text-tyro-text-muted block mb-1">
               {t("common.endDate")}
             </span>
             <p className="text-[12px] font-medium text-tyro-text-primary">
@@ -226,19 +226,19 @@ export default function HedefDetail({
         <div className="mt-3 pt-3 border-t border-tyro-border/30 flex flex-wrap gap-x-6 gap-y-1">
           {currentHedef.createdBy && (
             <div>
-              <p className="text-[10px] uppercase tracking-wider text-tyro-text-muted font-semibold mb-0.5">{t("common.createdBy").toUpperCase()}</p>
+              <p className="text-[11px] uppercase tracking-wider text-tyro-text-muted font-semibold mb-0.5">{t("common.createdBy").toUpperCase()}</p>
               <p className="text-[13px] text-tyro-text-primary">{currentHedef.createdBy}</p>
             </div>
           )}
           {currentHedef.createdAt && (
             <div>
-              <p className="text-[10px] uppercase tracking-wider text-tyro-text-muted font-semibold mb-0.5">{t("common.createdAt").toUpperCase()}</p>
+              <p className="text-[11px] uppercase tracking-wider text-tyro-text-muted font-semibold mb-0.5">{t("common.createdAt").toUpperCase()}</p>
               <p className="text-[13px] text-tyro-text-primary">{formatDate(currentHedef.createdAt)}</p>
             </div>
           )}
           {currentHedef.completedAt && (
             <div>
-              <p className="text-[10px] uppercase tracking-wider text-tyro-text-muted font-semibold mb-0.5">{t("common.completedAt").toUpperCase()}</p>
+              <p className="text-[11px] uppercase tracking-wider text-tyro-text-muted font-semibold mb-0.5">{t("common.completedAt").toUpperCase()}</p>
               <p className="text-[13px] text-tyro-text-primary text-emerald-600 font-medium">{formatDate(currentHedef.completedAt)}</p>
             </div>
           )}
@@ -285,7 +285,7 @@ export default function HedefDetail({
                     {rh.name}
                   </p>
                   <div className="flex items-center gap-2">
-                    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-tyro-bg text-tyro-text-secondary">
+                    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[11px] font-semibold bg-tyro-bg text-tyro-text-secondary">
                       {rh.source}
                     </span>
                     <div className="flex-1 h-1.5 rounded-full bg-tyro-bg overflow-hidden">

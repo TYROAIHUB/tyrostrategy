@@ -86,7 +86,7 @@ export default function StepReview({ control }: Props) {
         <div className="divide-y divide-tyro-border">
           {data.aksiyonlar?.map((a: any, i: number) => (
             <div key={i} className="px-4 py-3 flex items-start gap-3">
-              <div className="w-6 h-6 rounded-full bg-tyro-navy/10 flex items-center justify-center text-[10px] font-bold text-tyro-navy shrink-0 mt-0.5">
+              <div className="w-6 h-6 rounded-full bg-tyro-navy/10 flex items-center justify-center text-[11px] font-bold text-tyro-navy shrink-0 mt-0.5">
                 {i + 1}
               </div>
               <div className="flex-1 min-w-0">

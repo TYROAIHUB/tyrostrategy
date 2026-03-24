@@ -93,7 +93,7 @@ export default function WorkspacePage() {
             >
               <Search size={16} />
               <span className="text-[13px] text-tyro-text-muted">{t("common.search")}</span>
-              <kbd className="hidden sm:inline-flex items-center px-1.5 py-0.5 rounded-md bg-tyro-bg border border-tyro-border text-[10px] font-mono text-tyro-text-muted ml-auto">
+              <kbd className="hidden sm:inline-flex items-center px-1.5 py-0.5 rounded-md bg-tyro-bg border border-tyro-border text-[11px] font-mono text-tyro-text-muted ml-auto">
                 ⌘K
               </kbd>
             </button>

@@ -97,7 +97,7 @@ export default function AdvancedFilterPanel({ isOpen, onClose }: AdvancedFilterP
               <div className="flex items-center gap-2.5">
                 <h2 className="text-base font-bold text-tyro-text-primary">Gelişmiş Filtre</h2>
                 {activeCount > 0 && (
-                  <span className="flex items-center justify-center w-5 h-5 rounded-full bg-tyro-navy text-white text-[10px] font-bold">
+                  <span className="flex items-center justify-center w-5 h-5 rounded-full bg-tyro-navy text-white text-[11px] font-bold">
                     {activeCount}
                   </span>
                 )}
@@ -186,7 +186,7 @@ export default function AdvancedFilterPanel({ isOpen, onClose }: AdvancedFilterP
               <FilterSection title="İlerleme Aralığı">
                 <div className="flex items-center gap-3">
                   <div className="flex-1">
-                    <label className="text-[11px] font-semibold text-tyro-text-muted mb-1 block">Min %{progressMin}</label>
+                    <label className="text-[11px] font-semibold text-tyro-text-secondary mb-1 block">Min %{progressMin}</label>
                     <input
                       type="range"
                       min={0}
@@ -197,7 +197,7 @@ export default function AdvancedFilterPanel({ isOpen, onClose }: AdvancedFilterP
                     />
                   </div>
                   <div className="flex-1">
-                    <label className="text-[11px] font-semibold text-tyro-text-muted mb-1 block">Max %{progressMax}</label>
+                    <label className="text-[11px] font-semibold text-tyro-text-secondary mb-1 block">Max %{progressMax}</label>
                     <input
                       type="range"
                       min={0}

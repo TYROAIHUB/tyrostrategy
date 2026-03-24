@@ -142,7 +142,7 @@ export default function DataGrid<T>({
                 <button
                   aria-label={t("common.detail")}
                   onClick={() => onRowClick(row.original)}
-                  className="text-lg text-tyro-text-muted/60 cursor-pointer active:opacity-50 hover:text-tyro-navy transition-colors"
+                  className="text-lg text-tyro-text-muted cursor-pointer active:opacity-50 hover:text-tyro-navy transition-colors"
                 >
                   <Eye size={16} />
                 </button>
@@ -153,7 +153,7 @@ export default function DataGrid<T>({
                 <button
                   aria-label={t("common.edit")}
                   onClick={() => onEdit(row.original)}
-                  className="text-lg text-tyro-text-muted/60 cursor-pointer active:opacity-50 hover:text-tyro-navy transition-colors"
+                  className="text-lg text-tyro-text-muted cursor-pointer active:opacity-50 hover:text-tyro-navy transition-colors"
                 >
                   <Pencil size={16} />
                 </button>
@@ -168,7 +168,7 @@ export default function DataGrid<T>({
                       onDelete(row.original);
                     }
                   }}
-                  className="text-lg text-tyro-text-muted/60 cursor-pointer active:opacity-50 hover:text-red-500 transition-colors"
+                  className="text-lg text-tyro-text-muted cursor-pointer active:opacity-50 hover:text-red-500 transition-colors"
                 >
                   <Trash2 size={16} />
                 </button>

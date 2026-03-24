@@ -60,7 +60,7 @@ export default function AppLayout() {
             <p className="text-[11px] text-tyro-text-muted tracking-wide">
               {t("footer.poweredBy")} <span className="font-semibold text-tyro-text-secondary">TTECH Business Solutions</span>
             </p>
-            <p className="text-[10px] text-tyro-text-muted/60">
+            <p className="text-[11px] text-tyro-text-muted">
               © {new Date().getFullYear()} Tiryaki Agro · {t("footer.allRightsReserved")}
             </p>
           </div>

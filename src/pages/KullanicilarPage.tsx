@@ -185,7 +185,7 @@ export default function KullanicilarPage() {
               size: "sm",
               radius: "full",
               style: { background: `linear-gradient(to bottom right, ${sidebarTheme.accentColor}, ${sidebarTheme.accentColorLight})` },
-              className: "text-white text-[10px] font-bold",
+              className: "text-white text-[11px] font-bold",
             }}
           />
         );
@@ -222,12 +222,12 @@ export default function KullanicilarPage() {
         return (
           <div className="relative flex items-center gap-2 justify-center">
             <Tooltip content="Detay" size="sm">
-              <button className="text-lg text-default-400 cursor-pointer active:opacity-50" onClick={(e) => { e.stopPropagation(); openUserDetail(user); }}>
+              <button className="text-lg text-tyro-text-muted cursor-pointer active:opacity-50" onClick={(e) => { e.stopPropagation(); openUserDetail(user); }}>
                 <Eye size={16} />
               </button>
             </Tooltip>
             <Tooltip content="Düzenle" size="sm">
-              <button className="text-lg text-default-400 cursor-pointer active:opacity-50" onClick={(e) => { e.stopPropagation(); setSelectedUser(user); setIsEditing(true); setEditName(user.name); setEditEmail(user.email); setEditDept(user.department); setEditRole(user.role); setEditActive(user.active); }}>
+              <button className="text-lg text-tyro-text-muted cursor-pointer active:opacity-50" onClick={(e) => { e.stopPropagation(); setSelectedUser(user); setIsEditing(true); setEditName(user.name); setEditEmail(user.email); setEditDept(user.department); setEditRole(user.role); setEditActive(user.active); }}>
                 <Pencil size={16} />
               </button>
             </Tooltip>
@@ -253,7 +253,7 @@ export default function KullanicilarPage() {
           aria-label="Kullanıcı ara"
           placeholder="İsim ile ara..."
           size="sm"
-          startContent={<Search size={16} className="text-default-300" />}
+          startContent={<Search size={16} className="text-tyro-text-muted" />}
           value={search}
           variant="bordered"
           onClear={() => setSearch("")}
@@ -302,7 +302,7 @@ export default function KullanicilarPage() {
       </div>
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <span className="text-default-400 text-xs">Toplam {filtered.length} kullanıcı</span>
+          <span className="text-tyro-text-muted text-xs">Toplam {filtered.length} kullanıcı</span>
           {selectedKeys.size > 0 && (
             <>
               <span className="text-xs font-semibold" style={{ color: sidebarTheme.accentColor }}>
@@ -322,10 +322,10 @@ export default function KullanicilarPage() {
             </>
           )}
         </div>
-        <label className="flex items-center gap-1 text-default-400 text-xs">
+        <label className="flex items-center gap-1 text-tyro-text-muted text-xs">
           Sayfa başına:
           <select
-            className="bg-transparent outline-none focus-visible:ring-2 focus-visible:ring-tyro-navy/30 rounded text-default-400 text-xs cursor-pointer"
+            className="bg-transparent outline-none focus-visible:ring-2 focus-visible:ring-tyro-navy/30 rounded text-tyro-text-muted text-xs cursor-pointer"
             value={rowsPerPage}
             onChange={(e) => { setRowsPerPage(Number(e.target.value)); setPage(1); }}
           >
@@ -351,7 +351,7 @@ export default function KullanicilarPage() {
         classNames={{ cursor: "!text-white", base: "overflow-x-auto" }}
         style={{ "--heroui-primary": hexToHSL(sidebarTheme.accentColor), "--heroui-primary-foreground": "0 0% 100%" } as React.CSSProperties}
       />
-      <span className="text-xs text-default-400 shrink-0">
+      <span className="text-xs text-tyro-text-muted shrink-0">
         {(page - 1) * rowsPerPage + 1} - {Math.min(page * rowsPerPage, sorted.length)} / {sorted.length}
       </span>
     </div>
@@ -537,17 +537,17 @@ export default function KullanicilarPage() {
               <div className="bg-tyro-bg rounded-lg p-3 text-center">
                 <Briefcase size={14} className="mx-auto mb-1" style={{ color: sidebarTheme.accentColor }} />
                 <div className="text-lg font-bold" style={{ color: sidebarTheme.accentColor }}>{selectedUser.hedefCount}</div>
-                <div className="text-[10px] text-tyro-text-muted">Hedef</div>
+                <div className="text-[11px] text-tyro-text-muted">Hedef</div>
               </div>
               <div className="bg-tyro-bg rounded-lg p-3 text-center">
                 <ListChecks size={14} className="mx-auto mb-1 text-tyro-text-secondary" />
                 <div className="text-lg font-bold text-tyro-text-primary">{selectedUser.aksiyonCount}</div>
-                <div className="text-[10px] text-tyro-text-muted">Aksiyon</div>
+                <div className="text-[11px] text-tyro-text-muted">Aksiyon</div>
               </div>
               <div className="bg-tyro-bg rounded-lg p-3 text-center">
                 <Shield size={14} className="mx-auto mb-1 text-emerald-500" />
                 <div className="text-lg font-bold text-emerald-500">{selectedUser.achievedCount}</div>
-                <div className="text-[10px] text-tyro-text-muted">Tamamlanan</div>
+                <div className="text-[11px] text-tyro-text-muted">Tamamlanan</div>
               </div>
             </div>
 
@@ -623,7 +623,7 @@ function DetailRow({ icon, label, value }: { icon: React.ReactNode; label: strin
         {icon}
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-[10px] text-tyro-text-muted">{label}</p>
+        <p className="text-[11px] text-tyro-text-muted">{label}</p>
         <p className="text-[13px] font-medium text-tyro-text-primary">{value}</p>
       </div>
     </div>

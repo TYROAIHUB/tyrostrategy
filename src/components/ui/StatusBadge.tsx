@@ -26,7 +26,7 @@ const statusConfig: Record<EntityStatus, { bg: string; text: string; dot: string
   },
   "Not Started": {
     bg: "bg-slate-100",
-    text: "text-slate-500",
+    text: "text-tyro-text-muted",
     dot: "bg-slate-400",
   },
 };

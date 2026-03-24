@@ -14,7 +14,7 @@ function AksiyonNode({ aksiyon }: { aksiyon: Aksiyon }) {
       <span className="w-1.5 h-1.5 rounded-full bg-tyro-text-muted/40 shrink-0" />
       <ListChecks size={14} className="text-tyro-text-muted shrink-0" />
       <span className="text-xs text-tyro-text-secondary flex-1 min-w-0 truncate">{aksiyon.name}</span>
-      <span className="text-[10px] font-semibold text-tyro-text-muted tabular-nums shrink-0">
+      <span className="text-[11px] font-semibold text-tyro-text-muted tabular-nums shrink-0">
         %{aksiyon.progress}
       </span>
       <StatusBadge status={aksiyon.status} />
@@ -43,11 +43,11 @@ function HedefNode({ hedef }: { hedef: Hedef }) {
         <div className="flex-1 min-w-0">
           <span className="text-sm font-bold text-tyro-text-primary block">{hedef.name}</span>
           <div className="flex items-center gap-2 mt-0.5">
-            <span className="text-[10px] text-tyro-text-muted truncate">{hedef.source} · {hedef.owner}</span>
+            <span className="text-[11px] text-tyro-text-muted truncate">{hedef.source} · {hedef.owner}</span>
           </div>
           <div className="flex items-center gap-2 mt-1 sm:hidden">
             <StatusBadge status={hedef.status} />
-            <span className="text-[10px] font-semibold text-tyro-text-muted bg-tyro-bg px-2 py-0.5 rounded-full">
+            <span className="text-[11px] font-semibold text-tyro-text-muted bg-tyro-bg px-2 py-0.5 rounded-full">
               {aksiyonlar.length} aksiyon
             </span>
           </div>
@@ -56,7 +56,7 @@ function HedefNode({ hedef }: { hedef: Hedef }) {
           <div className="w-16 h-1.5 rounded-full bg-tyro-border/50 overflow-hidden">
             <div className="h-full rounded-full bg-tyro-navy transition-all" style={{ width: `${hedef.progress}%` }} />
           </div>
-          <span className="text-[10px] font-semibold text-tyro-text-muted tabular-nums w-8 text-right">%{hedef.progress}</span>
+          <span className="text-[11px] font-semibold text-tyro-text-muted tabular-nums w-8 text-right">%{hedef.progress}</span>
           <StatusBadge status={hedef.status} />
           <span className="text-xs font-semibold text-tyro-text-muted bg-tyro-bg px-2 py-0.5 rounded-full">
             {aksiyonlar.length} aksiyon
@@ -135,7 +135,7 @@ export default function TreePage() {
               <span className="text-[11px] font-bold uppercase tracking-wider text-tyro-text-muted">
                 {source}
               </span>
-              <span className="text-[10px] text-tyro-text-muted bg-tyro-bg px-2 py-0.5 rounded-full">
+              <span className="text-[11px] text-tyro-text-muted bg-tyro-bg px-2 py-0.5 rounded-full">
                 {items.length} hedef
               </span>
             </div>

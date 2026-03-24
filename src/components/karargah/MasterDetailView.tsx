@@ -54,7 +54,6 @@ function MasterListCard({
   onClick: () => void;
 }) {
   const { t } = useTranslation();
-  const [expanded, setExpanded] = useState(false);
   const pColor = progressColor(hedef.progress);
   // Mini circular progress (SVG)
   const radius = 6;
@@ -67,11 +66,12 @@ function MasterListCard({
       tabIndex={0}
       onClick={onClick}
       onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onClick(); } }}
-      className={`w-full text-left rounded-xl border transition-all duration-200 cursor-pointer group relative ${
+      className={`w-full text-left rounded-xl transition-all duration-200 cursor-pointer group relative ${
         isSelected
-          ? "bg-tyro-navy/[0.04] border-tyro-navy/20 shadow-[0_2px_8px_rgba(30,58,95,0.1)] translate-x-1"
-          : "bg-tyro-bg/40 border-transparent hover:bg-tyro-surface hover:border-tyro-border/30 hover:shadow-sm"
+          ? "moving-border shadow-[0_4px_16px_rgba(30,58,95,0.12)] scale-[1.01]"
+          : "border border-transparent bg-tyro-bg/40 hover:bg-tyro-surface hover:border-tyro-border/30 hover:shadow-sm"
       }`}
+      style={isSelected ? { "--status-color": STATUS_BAR[hedef.status] || "#10b981" } as React.CSSProperties : undefined}
     >
       {/* Status bar left edge — 6px, vivid color */}
       <div
@@ -106,7 +106,7 @@ function MasterListCard({
                 </svg>
               </span>
             ) : (
-              <span className="absolute inset-0 flex items-center justify-center text-[10px] font-black tabular-nums" style={{ color: pColor }}>
+              <span className="absolute inset-0 flex items-center justify-center text-[11px] font-black tabular-nums" style={{ color: pColor }}>
                 {hedef.progress}
               </span>
             )}
@@ -115,68 +115,19 @@ function MasterListCard({
 
         {/* Row 2: Owner + Source badge */}
         <div className="flex items-center gap-1.5 mb-0.5">
-          <span className="text-[10px] text-tyro-text-muted truncate">{hedef.owner}</span>
-          <span className="text-[10px] px-1.5 py-0.5 rounded bg-tyro-border/20 text-tyro-text-muted font-medium shrink-0">
+          <span className="text-[11px] text-tyro-text-muted truncate">{hedef.owner}</span>
+          <span className="text-[11px] px-1.5 py-0.5 rounded bg-tyro-border/20 text-tyro-text-muted font-medium shrink-0">
             {hedef.source}
           </span>
         </div>
 
-        {/* Row 3: Dates */}
-        <span className="text-[10px] text-tyro-text-muted/70">
-          {formatDate(hedef.startDate)} → {formatDate(hedef.endDate)}
-        </span>
-
-        {/* Expand toggle */}
-        <div
-          role="button"
-          tabIndex={-1}
-          onClick={(e) => { e.stopPropagation(); setExpanded((v) => !v); }}
-          className="w-full flex items-center justify-center gap-1 mt-1 py-0.5 text-tyro-text-muted hover:text-tyro-gold transition-colors cursor-pointer"
-        >
-          <ChevronDown size={11} className={`transition-transform duration-200 ${expanded ? "rotate-180" : ""}`} />
+        {/* Row 3: Dates + Status */}
+        <div className="flex items-center justify-between gap-1">
+          <span className="text-[11px] text-tyro-text-muted">
+            {formatDate(hedef.startDate)} → {formatDate(hedef.endDate)}
+          </span>
+          <StatusBadge status={hedef.status} showTooltip={false} />
         </div>
-
-        {/* Expanded details */}
-        <AnimatePresence>
-          {expanded && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: "auto", opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.2, ease: "easeInOut" }}
-              className="overflow-hidden"
-            >
-              <div className="pt-2 mt-1 border-t border-tyro-border/15 grid grid-cols-2 gap-x-3 gap-y-1.5">
-                <div>
-                  <span className="text-[10px] uppercase tracking-wider text-tyro-text-muted/60 block">{t("common.department", "Departman")}</span>
-                  <span className="text-[10px] text-tyro-text-secondary font-medium">{hedef.department || "—"}</span>
-                </div>
-                <div>
-                  <span className="text-[10px] uppercase tracking-wider text-tyro-text-muted/60 block">{t("forms.objective.reviewDate", "Kontrol")}</span>
-                  <span className="text-[10px] text-tyro-text-secondary font-medium">{hedef.reviewDate ? formatDate(hedef.reviewDate) : "—"}</span>
-                </div>
-                <div>
-                  <span className="text-[10px] uppercase tracking-wider text-tyro-text-muted/60 block">{t("nav.actions", "Aksiyonlar")}</span>
-                  <span className="text-[10px] text-tyro-text-secondary font-medium">{aksiyonCount} aksiyon</span>
-                </div>
-                <div>
-                  <span className="text-[10px] uppercase tracking-wider text-tyro-text-muted/60 block">{t("common.status", "Durum")}</span>
-                  <StatusBadge status={hedef.status} showTooltip={false} />
-                </div>
-                {hedef.tags && hedef.tags.length > 0 && (
-                  <div className="col-span-2">
-                    <span className="text-[10px] uppercase tracking-wider text-tyro-text-muted/60 block mb-0.5">{t("forms.objective.tags", "Etiketler")}</span>
-                    <div className="flex flex-wrap gap-1">
-                      {hedef.tags.map((tag) => (
-                        <TagChip key={tag} name={tag} size="sm" />
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
       </div>
     </div>
   );
@@ -187,7 +138,7 @@ function MasterListCard({
 // ========================================
 // Chip color matching AksiyonForm gradient palette
 function chipBg(v: number, selected: boolean): string {
-  if (!selected) return "bg-white/60 dark:bg-white/10 text-tyro-text-muted/50 hover:text-tyro-text-muted border border-tyro-border/15 hover:border-tyro-border/30";
+  if (!selected) return "bg-white/60 dark:bg-white/10 text-tyro-text-muted hover:text-tyro-text-muted border border-tyro-border/15 hover:border-tyro-border/30";
   if (v === 0) return "bg-slate-400 text-white shadow-md";
   if (v <= 25) return "bg-red-500 text-white shadow-md";
   if (v <= 50) return "bg-amber-500 text-white shadow-md";
@@ -213,7 +164,7 @@ function QuickProgressButtons({
             key={step}
             type="button"
             onClick={(e) => { e.stopPropagation(); onChange(step); }}
-            className={`relative min-w-[34px] h-[24px] rounded-lg text-[10px] font-bold tabular-nums cursor-pointer transition-all ${
+            className={`relative min-w-[34px] h-[24px] rounded-lg text-[11px] font-bold tabular-nums cursor-pointer transition-all ${
               isExact
                 ? chipBg(step, true) + " scale-110"
                 : isPassed
@@ -299,7 +250,13 @@ function DetailPanel({
     onUpdateAksiyon(aksiyonId, { progress, status });
     const aksName = aksiyon?.name ?? "";
     const statusLabel = status === "Not Started" ? "Başlanmadı" : status === "Achieved" ? "Tamamlandı" : status === "Behind" ? "Gecikmeli" : status === "At Risk" ? "Risk Altında" : "Yolunda";
-    toast.success(t("karargah.actionUpdated"), `"${aksName}" → %${progress} · ${statusLabel}`);
+    toast.success(t("karargah.actionUpdated"), {
+      message: aksName,
+      details: [
+        { label: "İlerleme", value: `%${progress}` },
+        { label: "Durum", value: statusLabel },
+      ],
+    });
   };
 
   return (
@@ -339,7 +296,7 @@ function DetailPanel({
       {/* === OBJECTIVE INFO — expandable glass card === */}
       <div className="rounded-2xl bg-white/70 dark:bg-white/5 backdrop-blur-xl border border-white/40 dark:border-white/10 shadow-[0_2px_16px_rgba(0,0,0,0.04)]">
         {/* Always visible: dates + review date */}
-        <div className="grid grid-cols-3 divide-x divide-tyro-border/15">
+        <div className="grid grid-cols-3 divide-x divide-tyro-border/40">
           <InfoCell icon={<Calendar size={12} />} label={t("common.startDate")} value={formatDate(hedef.startDate)} />
           <InfoCell icon={<Calendar size={12} />} label={t("common.endDate")} value={formatDate(hedef.endDate)} />
           <InfoCell icon={<Clock size={12} />} label={t("forms.objective.reviewDate", "Kontrol")} value={hedef.reviewDate ? formatDate(hedef.reviewDate) : "—"} />
@@ -354,7 +311,7 @@ function DetailPanel({
               transition={{ duration: 0.2, ease: "easeInOut" }}
               className="overflow-hidden"
             >
-              <div className="border-t border-tyro-border/15 grid grid-cols-3 divide-x divide-tyro-border/15">
+              <div className="border-t border-tyro-border/15 grid grid-cols-3 divide-x divide-tyro-border/40">
                 <InfoCell icon={<Users size={12} />} label={t("common.owner")} value={hedef.owner} />
                 <InfoCell icon={<Building2 size={12} />} label={t("common.department", "Departman")} value={hedef.department} />
                 <InfoCell icon={<Globe size={12} />} label={t("common.source")} value={hedef.source} />
@@ -362,14 +319,14 @@ function DetailPanel({
               {/* Parent Objective */}
               {parentHedefName && (
                 <div className="border-t border-tyro-border/15 px-3 py-2">
-                  <span className="text-[10px] uppercase tracking-wider text-tyro-text-muted/60 block mb-0.5">{t("forms.objective.parentObjective", "Ana Hedef")}</span>
+                  <span className="text-[11px] uppercase tracking-wider text-tyro-text-muted block mb-0.5">{t("forms.objective.parentObjective", "Ana Hedef")}</span>
                   <p className="text-[11px] text-tyro-text-primary font-medium">{parentHedefName}</p>
                 </div>
               )}
               {/* Participants */}
               {hedef.participants && hedef.participants.length > 0 && (
                 <div className="border-t border-tyro-border/15 px-3 py-2">
-                  <span className="text-[10px] uppercase tracking-wider text-tyro-text-muted/60 block mb-1">{t("forms.objective.participants", "Katılımcılar")}</span>
+                  <span className="text-[11px] uppercase tracking-wider text-tyro-text-muted block mb-1">{t("forms.objective.participants", "Katılımcılar")}</span>
                   <p className="text-[11px] text-tyro-text-secondary">{hedef.participants.join(", ")}</p>
                 </div>
               )}
@@ -379,8 +336,8 @@ function DetailPanel({
                 <div className="border-t border-tyro-border/15 px-3 py-2 flex gap-4">
                   {hedef.createdBy && (
                     <div>
-                      <span className="text-[10px] uppercase tracking-wider text-tyro-text-muted/60 block">{t("common.createdBy", "Oluşturan")}</span>
-                      <span className="text-[10px] text-tyro-text-secondary">{hedef.createdBy}{hedef.createdAt ? ` · ${formatDate(hedef.createdAt)}` : ""}</span>
+                      <span className="text-[11px] uppercase tracking-wider text-tyro-text-muted block">{t("common.createdBy", "Oluşturan")}</span>
+                      <span className="text-[11px] text-tyro-text-secondary">{hedef.createdBy}{hedef.createdAt ? ` · ${formatDate(hedef.createdAt)}` : ""}</span>
                     </div>
                   )}
                 </div>
@@ -394,7 +351,7 @@ function DetailPanel({
           onClick={() => setInfoExpanded((v) => !v)}
           className="w-full flex items-center justify-center gap-1.5 py-1.5 border-t border-tyro-border/15 text-tyro-text-muted hover:text-tyro-gold hover:bg-tyro-gold/5 transition-colors cursor-pointer"
         >
-          <span className="text-[10px] font-semibold">{infoExpanded ? "Daha az" : "Detaylar"}</span>
+          <span className="text-[11px] font-semibold">{infoExpanded ? "Daha az" : "Detaylar"}</span>
           <ChevronDown size={13} className={`transition-transform duration-200 ${infoExpanded ? "rotate-180" : ""}`} />
         </button>
       </div>
@@ -415,7 +372,7 @@ function DetailPanel({
         return (
       <div className="rounded-2xl bg-white/70 dark:bg-white/5 backdrop-blur-xl border border-white/40 dark:border-white/10 shadow-[0_2px_16px_rgba(0,0,0,0.04)] px-4 py-3">
         <div className="flex items-center gap-3">
-          <span className="text-[10px] font-semibold uppercase tracking-wider text-tyro-text-muted shrink-0">
+          <span className="text-[11px] font-semibold uppercase tracking-wider text-tyro-text-muted shrink-0">
             {t("common.progress", "İlerleme")}
           </span>
           <div className="flex-1 h-3 rounded-full bg-tyro-border/15 overflow-hidden">
@@ -427,7 +384,7 @@ function DetailPanel({
           <span className={`text-[15px] font-extrabold tabular-nums shrink-0 ${p === 0 ? "text-tyro-text-muted" : textColor}`}>
             %{p}
           </span>
-          <span className="text-[10px] text-tyro-text-muted shrink-0">
+          <span className="text-[11px] text-tyro-text-muted shrink-0">
             {completedCount}/{totalCount}
           </span>
         </div>
@@ -477,7 +434,7 @@ function InfoCell({ icon, label, value }: { icon: React.ReactNode; label: string
     <div className="px-3 py-2.5">
       <div className="flex items-center gap-1 mb-0.5">
         <span className="text-tyro-text-muted">{icon}</span>
-        <span className="text-[10px] font-medium uppercase tracking-wider text-tyro-text-muted">{label}</span>
+        <span className="text-[11px] font-medium uppercase tracking-wider text-tyro-text-muted">{label}</span>
       </div>
       <p className="text-[12px] font-medium text-tyro-text-primary truncate">{value || "-"}</p>
     </div>
@@ -528,7 +485,7 @@ function AksiyonRow({
 
       {/* Owner + Dates */}
       <div className="flex items-center gap-2 ml-7 mb-2">
-        <span className="text-[10px] text-tyro-text-muted">
+        <span className="text-[11px] text-tyro-text-muted">
           {aksiyon.owner || "—"} · {formatDate(aksiyon.startDate)} – {formatDate(aksiyon.endDate)}
         </span>
       </div>
@@ -592,9 +549,10 @@ export default function MasterDetailView({ hedefler, onOpenWizard }: MasterDetai
     let list = filterHedefler(hedefler);
     if (search.trim()) {
       const q = search.toLocaleLowerCase("tr");
-      list = list.filter((h) =>
-        [h.name, h.owner, h.department].join(" ").toLocaleLowerCase("tr").includes(q)
-      );
+      list = list.filter((h) => {
+        const fields = [h.name, h.owner, h.department, h.source, h.status, h.description, ...(h.tags ?? [])];
+        return fields.filter(Boolean).join(" ").toLocaleLowerCase("tr").includes(q);
+      });
     }
     if (statusFilter !== "all") list = list.filter((h) => h.status === statusFilter);
     if (sourceFilter !== "all") list = list.filter((h) => h.source === sourceFilter);
@@ -704,8 +662,8 @@ export default function MasterDetailView({ hedefler, onOpenWizard }: MasterDetai
           isClearable
           size="sm"
           variant="bordered"
-          placeholder={t("common.search")}
-          startContent={<Search size={14} className="text-default-300" />}
+          placeholder="Ad, sahip, departman, etiket..."
+          startContent={<Search size={14} className="text-tyro-text-muted" />}
           value={search}
           onClear={() => setSearch("")}
           onValueChange={setSearch}
@@ -718,7 +676,7 @@ export default function MasterDetailView({ hedefler, onOpenWizard }: MasterDetai
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          className="text-[10px] px-2 py-1 rounded-md border border-tyro-border bg-tyro-bg text-tyro-text-secondary cursor-pointer focus:outline-none focus:ring-1 focus:ring-tyro-navy/30"
+          className="text-[11px] px-2 py-1 rounded-md border border-tyro-border bg-tyro-bg text-tyro-text-secondary cursor-pointer focus:outline-none focus:ring-1 focus:ring-tyro-navy/30"
         >
           <option value="all">{t("common.status")}</option>
           <option value="On Track">{t("status.onTrack")}</option>
@@ -730,7 +688,7 @@ export default function MasterDetailView({ hedefler, onOpenWizard }: MasterDetai
         <select
           value={sourceFilter}
           onChange={(e) => setSourceFilter(e.target.value)}
-          className="text-[10px] px-2 py-1 rounded-md border border-tyro-border bg-tyro-bg text-tyro-text-secondary cursor-pointer focus:outline-none focus:ring-1 focus:ring-tyro-navy/30"
+          className="text-[11px] px-2 py-1 rounded-md border border-tyro-border bg-tyro-bg text-tyro-text-secondary cursor-pointer focus:outline-none focus:ring-1 focus:ring-tyro-navy/30"
         >
           <option value="all">{t("common.source")}</option>
           <option value="Türkiye">Türkiye</option>
@@ -740,7 +698,7 @@ export default function MasterDetailView({ hedefler, onOpenWizard }: MasterDetai
         <select
           value={sortBy}
           onChange={(e) => setSortBy(e.target.value as any)}
-          className="text-[10px] px-2 py-1 rounded-md border border-tyro-border bg-tyro-bg text-tyro-text-secondary cursor-pointer focus:outline-none focus:ring-1 focus:ring-tyro-navy/30 flex-1 min-w-0"
+          className="text-[11px] px-2 py-1 rounded-md border border-tyro-border bg-tyro-bg text-tyro-text-secondary cursor-pointer focus:outline-none focus:ring-1 focus:ring-tyro-navy/30 flex-1 min-w-0"
         >
           <option value="progress">{t("karargah.sortByProgress")}</option>
           <option value="name">{t("karargah.sortByName")}</option>
@@ -760,7 +718,7 @@ export default function MasterDetailView({ hedefler, onOpenWizard }: MasterDetai
           <button
             type="button"
             onClick={clearFilters}
-            className="text-[10px] px-1.5 py-1 rounded-md bg-red-50 text-red-600 hover:bg-red-100 cursor-pointer font-medium shrink-0"
+            className="text-[11px] px-1.5 py-1 rounded-md bg-red-50 text-red-600 hover:bg-red-100 cursor-pointer font-medium shrink-0"
           >
             {t("karargah.clearFilters")}
           </button>
@@ -842,7 +800,7 @@ export default function MasterDetailView({ hedefler, onOpenWizard }: MasterDetai
           <h3 className="text-[14px] font-semibold text-tyro-text-muted">
             {t("karargah.selectObjective")}
           </h3>
-          <p className="text-[12px] text-tyro-text-muted/70 max-w-[280px]">
+          <p className="text-[12px] text-tyro-text-muted max-w-[280px]">
             {t("karargah.selectObjectiveDesc")}
           </p>
         </div>
@@ -893,7 +851,7 @@ export default function MasterDetailView({ hedefler, onOpenWizard }: MasterDetai
                       </div>
                       <div className="text-left min-w-0">
                         <p className="text-[13px] font-semibold text-tyro-text-primary leading-tight">Kontrol Tarihi</p>
-                        <p className="text-[10px] text-tyro-text-muted leading-tight mt-0.5">Tarihi güncelle</p>
+                        <p className="text-[11px] text-tyro-text-muted leading-tight mt-0.5">Tarihi güncelle</p>
                       </div>
                     </button>
                   </PopoverTrigger>
@@ -911,7 +869,10 @@ export default function MasterDetailView({ hedefler, onOpenWizard }: MasterDetai
                       startContent={<Check size={13} />}
                       onPress={() => {
                         updateHedef(selectedHedef.id, { reviewDate: reviewDateDraft });
-                        toast.success("Güncellendi", `"${selectedHedef.name}" — Kontrol Tarihi: ${reviewDateDraft}`);
+                        toast.success("Kontrol Tarihi Güncellendi", {
+                          message: selectedHedef.name,
+                          details: [{ label: "Yeni Tarih", value: reviewDateDraft }],
+                        });
                         setReviewPopoverOpen(false);
                         setActionsFabOpen(false);
                       }}
@@ -932,7 +893,7 @@ export default function MasterDetailView({ hedefler, onOpenWizard }: MasterDetai
                   </div>
                   <div className="text-left min-w-0">
                     <p className="text-[13px] font-semibold text-tyro-text-primary leading-tight">Düzenle</p>
-                    <p className="text-[10px] text-tyro-text-muted leading-tight mt-0.5">Hedef bilgilerini düzenle</p>
+                    <p className="text-[11px] text-tyro-text-muted leading-tight mt-0.5">Hedef bilgilerini düzenle</p>
                   </div>
                 </button>
                 <div className="h-px bg-tyro-border/15 mx-4" />
@@ -945,10 +906,10 @@ export default function MasterDetailView({ hedefler, onOpenWizard }: MasterDetai
                     setConfirmAction(() => () => {
                       const ok = deleteHedef(selectedHedef.id);
                       if (ok) {
-                        toast.success("Silindi", `"${selectedHedef.name}" silindi.`);
+                        toast.success("Silindi", { message: selectedHedef.name });
                         setSelectedId(null);
                       } else {
-                        toast.error("Silinemedi", "Bu hedefe bağlı aksiyonlar var.");
+                        toast.error("Silinemedi", { message: "Bu hedefe bağlı aksiyonlar var." });
                       }
                     });
                     setConfirmOpen(true);
@@ -960,7 +921,7 @@ export default function MasterDetailView({ hedefler, onOpenWizard }: MasterDetai
                   </div>
                   <div className="text-left min-w-0">
                     <p className="text-[13px] font-semibold text-red-600 leading-tight">Sil</p>
-                    <p className="text-[10px] text-tyro-text-muted leading-tight mt-0.5">Hedefi kalıcı olarak sil</p>
+                    <p className="text-[11px] text-tyro-text-muted leading-tight mt-0.5">Hedefi kalıcı olarak sil</p>
                   </div>
                 </button>
               </motion.div>
@@ -1012,7 +973,7 @@ export default function MasterDetailView({ hedefler, onOpenWizard }: MasterDetai
                   </div>
                   <div className="text-left min-w-0">
                     <p className="text-[13px] font-semibold text-tyro-text-primary leading-tight">Hedef Sihirbazı</p>
-                    <p className="text-[10px] text-tyro-text-muted leading-tight mt-0.5">Adım adım hedef oluştur</p>
+                    <p className="text-[11px] text-tyro-text-muted leading-tight mt-0.5">Adım adım hedef oluştur</p>
                   </div>
                 </button>
                 <div className="h-px bg-tyro-border/15 mx-4" />
@@ -1026,7 +987,7 @@ export default function MasterDetailView({ hedefler, onOpenWizard }: MasterDetai
                   </div>
                   <div className="text-left min-w-0">
                     <p className="text-[13px] font-semibold text-tyro-text-primary leading-tight">Yeni Aksiyon</p>
-                    <p className="text-[10px] text-tyro-text-muted leading-tight mt-0.5">Hedefe aksiyon ekle</p>
+                    <p className="text-[11px] text-tyro-text-muted leading-tight mt-0.5">Hedefe aksiyon ekle</p>
                   </div>
                 </button>
               </motion.div>
@@ -1093,7 +1054,7 @@ export default function MasterDetailView({ hedefler, onOpenWizard }: MasterDetai
               setConfirmMessage(`"${viewingAksiyon.name}" aksiyonunu silmek istediğinize emin misiniz?`);
               setConfirmAction(() => () => {
                 deleteAksiyon(viewingAksiyon.id);
-                toast.success(t("toast.actionDeleted", "Aksiyon silindi"), `"${viewingAksiyon.name}" silindi.`);
+                toast.success(t("toast.actionDeleted", "Aksiyon silindi"), { message: viewingAksiyon.name });
                 setViewingAksiyon(null);
               });
               setConfirmOpen(true);

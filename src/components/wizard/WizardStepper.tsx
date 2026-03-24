@@ -62,7 +62,7 @@ export default function WizardStepper({ steps, currentStep }: WizardStepperProps
                 </motion.div>
               </div>
               <motion.span
-                className={`text-[10px] font-bold hidden sm:block whitespace-nowrap tracking-wide ${
+                className={`text-[11px] font-bold hidden sm:block whitespace-nowrap tracking-wide ${
                   isActive ? color.text : isCompleted ? "text-tyro-gold" : "text-tyro-text-muted"
                 }`}
                 initial={false}

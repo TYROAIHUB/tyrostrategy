@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { CheckCircle2, AlertTriangle, XCircle, Info, X } from "lucide-react";
 import { useToastStore, type Toast, type ToastType } from "@/stores/toastStore";
@@ -44,6 +44,7 @@ function ToastItem({ toast }: { toast: Toast }) {
   const duration = toast.duration ?? DEFAULT_DURATION;
   const [paused, setPaused] = useState(false);
   const [elapsed, setElapsed] = useState(0);
+  const expiredRef = useRef(false);
 
   const dismiss = useCallback(() => removeToast(toast.id), [removeToast, toast.id]);
 
@@ -52,11 +53,12 @@ function ToastItem({ toast }: { toast: Toast }) {
     const interval = setInterval(() => {
       setElapsed((prev) => {
         const next = prev + 50;
-        if (next >= duration) {
+        if (next >= duration && !expiredRef.current) {
+          expiredRef.current = true;
           clearInterval(interval);
-          dismiss();
+          setTimeout(dismiss, 0);
         }
-        return next;
+        return Math.min(next, duration);
       });
     }, 50);
     return () => clearInterval(interval);
@@ -97,6 +99,16 @@ function ToastItem({ toast }: { toast: Toast }) {
             <p className="text-[12px] text-tyro-text-secondary mt-0.5 leading-relaxed">
               {toast.message}
             </p>
+          )}
+          {toast.details && toast.details.length > 0 && (
+            <div className="mt-1.5 flex flex-col gap-0.5">
+              {toast.details.map((d, i) => (
+                <div key={i} className="flex items-center gap-1.5 text-[11px] leading-snug">
+                  <span className="text-tyro-text-muted shrink-0">{d.label}:</span>
+                  <span className="font-medium text-tyro-text-primary truncate">{d.value}</span>
+                </div>
+              ))}
+            </div>
           )}
         </div>
 

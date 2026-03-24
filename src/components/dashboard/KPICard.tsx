@@ -99,7 +99,7 @@ function InteractiveSparkline({ data, color }: { data: number[]; color: string }
       {/* Tooltip */}
       {hoveredIdx !== null && (
         <div
-          className="absolute -top-7 px-1.5 py-0.5 rounded bg-tyro-text-primary text-white text-[10px] font-bold tabular-nums pointer-events-none whitespace-nowrap"
+          className="absolute -top-7 px-1.5 py-0.5 rounded bg-tyro-text-primary text-white text-[11px] font-bold tabular-nums pointer-events-none whitespace-nowrap"
           style={{ left: points[hoveredIdx].x, transform: "translateX(-50%)" }}
         >
           {points[hoveredIdx].value}
@@ -194,7 +194,7 @@ export default function KPICard({
               transition={{ type: "spring", stiffness: 300, damping: 20 }}
             >
               <CircularProgress progress={progress} size={44} strokeWidth={4} color={color}>
-                <span className="text-[10px] font-bold text-tyro-text-secondary">
+                <span className="text-[11px] font-bold text-tyro-text-secondary">
                   {progress}%
                 </span>
               </CircularProgress>

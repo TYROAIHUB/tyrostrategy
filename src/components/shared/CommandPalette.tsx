@@ -225,7 +225,7 @@ export default function CommandPalette() {
                 className="flex-1 bg-transparent text-sm text-tyro-text-primary placeholder:text-tyro-text-muted outline-none focus:ring-0"
                 aria-label={t("common.search")}
               />
-              <kbd className="hidden sm:inline-flex items-center px-1.5 py-0.5 rounded-md bg-tyro-bg border border-tyro-border text-[10px] font-mono text-tyro-text-muted">
+              <kbd className="hidden sm:inline-flex items-center px-1.5 py-0.5 rounded-md bg-tyro-bg border border-tyro-border text-[11px] font-mono text-tyro-text-muted">
                 ESC
               </kbd>
             </div>
@@ -239,7 +239,7 @@ export default function CommandPalette() {
               ) : (
                 Array.from(grouped.entries()).map(([cat, items]) => (
                   <div key={cat} className="mb-2 last:mb-0">
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-tyro-text-muted px-3 py-1.5">
+                    <p className="text-[11px] font-bold uppercase tracking-wider text-tyro-text-muted px-3 py-1.5">
                       {categoryLabels[cat]}
                     </p>
                     {items.map((item) => {
@@ -269,7 +269,7 @@ export default function CommandPalette() {
             </div>
 
             {/* Footer */}
-            <div className="flex items-center gap-4 px-4 py-2.5 border-t border-tyro-border text-[10px] text-tyro-text-muted">
+            <div className="flex items-center gap-4 px-4 py-2.5 border-t border-tyro-border text-[11px] text-tyro-text-muted">
               <span>
                 <kbd className="font-mono">↑↓</kbd> {t("search.navigate")}
               </span>

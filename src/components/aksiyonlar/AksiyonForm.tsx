@@ -108,20 +108,22 @@ export default function AksiyonForm({ aksiyon, defaultHedefId, onSuccess }: Aksi
     setIsLoading(true);
     try {
       if (aksiyon) {
-        // Detect changed fields for detailed toast
-        const changes: string[] = [];
-        if (data.name !== aksiyon.name) changes.push(`Ad: "${data.name}"`);
-        if (data.progress !== aksiyon.progress) changes.push(`İlerleme: %${data.progress}`);
-        if (data.status !== aksiyon.status) changes.push(`Durum: ${data.status}`);
-        if (data.owner !== aksiyon.owner) changes.push(`Sahip: ${data.owner}`);
-        if (data.startDate !== aksiyon.startDate) changes.push(`Başlangıç: ${data.startDate}`);
-        if (data.endDate !== aksiyon.endDate) changes.push(`Bitiş: ${data.endDate}`);
+        // Detect changed fields for structured toast
+        const details: { label: string; value: string }[] = [];
+        if (data.name !== aksiyon.name) details.push({ label: "Ad", value: data.name });
+        if (data.progress !== aksiyon.progress) details.push({ label: "İlerleme", value: `%${data.progress}` });
+        if (data.status !== aksiyon.status) details.push({ label: "Durum", value: data.status });
+        if (data.owner !== aksiyon.owner) details.push({ label: "Sahip", value: data.owner });
+        if (data.startDate !== aksiyon.startDate) details.push({ label: "Başlangıç", value: data.startDate });
+        if (data.endDate !== aksiyon.endDate) details.push({ label: "Bitiş", value: data.endDate });
         updateAksiyon(aksiyon.id, data);
-        const detail = changes.length > 0 ? `"${data.name}" → ${changes.join(", ")}` : `"${data.name}" ${t("toast.updatedSuccessfully")}.`;
-        toast.success(t("toast.actionUpdated"), detail);
+        toast.success(t("toast.actionUpdated"), {
+          message: data.name,
+          details: details.length > 0 ? details : [{ label: "Durum", value: "Değişiklik kaydedildi" }],
+        });
       } else {
         addAksiyon(data);
-        toast.success(t("toast.actionCreated"), `"${data.name}" hedefe eklendi.`);
+        toast.success(t("toast.actionCreated"), { message: data.name });
       }
       onSuccess();
     } catch (err) {
@@ -262,7 +264,7 @@ export default function AksiyonForm({ aksiyon, defaultHedefId, onSuccess }: Aksi
           return (
             <div>
               <div className="flex items-center justify-between mb-2">
-                <label className="text-[12px] font-semibold text-tyro-text-secondary">
+                <label className="text-[11px] font-semibold text-tyro-text-secondary">
                   {t("forms.action.progress")}
                 </label>
                 <span className={`text-lg font-extrabold tabular-nums ${getTextColor(val)}`}>
@@ -321,7 +323,7 @@ export default function AksiyonForm({ aksiyon, defaultHedefId, onSuccess }: Aksi
               <label className="text-[11px] font-semibold text-tyro-text-secondary">
                 {t("forms.objective.status")}<span className="text-tyro-danger ml-0.5">*</span>
                 {isStatusLocked && (
-                  <span className="ml-1.5 text-[10px] text-tyro-text-muted font-normal">(otomatik)</span>
+                  <span className="ml-1.5 text-[11px] text-tyro-text-muted font-normal">(otomatik)</span>
                 )}
               </label>
               {field.value && <StatusBadge status={field.value as EntityStatus} />}
@@ -400,19 +402,19 @@ export default function AksiyonForm({ aksiyon, defaultHedefId, onSuccess }: Aksi
         <div className="mt-4 pt-4 border-t border-tyro-border/30 flex flex-wrap gap-x-6 gap-y-2">
           {aksiyon.createdBy && (
             <div>
-              <p className="text-[10px] uppercase tracking-wider text-tyro-text-muted font-semibold mb-0.5">{t("common.createdBy").toUpperCase()}</p>
+              <p className="text-[11px] uppercase tracking-wider text-tyro-text-muted font-semibold mb-0.5">{t("common.createdBy").toUpperCase()}</p>
               <p className="text-xs text-tyro-text-secondary">{aksiyon.createdBy}</p>
             </div>
           )}
           {aksiyon.createdAt && (
             <div>
-              <p className="text-[10px] uppercase tracking-wider text-tyro-text-muted font-semibold mb-0.5">{t("common.createdAt").toUpperCase()}</p>
+              <p className="text-[11px] uppercase tracking-wider text-tyro-text-muted font-semibold mb-0.5">{t("common.createdAt").toUpperCase()}</p>
               <p className="text-xs text-tyro-text-secondary">{formatDate(aksiyon.createdAt)}</p>
             </div>
           )}
           {aksiyon.completedAt && (
             <div>
-              <p className="text-[10px] uppercase tracking-wider text-tyro-text-muted font-semibold mb-0.5">{t("common.completedAt").toUpperCase()}</p>
+              <p className="text-[11px] uppercase tracking-wider text-tyro-text-muted font-semibold mb-0.5">{t("common.completedAt").toUpperCase()}</p>
               <p className="text-xs text-emerald-600 font-medium">{formatDate(aksiyon.completedAt)}</p>
             </div>
           )}

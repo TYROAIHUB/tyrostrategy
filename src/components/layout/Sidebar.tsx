@@ -219,7 +219,7 @@ function SidebarContent({ collapsed, onNavigate, pinned, onTogglePin }: { collap
           <div key={section.title}>
             <div
               className={clsx(
-                "text-[10px] font-bold uppercase tracking-wider px-3 py-3 whitespace-nowrap overflow-hidden transition-all duration-300",
+                "text-[11px] font-bold uppercase tracking-wider px-3 py-3 whitespace-nowrap overflow-hidden transition-all duration-300",
                 collapsed && "opacity-0 h-2 py-1"
               )}
               style={{ color: "var(--sb-section-title)" }}
@@ -354,7 +354,7 @@ function SidebarContent({ collapsed, onNavigate, pinned, onTogglePin }: { collap
                         <div className="px-3 pt-1.5 pb-2">
                           {/* Sidebar-only themes */}
                           <p
-                            className="text-[10px] font-bold uppercase tracking-wider mb-1.5"
+                            className="text-[11px] font-bold uppercase tracking-wider mb-1.5"
                             style={{ color: "var(--sb-text-muted)" }}
                           >
                             {t("nav.sidebarTheme")}
@@ -398,7 +398,7 @@ function SidebarContent({ collapsed, onNavigate, pinned, onTogglePin }: { collap
 
                           {/* Full app themes */}
                           <p
-                            className="text-[10px] font-bold uppercase tracking-wider mb-1.5"
+                            className="text-[11px] font-bold uppercase tracking-wider mb-1.5"
                             style={{ color: "var(--sb-text-muted)" }}
                           >
                             {t("nav.appTheme")}
@@ -491,7 +491,7 @@ function SidebarContent({ collapsed, onNavigate, pinned, onTogglePin }: { collap
             )}
           >
             <h4 className="text-[13px] font-semibold truncate" style={{ color: "var(--sb-text-primary)" }}>{currentUser.name}</h4>
-            <p className="text-[10px] font-medium truncate" style={{ color: "var(--sb-text-muted)" }}>{currentUser.department}</p>
+            <p className="text-[11px] font-medium truncate" style={{ color: "var(--sb-text-muted)" }}>{currentUser.department}</p>
           </div>
 
           {/* Chevron indicator */}

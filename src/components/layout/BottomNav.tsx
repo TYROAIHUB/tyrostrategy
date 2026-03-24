@@ -181,14 +181,14 @@ export default function BottomNav() {
                     />
                   </motion.div>
                   {item.id === "aksiyonlar" && riskCount > 0 && (
-                    <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 rounded-full bg-red-500 text-white text-[9px] font-bold flex items-center justify-center">
+                    <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 rounded-full bg-red-500 text-white text-[11px] font-bold flex items-center justify-center">
                       {riskCount}
                     </span>
                   )}
                   <motion.span
                     animate={{ opacity: active ? 1 : 0.5, scale: active ? 1 : 0.95 }}
                     transition={{ duration: 0.2 }}
-                    className="text-[10px] font-semibold leading-tight"
+                    className="text-[11px] font-semibold leading-tight"
                     style={{ color: active ? accentColor : undefined }}
                   >
                     {item.label}

@@ -24,7 +24,7 @@ export default function BentoKPI() {
         >
           <Crosshair size={18} className="text-tyro-navy mb-1" />
           <span className="text-[22px] font-extrabold text-tyro-text-primary tabular-nums leading-none">{ws.myHedefler.length}</span>
-          <span className="text-[10px] font-medium text-tyro-text-muted">{t("workspace.myObjectives")}</span>
+          <span className="text-[11px] font-medium text-tyro-text-muted">{t("workspace.myObjectives")}</span>
         </div>
 
         {/* Aksiyonlarım */}
@@ -34,7 +34,7 @@ export default function BentoKPI() {
         >
           <CircleCheckBig size={18} className="text-blue-500 mb-1" />
           <span className="text-[22px] font-extrabold text-tyro-text-primary tabular-nums leading-none">{ws.totalAksiyonlar}</span>
-          <span className="text-[10px] font-medium text-tyro-text-muted">{t("workspace.myActions")}</span>
+          <span className="text-[11px] font-medium text-tyro-text-muted">{t("workspace.myActions")}</span>
         </div>
       </div>
 
@@ -49,7 +49,7 @@ export default function BentoKPI() {
             <circle cx="18" cy="18" r="14" fill="none" stroke="var(--tyro-success)" strokeWidth="3"
               strokeDasharray={`${aksiyonPct * 0.88} 88`} strokeLinecap="round" />
           </svg>
-          <span className="absolute inset-0 flex items-center justify-center text-[10px] font-extrabold tabular-nums text-emerald-600">
+          <span className="absolute inset-0 flex items-center justify-center text-[11px] font-extrabold tabular-nums text-emerald-600">
             {aksiyonPct}%
           </span>
         </div>
@@ -59,7 +59,7 @@ export default function BentoKPI() {
             <span className="text-[12px] font-bold text-tyro-text-primary">{ws.achievedAksiyonlar}</span>
             <span className="text-[11px] text-tyro-text-muted">/ {ws.totalAksiyonlar}</span>
           </div>
-          <span className="text-[10px] text-tyro-text-muted">{t("workspace.completed")}</span>
+          <span className="text-[11px] text-tyro-text-muted">{t("workspace.completed")}</span>
         </div>
       </div>
 
@@ -72,7 +72,7 @@ export default function BentoKPI() {
           <AlertTriangle size={20} className="text-red-500 shrink-0" />
           <div className="flex-1 min-w-0">
             <span className="text-[16px] font-extrabold text-tyro-text-primary tabular-nums">{ws.behindAksiyonlar + ws.atRiskAksiyonlar}</span>
-            <span className="text-[10px] text-tyro-text-muted block">
+            <span className="text-[11px] text-tyro-text-muted block">
               {ws.behindAksiyonlar} {t("workspace.late")}, {ws.atRiskAksiyonlar} {t("workspace.atRisk")}
             </span>
           </div>
@@ -82,7 +82,7 @@ export default function BentoKPI() {
       {/* Overall progress bar */}
       <div className="mt-auto">
         <div className="flex items-center justify-between mb-1.5">
-          <span className="text-[10px] font-medium text-tyro-text-muted">{t("workspace.avgProgress")}</span>
+          <span className="text-[11px] font-medium text-tyro-text-muted">{t("workspace.avgProgress")}</span>
           <span className="text-[13px] font-extrabold text-tyro-navy tabular-nums">%{overallPct}</span>
         </div>
         <div className="h-2.5 rounded-full bg-tyro-bg overflow-hidden">

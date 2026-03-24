@@ -137,7 +137,7 @@ function AlignmentNode({ data }: NodeProps<Node<AlignmentNodeData>>) {
       {/* Source + Status */}
       <div className="flex items-center gap-2 mt-1">
         <span
-          className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full"
+          className="text-[11px] font-semibold px-1.5 py-0.5 rounded-full"
           style={{
             backgroundColor: isParent ? "rgba(255,255,255,0.2)" : sc.bg,
             color: isParent ? "#fff" : sc.text,
@@ -146,7 +146,7 @@ function AlignmentNode({ data }: NodeProps<Node<AlignmentNodeData>>) {
           {hedef.source}
         </span>
         <span
-          className="text-[10px] font-semibold flex items-center gap-1"
+          className="text-[11px] font-semibold flex items-center gap-1"
           style={{ color: isParent ? "rgba(255,255,255,0.8)" : "#64748b" }}
         >
           <span
@@ -172,7 +172,7 @@ function AlignmentNode({ data }: NodeProps<Node<AlignmentNodeData>>) {
           />
         </div>
         <span
-          className="text-[10px] font-bold tabular-nums"
+          className="text-[11px] font-bold tabular-nums"
           style={{ color: isParent ? "rgba(255,255,255,0.9)" : "#475569" }}
         >
           %{hedef.progress}
@@ -181,7 +181,7 @@ function AlignmentNode({ data }: NodeProps<Node<AlignmentNodeData>>) {
 
       {/* Action count */}
       <div
-        className="text-[10px] font-medium mt-1"
+        className="text-[11px] font-medium mt-1"
         style={{ color: isParent ? "rgba(255,255,255,0.6)" : "#94a3b8" }}
       >
         {actionCount} {t("tAlignment.actions")}
@@ -417,7 +417,7 @@ function TAlignmentInner() {
     `px-3 py-1.5 text-[12px] font-semibold rounded-full transition-all cursor-pointer border ${
       active
         ? "text-white shadow-sm"
-        : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
+        : "bg-white text-tyro-text-secondary border-tyro-border hover:bg-tyro-bg"
     }`;
 
   return (
@@ -435,7 +435,7 @@ function TAlignmentInner() {
         className="flex flex-wrap items-center gap-2 mb-3 px-1"
       >
         {/* Direction toggle */}
-        <div className="flex items-center gap-1 bg-white rounded-full border border-slate-200 p-0.5">
+        <div className="flex items-center gap-1 bg-white rounded-full border border-tyro-border p-0.5">
           <button
             onClick={() => setDirection("LR")}
             className={pillBtnClass(direction === "LR")}
@@ -456,11 +456,11 @@ function TAlignmentInner() {
 
         {/* Source filter */}
         <div className="flex items-center gap-1.5">
-          <Filter size={14} className="text-slate-400" />
+          <Filter size={14} className="text-tyro-text-muted" />
           <select
             value={sourceFilter}
             onChange={(e) => setSourceFilter(e.target.value)}
-            className="text-[12px] font-medium bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-slate-700 cursor-pointer focus:outline-none focus:ring-1 focus:ring-slate-300"
+            className="text-[12px] font-medium bg-white border border-tyro-border rounded-lg px-2.5 py-1.5 text-tyro-text-primary cursor-pointer focus:outline-none focus:ring-1 focus:ring-slate-300"
           >
             {sourceOptions.map((o) => (
               <option key={o.key} value={o.key}>
@@ -474,7 +474,7 @@ function TAlignmentInner() {
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          className="text-[12px] font-medium bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-slate-700 cursor-pointer focus:outline-none focus:ring-1 focus:ring-slate-300"
+          className="text-[12px] font-medium bg-white border border-tyro-border rounded-lg px-2.5 py-1.5 text-tyro-text-primary cursor-pointer focus:outline-none focus:ring-1 focus:ring-slate-300"
         >
           {statusOptions.map((o) => (
             <option key={o.key} value={o.key}>
@@ -490,21 +490,21 @@ function TAlignmentInner() {
         <div className="flex items-center gap-1">
           <button
             onClick={() => zoomIn({ duration: 200 })}
-            className="w-8 h-8 flex items-center justify-center rounded-lg bg-white border border-slate-200 text-slate-500 hover:bg-slate-50 transition-colors cursor-pointer"
+            className="w-8 h-8 flex items-center justify-center rounded-lg bg-white border border-tyro-border text-tyro-text-muted hover:bg-tyro-bg transition-colors cursor-pointer"
             title="Zoom In"
           >
             <ZoomIn size={15} />
           </button>
           <button
             onClick={() => zoomOut({ duration: 200 })}
-            className="w-8 h-8 flex items-center justify-center rounded-lg bg-white border border-slate-200 text-slate-500 hover:bg-slate-50 transition-colors cursor-pointer"
+            className="w-8 h-8 flex items-center justify-center rounded-lg bg-white border border-tyro-border text-tyro-text-muted hover:bg-tyro-bg transition-colors cursor-pointer"
             title="Zoom Out"
           >
             <ZoomOut size={15} />
           </button>
           <button
             onClick={() => fitView({ padding: 0.15, duration: 400 })}
-            className="w-8 h-8 flex items-center justify-center rounded-lg bg-white border border-slate-200 text-slate-500 hover:bg-slate-50 transition-colors cursor-pointer"
+            className="w-8 h-8 flex items-center justify-center rounded-lg bg-white border border-tyro-border text-tyro-text-muted hover:bg-tyro-bg transition-colors cursor-pointer"
             title={t("tAlignment.fitView")}
           >
             <Maximize size={15} />
@@ -531,7 +531,7 @@ function TAlignmentInner() {
         initial={{ opacity: 0, scale: 0.98 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.4, delay: 0.1 }}
-        className="rounded-2xl border border-slate-200 overflow-hidden bg-white"
+        className="rounded-2xl border border-tyro-border overflow-hidden bg-white"
         style={{ height: "calc(100vh - 240px)", minHeight: 500 }}
       >
         <ReactFlow

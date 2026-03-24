@@ -36,7 +36,7 @@ function RadialGauge({ value, total, avgProgress: _avgProgress, color }: { value
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
         <span className="text-[14px] font-extrabold tabular-nums text-tyro-text-primary leading-none">{value}</span>
-        <span className="text-[10px] text-tyro-text-muted">/ {total}</span>
+        <span className="text-[11px] text-tyro-text-muted">/ {total}</span>
       </div>
     </div>
   );
@@ -104,7 +104,7 @@ function ProgressCard({ item, onClick, showParent }: {
             strokeLinecap="round"
           />
         </svg>
-        <span className="absolute inset-0 flex items-center justify-center text-[10px] font-bold tabular-nums" style={{ color: pColor }}>
+        <span className="absolute inset-0 flex items-center justify-center text-[11px] font-bold tabular-nums" style={{ color: pColor }}>
           {item.progress}
         </span>
       </div>
@@ -112,19 +112,19 @@ function ProgressCard({ item, onClick, showParent }: {
       {/* Info */}
       <div className="min-w-0 flex-1">
         {showParent && item.parentName && (
-          <p className="text-[10px] font-medium text-tyro-navy/40 truncate leading-tight mb-0.5">{item.parentName}</p>
+          <p className="text-[11px] font-medium text-tyro-navy/40 truncate leading-tight mb-0.5">{item.parentName}</p>
         )}
         <p className="text-[12px] font-semibold text-tyro-text-primary truncate group-hover:text-tyro-navy transition-colors leading-snug">{item.name}</p>
         <div className="flex items-center gap-2 mt-0.5">
           <StatusBadge status={item.status} />
           {item.owner && (
-            <span className="text-[10px] text-tyro-text-muted truncate max-w-[100px]">{item.owner}</span>
+            <span className="text-[11px] text-tyro-text-muted truncate max-w-[100px]">{item.owner}</span>
           )}
           {item.endDate && (
-            <span className="text-[10px] text-tyro-text-muted">{formatDate(item.endDate)}</span>
+            <span className="text-[11px] text-tyro-text-muted">{formatDate(item.endDate)}</span>
           )}
           {item.aksiyonCount !== undefined && (
-            <span className="text-[10px] text-tyro-text-muted">{item.aksiyonCount} aks.</span>
+            <span className="text-[11px] text-tyro-text-muted">{item.aksiyonCount} aks.</span>
           )}
         </div>
       </div>
@@ -247,7 +247,7 @@ export default function MyProjectsList() {
                         className="h-full rounded-lg flex items-center justify-center cursor-help hover:brightness-110 transition-all"
                         style={{ width: `${(count / ws.myHedefler.length) * 100}%`, backgroundColor: SOURCE_COLORS[source] ?? "#94a3b8", minWidth: 40 }}
                       >
-                        <span className="text-[10px] font-bold text-white/90 drop-shadow-sm">{source} · {pct}%</span>
+                        <span className="text-[11px] font-bold text-white/90 drop-shadow-sm">{source} · {pct}%</span>
                       </div>
                     </Tooltip>
                   );

@@ -162,7 +162,7 @@ export default function DashboardPage() {
           >
             <Search size={16} />
             <span className="text-[13px] text-tyro-text-muted">{t("common.search")}</span>
-            <kbd className="hidden sm:inline-flex items-center px-1.5 py-0.5 rounded-md bg-tyro-bg border border-tyro-border text-[10px] font-mono text-tyro-text-muted ml-auto sm:ml-2">
+            <kbd className="hidden sm:inline-flex items-center px-1.5 py-0.5 rounded-md bg-tyro-bg border border-tyro-border text-[11px] font-mono text-tyro-text-muted ml-auto sm:ml-2">
               ⌘K
             </kbd>
           </button>
@@ -291,7 +291,7 @@ function ActiveBentoCard({ kpi, completedHedefler }: ActiveBentoCardProps) {
           </div>
           {kpi.progress !== undefined && (
             <CircularProgress progress={kpi.progress} size={44} strokeWidth={4} color={kpi.color}>
-              <span className="text-[10px] font-bold text-tyro-text-secondary">{kpi.progress}%</span>
+              <span className="text-[11px] font-bold text-tyro-text-secondary">{kpi.progress}%</span>
             </CircularProgress>
           )}
         </div>
@@ -306,7 +306,7 @@ function ActiveBentoCard({ kpi, completedHedefler }: ActiveBentoCardProps) {
               className="overflow-hidden"
             >
               <div className="mt-4 pt-3 border-t border-tyro-border">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-tyro-text-muted mb-2">
+                <p className="text-[11px] font-bold uppercase tracking-wider text-tyro-text-muted mb-2">
                   Tamamlanan Hedefler
                 </p>
                 {completedHedefler.length === 0 ? (

@@ -1,10 +1,11 @@
 import "@/lib/i18n";
-import { StrictMode } from "react";
+import { StrictMode, type ReactNode } from "react";
 import { createRoot } from "react-dom/client";
 import { PublicClientApplication, EventType } from "@azure/msal-browser";
 import type { AuthenticationResult } from "@azure/msal-browser";
 import { MsalProvider } from "@azure/msal-react";
 import { HeroUIProvider } from "@heroui/react";
+import { useUIStore } from "@/stores/uiStore";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { msalConfig } from "@/lib/auth/msalConfig";
 import App from "./App";
@@ -63,13 +64,18 @@ const queryClient = new QueryClient({
   },
 });
 
+function LocaleAwareHeroUI({ children }: { children: ReactNode }) {
+  const locale = useUIStore((s) => s.locale);
+  return <HeroUIProvider locale={locale === "tr" ? "tr-TR" : "en-US"}>{children}</HeroUIProvider>;
+}
+
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <MsalProvider instance={msalInstance}>
       <QueryClientProvider client={queryClient}>
-        <HeroUIProvider>
+        <LocaleAwareHeroUI>
           <App />
-        </HeroUIProvider>
+        </LocaleAwareHeroUI>
       </QueryClientProvider>
     </MsalProvider>
   </StrictMode>

@@ -15,7 +15,7 @@ const ROLE_KEY: Record<UR, string> = { Admin: "roles.admin", "Proje Lideri": "ro
 const ROLE_STYLES: { role: UserRole; icon: typeof Crown; color: string; bgColor: string; borderColor: string }[] = [
   { role: "Admin", icon: Crown, color: "text-amber-600", bgColor: "bg-amber-500/10", borderColor: "border-amber-500/30" },
   { role: "Proje Lideri", icon: Briefcase, color: "text-blue-600", bgColor: "bg-blue-500/10", borderColor: "border-blue-500/30" },
-  { role: "Kullanıcı", icon: User, color: "text-slate-500", bgColor: "bg-slate-500/10", borderColor: "border-slate-500/30" },
+  { role: "Kullanıcı", icon: User, color: "text-tyro-text-muted", bgColor: "bg-slate-500/10", borderColor: "border-slate-500/30" },
 ];
 
 export default function GuvenlikPage() {

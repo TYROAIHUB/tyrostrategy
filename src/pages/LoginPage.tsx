@@ -180,10 +180,10 @@ export default function LoginPage() {
               }}
             >
               <div className="relative z-10">
-                <h2 className="text-[22px] sm:text-[26px] font-extrabold tracking-tight mb-1 text-slate-800">
+                <h2 className="text-[22px] sm:text-[26px] font-extrabold tracking-tight mb-1 text-tyro-text-primary">
                   {t("login.welcome")}
                 </h2>
-                <p className="text-slate-400 text-[13px] sm:text-[15px] mb-6">
+                <p className="text-tyro-text-muted text-[13px] sm:text-[15px] mb-6">
                   {t("login.selectUser")}
                 </p>
 
@@ -210,12 +210,12 @@ export default function LoginPage() {
                       >
                         <RoleAvatar name={user.name} role={user.role} size="sm" />
                         <div className="flex-1 min-w-0">
-                          <h4 className="text-[13px] font-semibold text-slate-700 truncate">{user.name}</h4>
-                          <p className="text-[11px] text-slate-400 truncate">{user.department}</p>
+                          <h4 className="text-[13px] font-semibold text-tyro-text-primary truncate">{user.name}</h4>
+                          <p className="text-[11px] text-tyro-text-muted truncate">{user.department}</p>
                         </div>
                         <div className="flex items-center gap-1.5 shrink-0">
                           <span
-                            className="text-[10px] font-bold px-2 py-0.5 rounded-full"
+                            className="text-[11px] font-bold px-2 py-0.5 rounded-full"
                             style={{
                               backgroundColor: `${user.accent}15`,
                               color: user.accentDark,
@@ -256,27 +256,27 @@ export default function LoginPage() {
 
                 {/* Info */}
                 <div className="flex items-start gap-2.5 mt-5 p-3 rounded-xl bg-slate-50">
-                  <Shield size={14} className="text-slate-300 mt-0.5 shrink-0" />
-                  <p className="text-[11px] text-slate-400 leading-relaxed">
+                  <Shield size={14} className="text-tyro-text-muted mt-0.5 shrink-0" />
+                  <p className="text-[11px] text-tyro-text-muted leading-relaxed">
                     {t("login.demoMode")}
                   </p>
                 </div>
 
                 {/* Language toggle */}
                 <div className="flex items-center justify-center gap-2 mt-4">
-                  <Globe size={14} className="text-slate-400" />
+                  <Globe size={14} className="text-tyro-text-muted" />
                   <button
                     type="button"
                     onClick={() => setLocale("tr")}
-                    className={`text-[12px] font-semibold px-2.5 py-1 rounded-lg transition-colors cursor-pointer ${locale === "tr" ? "bg-tyro-navy/10 text-tyro-navy" : "text-slate-400 hover:text-slate-600"}`}
+                    className={`text-[12px] font-semibold px-2.5 py-1 rounded-lg transition-colors cursor-pointer ${locale === "tr" ? "bg-tyro-navy/10 text-tyro-navy" : "text-tyro-text-muted hover:text-tyro-text-primary"}`}
                   >
                     TR
                   </button>
-                  <span className="text-slate-300">|</span>
+                  <span className="text-tyro-text-muted">|</span>
                   <button
                     type="button"
                     onClick={() => setLocale("en")}
-                    className={`text-[12px] font-semibold px-2.5 py-1 rounded-lg transition-colors cursor-pointer ${locale === "en" ? "bg-tyro-navy/10 text-tyro-navy" : "text-slate-400 hover:text-slate-600"}`}
+                    className={`text-[12px] font-semibold px-2.5 py-1 rounded-lg transition-colors cursor-pointer ${locale === "en" ? "bg-tyro-navy/10 text-tyro-navy" : "text-tyro-text-muted hover:text-tyro-text-primary"}`}
                   >
                     EN
                   </button>
@@ -291,7 +291,7 @@ export default function LoginPage() {
                   <div className="w-10 h-10 rounded-xl bg-white/10 backdrop-blur-sm flex items-center justify-center">
                     <f.icon size={16} className="text-tyro-gold" />
                   </div>
-                  <span className="text-[10px] text-white/50 font-medium text-center leading-tight max-w-[64px]">
+                  <span className="text-[11px] text-white/50 font-medium text-center leading-tight max-w-[64px]">
                     {f.title}
                   </span>
                 </div>
@@ -299,7 +299,7 @@ export default function LoginPage() {
             </div>
 
             {/* Copyright */}
-            <p className="text-center text-[10px] sm:text-xs text-white/25 mt-6">
+            <p className="text-center text-[11px] sm:text-xs text-white/25 mt-6">
               © 2026 TTECH Business Solutions · Tiryaki Agro
             </p>
           </motion.div>

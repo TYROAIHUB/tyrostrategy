@@ -333,7 +333,7 @@ function TabloView({
                       {hedef.name}
                     </button>
                     {childAksiyonlar.length > 0 && (
-                      <span className="text-[10px] text-tyro-text-muted bg-tyro-bg px-1.5 py-0.5 rounded-full shrink-0">
+                      <span className="text-[11px] text-tyro-text-muted bg-tyro-bg px-1.5 py-0.5 rounded-full shrink-0">
                         {childAksiyonlar.length}
                       </span>
                     )}
@@ -347,7 +347,7 @@ function TabloView({
                     <div className="flex-1 h-1.5 rounded-full bg-tyro-border/50 overflow-hidden">
                       <div className="h-full rounded-full bg-tyro-navy transition-all" style={{ width: `${hedef.progress}%` }} />
                     </div>
-                    <span className="text-[10px] font-semibold text-tyro-text-muted tabular-nums">%{hedef.progress}</span>
+                    <span className="text-[11px] font-semibold text-tyro-text-muted tabular-nums">%{hedef.progress}</span>
                   </div>
                   <span className="text-xs text-tyro-text-muted truncate">{hedef.department}</span>
                   <span className="text-xs text-tyro-text-muted tabular-nums">{formatDate(hedef.startDate)}</span>
@@ -385,7 +385,7 @@ function TabloView({
                             <div className="flex-1 h-1.5 rounded-full bg-tyro-border/50 overflow-hidden">
                               <div className="h-full rounded-full bg-tyro-info transition-all" style={{ width: `${aksiyon.progress}%` }} />
                             </div>
-                            <span className="text-[10px] font-semibold text-tyro-text-muted tabular-nums">%{aksiyon.progress}</span>
+                            <span className="text-[11px] font-semibold text-tyro-text-muted tabular-nums">%{aksiyon.progress}</span>
                           </div>
                           <span />
                           <span className="text-xs text-tyro-text-muted tabular-nums">{formatDate(aksiyon.startDate)}</span>
@@ -431,11 +431,11 @@ function TabloView({
                       {hedef.name}
                     </button>
                     <div className="flex items-center gap-2 mt-1 flex-wrap">
-                      <span className={clsx("text-[10px] font-semibold px-2 py-0.5 rounded-full", sourceBadgeClasses[hedef.source])}>
+                      <span className={clsx("text-[11px] font-semibold px-2 py-0.5 rounded-full", sourceBadgeClasses[hedef.source])}>
                         {hedef.source}
                       </span>
                       <StatusBadge status={hedef.status} />
-                      <span className="text-[10px] text-tyro-text-muted">{hedef.owner}</span>
+                      <span className="text-[11px] text-tyro-text-muted">{hedef.owner}</span>
                     </div>
                   </div>
                 </div>
@@ -443,7 +443,7 @@ function TabloView({
                   <div className="flex-1 h-1.5 rounded-full bg-tyro-border/50 overflow-hidden">
                     <div className="h-full rounded-full bg-tyro-navy" style={{ width: `${hedef.progress}%` }} />
                   </div>
-                  <span className="text-[10px] font-semibold text-tyro-text-muted tabular-nums">%{hedef.progress}</span>
+                  <span className="text-[11px] font-semibold text-tyro-text-muted tabular-nums">%{hedef.progress}</span>
                 </div>
                 <AnimatePresence>
                   {isExpanded && childAksiyonlar.length > 0 && (
@@ -461,7 +461,7 @@ function TabloView({
                         >
                           <ListChecks size={12} className="text-tyro-text-muted shrink-0" />
                           <span className="text-xs text-tyro-text-secondary flex-1 truncate">{a.name}</span>
-                          <span className="text-[10px] font-semibold text-tyro-text-muted tabular-nums">%{a.progress}</span>
+                          <span className="text-[11px] font-semibold text-tyro-text-muted tabular-nums">%{a.progress}</span>
                           <StatusBadge status={a.status} />
                         </button>
                       ))}
@@ -567,7 +567,7 @@ function KanbanView({
             <div className="flex items-center gap-2 mb-3 px-1">
               <span className={clsx("w-2.5 h-2.5 rounded-full", statusColumnColors[status])} />
               <span className="text-xs font-bold text-tyro-text-primary">{getStatusLabel(status, t)}</span>
-              <span className="text-[10px] font-semibold text-tyro-text-muted bg-tyro-surface px-2 py-0.5 rounded-full">
+              <span className="text-[11px] font-semibold text-tyro-text-muted bg-tyro-surface px-2 py-0.5 rounded-full">
                 {items.length}
               </span>
             </div>
@@ -588,7 +588,7 @@ function KanbanView({
                     )}
                   >
                     {/* Hedef tag */}
-                    <p className="text-[10px] font-medium text-tyro-text-muted truncate mb-1">
+                    <p className="text-[11px] font-medium text-tyro-text-muted truncate mb-1">
                       {getHedefName(aksiyon.hedefId)}
                     </p>
                     {/* Aksiyon name */}
@@ -603,12 +603,12 @@ function KanbanView({
                       <div className="flex-1 h-1.5 rounded-full bg-tyro-border/50 overflow-hidden">
                         <div className="h-full rounded-full bg-tyro-navy transition-all" style={{ width: `${aksiyon.progress}%` }} />
                       </div>
-                      <span className="text-[10px] font-semibold text-tyro-text-muted tabular-nums">%{aksiyon.progress}</span>
+                      <span className="text-[11px] font-semibold text-tyro-text-muted tabular-nums">%{aksiyon.progress}</span>
                     </div>
                     {/* Owner */}
                     <div className="flex items-center gap-1.5 mt-2">
                       <div className="w-5 h-5 rounded-full bg-tyro-navy/10 flex items-center justify-center">
-                        <span className="text-[10px] font-bold text-tyro-navy">
+                        <span className="text-[11px] font-bold text-tyro-navy">
                           {aksiyon.owner
                             .split(" ")
                             .map((w) => w[0])
@@ -855,7 +855,7 @@ function GanttView({
                 <div className="flex items-start gap-2 mb-2">
                   <span className="w-2.5 h-2.5 rounded-full shrink-0 mt-1" style={{ backgroundColor: color }} />
                   <div className="flex-1 min-w-0">
-                    <p className="text-[10px] font-medium text-tyro-text-muted truncate">{hedefler.find((h) => h.id === task.hedefId)?.name}</p>
+                    <p className="text-[11px] font-medium text-tyro-text-muted truncate">{hedefler.find((h) => h.id === task.hedefId)?.name}</p>
                     <p className="text-sm font-semibold text-tyro-text-primary leading-snug">{task.name}</p>
                     <p className="text-[11px] text-tyro-text-muted mt-0.5">
                       {new Date(task.startDate).toLocaleDateString(i18n.language === "en" ? "en-US" : "tr-TR", { day: "2-digit", month: "short", year: "numeric" })}
@@ -892,7 +892,7 @@ function GanttView({
                   {timeLabels.map((tl, idx) => (
                     <span
                       key={idx}
-                      className="absolute text-[10px] font-semibold text-tyro-text-muted whitespace-nowrap"
+                      className="absolute text-[11px] font-semibold text-tyro-text-muted whitespace-nowrap"
                       style={{ left: `${tl.pct}%`, bottom: 4 }}
                     >
                       {tl.label}
@@ -918,11 +918,11 @@ function GanttView({
                       <div className="shrink-0 flex items-center gap-2 px-2" style={{ width: LABEL_COL_W }}>
                         <span className="w-2 h-2 rounded-full shrink-0 mt-1" style={{ backgroundColor: color }} />
                         <div className="flex flex-col truncate flex-1 leading-tight" title={`${hedefler.find((h) => h.id === task.hedefId)?.name ?? ""} \u203A ${task.name}`}>
-                          <span className="text-[10px] text-tyro-text-muted truncate">{hedefler.find((h) => h.id === task.hedefId)?.name}</span>
+                          <span className="text-[11px] text-tyro-text-muted truncate">{hedefler.find((h) => h.id === task.hedefId)?.name}</span>
                           <span className="text-[11px] text-tyro-text-secondary truncate">{task.name}</span>
                         </div>
                         {isClipped && (
-                          <span className="text-[10px] font-bold text-tyro-text-muted bg-tyro-bg px-1.5 py-0.5 rounded shrink-0">
+                          <span className="text-[11px] font-bold text-tyro-text-muted bg-tyro-bg px-1.5 py-0.5 rounded shrink-0">
                             {clippedYear}\u203A
                           </span>
                         )}
@@ -959,7 +959,7 @@ function GanttView({
                             style={{ width: `${100 - task.progress}%` }}
                           />
                           {width > 4 && (
-                            <span className="relative z-10 px-2 text-[10px] font-bold text-white truncate">
+                            <span className="relative z-10 px-2 text-[11px] font-bold text-white truncate">
                               %{task.progress}
                             </span>
                           )}
@@ -1014,7 +1014,7 @@ function WBSAksiyonNode({ aksiyon }: { aksiyon: Aksiyon }) {
       <span className="w-1.5 h-1.5 rounded-full bg-tyro-text-muted/40 shrink-0" />
       <ListChecks size={14} className="text-tyro-text-muted shrink-0" />
       <span className="text-xs text-tyro-text-secondary flex-1 min-w-0 truncate">{aksiyon.name}</span>
-      <span className="text-[10px] font-semibold text-tyro-text-muted tabular-nums shrink-0">
+      <span className="text-[11px] font-semibold text-tyro-text-muted tabular-nums shrink-0">
         %{aksiyon.progress}
       </span>
       <StatusBadge status={aksiyon.status} />
@@ -1043,11 +1043,11 @@ function WBSHedefNode({ hedef }: { hedef: Hedef }) {
         <div className="flex-1 min-w-0">
           <span className="text-sm font-bold text-tyro-text-primary block">{hedef.name}</span>
           <div className="flex items-center gap-2 mt-0.5">
-            <span className="text-[10px] text-tyro-text-muted truncate">{hedef.source} · {hedef.owner}</span>
+            <span className="text-[11px] text-tyro-text-muted truncate">{hedef.source} · {hedef.owner}</span>
           </div>
           <div className="flex items-center gap-2 mt-1 sm:hidden">
             <StatusBadge status={hedef.status} />
-            <span className="text-[10px] font-semibold text-tyro-text-muted bg-tyro-bg px-2 py-0.5 rounded-full">
+            <span className="text-[11px] font-semibold text-tyro-text-muted bg-tyro-bg px-2 py-0.5 rounded-full">
               {childAksiyonlar.length} aksiyon
             </span>
           </div>
@@ -1056,7 +1056,7 @@ function WBSHedefNode({ hedef }: { hedef: Hedef }) {
           <div className="w-16 h-1.5 rounded-full bg-tyro-border/50 overflow-hidden">
             <div className="h-full rounded-full bg-tyro-navy transition-all" style={{ width: `${hedef.progress}%` }} />
           </div>
-          <span className="text-[10px] font-semibold text-tyro-text-muted tabular-nums w-8 text-right">%{hedef.progress}</span>
+          <span className="text-[11px] font-semibold text-tyro-text-muted tabular-nums w-8 text-right">%{hedef.progress}</span>
           <StatusBadge status={hedef.status} />
           <span className="text-xs font-semibold text-tyro-text-muted bg-tyro-bg px-2 py-0.5 rounded-full">
             {childAksiyonlar.length} aksiyon
@@ -1133,7 +1133,7 @@ function WBSView({
               <span className="text-[11px] font-bold uppercase tracking-wider text-tyro-text-muted">
                 {source}
               </span>
-              <span className="text-[10px] text-tyro-text-muted bg-tyro-bg px-2 py-0.5 rounded-full">
+              <span className="text-[11px] text-tyro-text-muted bg-tyro-bg px-2 py-0.5 rounded-full">
                 {items.length} hedef
               </span>
             </div>

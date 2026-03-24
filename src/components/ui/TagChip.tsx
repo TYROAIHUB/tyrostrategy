@@ -25,7 +25,7 @@ export default function TagChip({ name, color: colorOverride, size = "sm", showI
       onClose={onClose}
       classNames={{
         base: `border ${size === "sm" ? "h-5" : "h-6"}`,
-        content: `${size === "sm" ? "text-[10px]" : "text-[11px]"} font-medium px-1`,
+        content: `${size === "sm" ? "text-[11px]" : "text-[11px]"} font-medium px-1`,
         closeButton: "opacity-70 hover:opacity-100",
       }}
       style={{

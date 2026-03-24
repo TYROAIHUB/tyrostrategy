@@ -127,7 +127,7 @@ export function RoleAvatar({ name, role, size = "md", showBadge = false, innerBg
       {/* Badge */}
       {showBadge && (
         <span
-          className="text-[10px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap"
+          className="text-[11px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap"
           style={{
             background: style.badgeBg,
             color: style.badgeText,

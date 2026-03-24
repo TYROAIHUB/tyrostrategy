@@ -93,21 +93,23 @@ export default function HedefForm({ hedef, onSuccess }: HedefFormProps) {
         parentObjectiveId: data.parentObjectiveId || undefined,
       };
       if (hedef) {
-        // Detect changed fields for detailed toast
-        const changes: string[] = [];
-        if (data.name !== hedef.name) changes.push(`Ad: "${data.name}"`);
-        if (data.status !== hedef.status) changes.push(`Durum: ${data.status}`);
-        if (data.owner !== hedef.owner) changes.push(`Sahip: ${data.owner}`);
-        if (data.source !== hedef.source) changes.push(`Kaynak: ${data.source}`);
-        if (data.department !== hedef.department) changes.push(`Departman: ${data.department}`);
-        if (data.startDate !== hedef.startDate) changes.push(`Başlangıç: ${data.startDate}`);
-        if (data.endDate !== hedef.endDate) changes.push(`Bitiş: ${data.endDate}`);
+        // Detect changed fields for structured toast
+        const details: { label: string; value: string }[] = [];
+        if (data.name !== hedef.name) details.push({ label: "Ad", value: data.name });
+        if (data.status !== hedef.status) details.push({ label: "Durum", value: data.status });
+        if (data.owner !== hedef.owner) details.push({ label: "Sahip", value: data.owner });
+        if (data.source !== hedef.source) details.push({ label: "Kaynak", value: data.source });
+        if (data.department !== hedef.department) details.push({ label: "Departman", value: data.department });
+        if (data.startDate !== hedef.startDate) details.push({ label: "Başlangıç", value: data.startDate });
+        if (data.endDate !== hedef.endDate) details.push({ label: "Bitiş", value: data.endDate });
         updateHedef(hedef.id, payload);
-        const detail = changes.length > 0 ? `"${data.name}" → ${changes.join(", ")}` : `"${data.name}" ${t("toast.updatedSuccessfully")}.`;
-        toast.success(t("toast.objectiveUpdated"), detail);
+        toast.success(t("toast.objectiveUpdated"), {
+          message: data.name,
+          details: details.length > 0 ? details : [{ label: "Durum", value: "Değişiklik kaydedildi" }],
+        });
       } else {
         addHedef({ ...payload, progress: 0 });
-        toast.success(t("toast.objectiveCreated"), `"${data.name}" oluşturuldu.`);
+        toast.success(t("toast.objectiveCreated"), { message: data.name });
       }
       onSuccess();
     } catch (err) {

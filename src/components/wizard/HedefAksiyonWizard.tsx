@@ -4,7 +4,7 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@heroui/react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, ArrowRight, Wand2, Target, Users, ListChecks, ClipboardCheck } from "lucide-react";
+import { ArrowLeft, ArrowRight, Wand2, Target, Users, ListChecks, ClipboardCheck, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
 import { useDataStore } from "@/stores/dataStore";
@@ -205,12 +205,12 @@ export default function HedefAksiyonWizard({ onClose }: Props) {
         setShowSuccess(true);
 
         const aksCount = data.aksiyonlar?.length ?? 0;
-        toast.success(
-          t("toast.objectiveCreated"),
-          aksCount > 0
-            ? `"${data.name}" — ${aksCount} aksiyon eklendi`
-            : `"${data.name}" oluşturuldu.`,
-        );
+        toast.success(t("toast.objectiveCreated"), {
+          message: data.name,
+          details: aksCount > 0
+            ? [{ label: "Aksiyonlar", value: `${aksCount} aksiyon eklendi` }]
+            : undefined,
+        });
       } catch (err) {
         toast.error(
           t("toast.operationFailed"),
@@ -262,15 +262,25 @@ export default function HedefAksiyonWizard({ onClose }: Props) {
       {/* Sticky footer navigation */}
       {!showSuccess && (
         <div className="flex items-center justify-between pt-5 mt-5 border-t border-tyro-border">
-          <Button
-            variant="light"
-            isDisabled={currentStep === 0}
-            onPress={goBack}
-            startContent={<ArrowLeft size={14} />}
-            className="font-semibold"
-          >
-            {t("wizard.back")}
-          </Button>
+          {currentStep === 0 ? (
+            <Button
+              variant="light"
+              onPress={onClose}
+              startContent={<X size={14} />}
+              className="font-semibold text-tyro-text-muted"
+            >
+              {t("common.cancel", "İptal")}
+            </Button>
+          ) : (
+            <Button
+              variant="light"
+              onPress={goBack}
+              startContent={<ArrowLeft size={14} />}
+              className="font-semibold"
+            >
+              {t("wizard.back")}
+            </Button>
+          )}
 
           <div className="flex items-center gap-2">
             {/* Atla butonu — sadece aksiyonlar adımında (step 2) */}
