@@ -8,6 +8,7 @@ import GlassCard from "@/components/ui/GlassCard";
 import StatusBadge from "@/components/ui/StatusBadge";
 import { useMyWorkspace } from "@/hooks/useMyWorkspace";
 import { useDataStore } from "@/stores/dataStore";
+import TagChip from "@/components/ui/TagChip";
 import { progressColor } from "@/lib/colorUtils";
 import { getStatusLabel } from "@/lib/constants";
 import { formatDate } from "@/lib/dateUtils";
@@ -145,6 +146,11 @@ export default function MyProjectsList() {
   // Stats
   const hedefSourceMap = new Map<string, number>();
   for (const h of ws.myHedefler) hedefSourceMap.set(h.source, (hedefSourceMap.get(h.source) ?? 0) + 1);
+  const hedefTagMap = new Map<string, number>();
+  for (const h of ws.myHedefler) {
+    for (const tag of (h.tags ?? [])) hedefTagMap.set(tag, (hedefTagMap.get(tag) ?? 0) + 1);
+  }
+  const getTagColor = useDataStore((s) => s.getTagColor);
   const hedefAvg = ws.myHedefler.length > 0
     ? Math.round(ws.myHedefler.reduce((s, h) => s + h.progress, 0) / ws.myHedefler.length) : 0;
   const hedefAchieved = ws.myHedefler.filter((h) => h.status === "Achieved").length;
@@ -252,6 +258,32 @@ export default function MyProjectsList() {
                     </Tooltip>
                   );
                 })}
+              </div>
+            </div>
+          )}
+
+          {/* Tag distribution (hedef only) — stacked bar like source distribution */}
+          {tab === "hedef" && hedefTagMap.size > 0 && (
+            <div>
+              <p className="text-[12px] font-bold text-tyro-text-primary mb-2">{t("workspace.tagDistribution", "Etiket Dağılımı")}</p>
+              <div className="flex items-center gap-1 h-5 rounded-lg overflow-hidden bg-tyro-bg/40">
+                {Array.from(hedefTagMap.entries())
+                  .sort((a, b) => b[1] - a[1])
+                  .map(([tag, count]) => {
+                    const total = ws.myHedefler.length;
+                    const pct = Math.round((count / total) * 100);
+                    const tagColor = getTagColor(tag);
+                    return (
+                      <Tooltip key={tag} content={`${tag}: ${count} (${pct}%)`} placement="top" size="sm">
+                        <div
+                          className="h-full rounded-lg flex items-center justify-center cursor-help hover:brightness-110 transition-all"
+                          style={{ width: `${(count / total) * 100}%`, backgroundColor: tagColor, minWidth: 40 }}
+                        >
+                          <span className="text-[11px] font-bold text-white/90 drop-shadow-sm truncate px-1">{tag} · {pct}%</span>
+                        </div>
+                      </Tooltip>
+                    );
+                  })}
               </div>
             </div>
           )}

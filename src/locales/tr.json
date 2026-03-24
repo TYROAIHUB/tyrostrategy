@@ -234,6 +234,7 @@
     "late": "geciken",
     "atRisk": "riskli",
     "sourceDistribution": "Kaynak Dağılımı",
+    "tagDistribution": "Etiket Dağılımı",
     "objectiveProgress": "Hedef İlerlemesi",
     "actionProgress": "Aksiyon İlerlemesi",
     "statusDistribution": "Durum Dağılımı"

@@ -8,10 +8,11 @@ interface TagChipProps {
   color?: string;       // override — yoksa store'dan çekilir
   size?: "sm" | "md";
   showIcon?: boolean;
+  count?: number;       // opsiyonel sayaç badge'i
   onClose?: () => void;
 }
 
-export default function TagChip({ name, color: colorOverride, size = "sm", showIcon, onClose }: TagChipProps) {
+export default function TagChip({ name, color: colorOverride, size = "sm", showIcon, count, onClose }: TagChipProps) {
   const tagDefinitions = useDataStore((s) => s.tagDefinitions);
   const color = colorOverride ?? tagDefinitions.find(
     (t) => t.name.toLocaleLowerCase("tr") === name.toLocaleLowerCase("tr")
@@ -34,7 +35,7 @@ export default function TagChip({ name, color: colorOverride, size = "sm", showI
         borderColor: `${color}40`,
       }}
     >
-      {name}
+      {name}{count != null && <span className="ml-1 opacity-60 font-bold">{count}</span>}
     </Chip>
   );
 }

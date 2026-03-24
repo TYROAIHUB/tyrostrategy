@@ -234,6 +234,7 @@
     "late": "late",
     "atRisk": "at risk",
     "sourceDistribution": "Source Distribution",
+    "tagDistribution": "Tag Distribution",
     "objectiveProgress": "Objective Progress",
     "actionProgress": "Action Progress",
     "statusDistribution": "Status Distribution"
