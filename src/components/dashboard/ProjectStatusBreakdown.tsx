@@ -6,7 +6,7 @@ export default function ProjectStatusBreakdown() {
   const { t } = useTranslation();
   return (
     <GlassCard className="p-6 flex-1 flex flex-col">
-      <h3 className="text-sm font-semibold text-tyro-text-secondary mb-4">
+      <h3 className="text-[13px] font-bold text-tyro-text-primary mb-3">
         {t("dashboard.objectiveStatusBreakdown")}
       </h3>
       <div className="space-y-5">

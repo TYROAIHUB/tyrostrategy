@@ -35,7 +35,7 @@ export default function MultiRingWidget() {
 
   return (
     <GlassCard className="p-6 flex-1 flex flex-col">
-      <h3 className="text-sm font-semibold text-tyro-text-secondary mb-6">
+      <h3 className="text-[13px] font-bold text-tyro-text-primary mb-3">
         {t("dashboard.overallProgress")}
       </h3>
 
