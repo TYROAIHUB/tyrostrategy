@@ -143,14 +143,14 @@ export default function TagActivityGauge() {
                 <tspan
                   x="50%"
                   dy="-0.6em"
-                  className="fill-tyro-text-secondary text-[10px] font-medium"
+                  style={{ fill: "var(--color-tyro-text-secondary, #64748b)", fontSize: 11, fontWeight: 500 }}
                 >
                   Hedef
                 </tspan>
                 <tspan
                   x="50%"
                   dy="1.4em"
-                  className="fill-tyro-text-primary text-[18px] font-bold"
+                  style={{ fill: "var(--color-tyro-text-primary, #0f172a)", fontSize: 20, fontWeight: 700 }}
                 >
                   {totalTaggedHedef}
                 </tspan>
