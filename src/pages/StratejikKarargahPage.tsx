@@ -17,7 +17,7 @@ import SlidingPanel from "@/components/shared/SlidingPanel";
 import HedefDetail from "@/components/hedefler/HedefDetail";
 import AksiyonDetail from "@/components/aksiyonlar/AksiyonDetail";
 import { useDataStore } from "@/stores/dataStore";
-const HedefAksiyonWizard = lazy(() => import("@/components/wizard/HedefAksiyonWizard"));
+import HedefAksiyonWizard from "@/components/wizard/HedefAksiyonWizard";
 import WizardHeader from "@/components/wizard/WizardHeader";
 import MasterDetailView from "@/components/karargah/MasterDetailView";
 import { getStatusLabel } from "@/lib/constants";
@@ -191,9 +191,7 @@ export default function StratejikKarargahPage() {
         maxWidth={680}
         headerContent={<WizardHeader />}
       >
-        <Suspense fallback={<div className="flex items-center justify-center h-64 text-tyro-text-muted text-sm">{t("common.loading")}</div>}>
-          {wizardOpen && <HedefAksiyonWizard onClose={() => setWizardOpen(false)} />}
-        </Suspense>
+        {wizardOpen && <HedefAksiyonWizard onClose={() => setWizardOpen(false)} />}
       </SlidingPanel>
     </div>
   );

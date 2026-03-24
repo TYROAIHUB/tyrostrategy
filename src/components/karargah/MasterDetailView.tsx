@@ -821,7 +821,7 @@ export default function MasterDetailView({ hedefler, onOpenWizard }: MasterDetai
 
       {/* ===== ACTIONS FAB — İşlemler ===== */}
       {selectedHedef && (
-      <div className="fixed bottom-6 right-24 z-40">
+      <div className="fixed bottom-24 right-20 lg:bottom-6 lg:right-24 z-40">
         <AnimatePresence>
           {actionsFabOpen && (
             <>
@@ -943,7 +943,7 @@ export default function MasterDetailView({ hedefler, onOpenWizard }: MasterDetai
       )}
 
       {/* ===== CREATE FAB — Oluşturma ===== */}
-      <div className="fixed bottom-6 right-6 lg:bottom-6 lg:right-6 z-40">
+      <div className="fixed bottom-24 right-6 lg:bottom-6 lg:right-6 z-40">
         <AnimatePresence>
           {fabOpen && (
             <>

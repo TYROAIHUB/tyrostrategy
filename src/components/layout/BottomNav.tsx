@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useLayoutEffect, useCallback, type PointerEvent as ReactPointerEvent } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useSidebarTheme } from "@/hooks/useSidebarTheme";
@@ -16,8 +16,83 @@ import {
   Settings,
   Map,
 } from "lucide-react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, useMotionValue, useTransform, useSpring } from "framer-motion";
 import { usePermissions } from "@/hooks/usePermissions";
+
+/* ─── Dock magnification config ─── */
+const DOCK_ICON_SIZE = 22;      // base icon size
+const DOCK_ICON_MAX = 32;       // max icon size when hovered
+const DOCK_DISTANCE = 100;      // px radius of magnification effect
+
+function useDockMagnification(mouseX: ReturnType<typeof useMotionValue>, ref: React.RefObject<HTMLButtonElement | null>) {
+  const distance = useTransform(mouseX, (val: number) => {
+    const el = ref.current;
+    if (!el || val < 0) return DOCK_DISTANCE + 1; // out of range
+    const rect = el.getBoundingClientRect();
+    return Math.abs(val - (rect.left + rect.width / 2));
+  });
+
+  const sizeRaw = useTransform(distance, [0, DOCK_DISTANCE], [DOCK_ICON_MAX, DOCK_ICON_SIZE]);
+  const size = useSpring(sizeRaw, { mass: 0.1, stiffness: 200, damping: 15 });
+
+  return size;
+}
+
+function DockItem({
+  item,
+  active,
+  accentColor,
+  mouseX,
+  riskCount,
+  onClick,
+}: {
+  item: { id: string; label: string; icon: any; path: string };
+  active: boolean;
+  accentColor: string;
+  mouseX: ReturnType<typeof useMotionValue>;
+  riskCount?: number;
+  onClick: () => void;
+}) {
+  const ref = useRef<HTMLButtonElement>(null);
+  const size = useDockMagnification(mouseX, ref);
+  const Icon = item.icon;
+
+  return (
+    <button
+      ref={ref}
+      data-nav-item
+      onClick={onClick}
+      className="relative z-10 flex flex-col items-center justify-center min-w-[48px] min-h-[48px] gap-0.5 cursor-pointer touch-none"
+    >
+      <motion.div
+        className="flex items-center justify-center"
+        style={{ width: size, height: size }}
+        animate={active ? { y: -3 } : { y: 0 }}
+        transition={{ type: "spring", stiffness: 300, damping: 20 }}
+      >
+        <Icon
+          size="100%"
+          strokeWidth={active ? 2.5 : 1.8}
+          className="transition-colors duration-200"
+          style={{ color: active ? accentColor : undefined }}
+        />
+      </motion.div>
+      {item.id === "aksiyonlar" && riskCount && riskCount > 0 && (
+        <span className="absolute -top-0.5 right-0 min-w-[16px] h-4 px-1 rounded-full bg-red-500 text-white text-[11px] font-bold flex items-center justify-center">
+          {riskCount}
+        </span>
+      )}
+      <motion.span
+        animate={{ opacity: active ? 1 : 0.5, scale: active ? 1 : 0.95 }}
+        transition={{ duration: 0.2 }}
+        className="text-[11px] font-semibold leading-tight"
+        style={{ color: active ? accentColor : undefined }}
+      >
+        {item.label}
+      </motion.span>
+    </button>
+  );
+}
 
 export default function BottomNav() {
   const { t } = useTranslation();
@@ -63,26 +138,39 @@ export default function BottomNav() {
   const moreIndex = filteredMainItems.length;
   const resolvedIndex = activeIndex >= 0 ? activeIndex : isMoreActive ? moreIndex : -1;
 
+  // Mouse X for dock magnification
+  const mouseX = useMotionValue(-1);
+
+  const handlePointerMove = (e: ReactPointerEvent) => {
+    mouseX.set(e.clientX);
+  };
+
+  const handlePointerLeave = () => {
+    mouseX.set(-1);
+  };
+
   // Measure active tab position for sliding indicator
-  const updateIndicator = useCallback(() => {
+  const measureIndicator = useCallback(() => {
     if (resolvedIndex < 0 || !navRef.current) return;
     const buttons = navRef.current.querySelectorAll<HTMLButtonElement>("[data-nav-item]");
     const btn = buttons[resolvedIndex];
     if (btn) {
       const navRect = navRef.current.getBoundingClientRect();
       const btnRect = btn.getBoundingClientRect();
-      setIndicatorStyle({
-        left: btnRect.left - navRect.left + btnRect.width / 2 - 16,
-        width: 32,
-      });
+      const center = btnRect.left - navRect.left + btnRect.width / 2;
+      setIndicatorStyle({ left: center - 12, width: 24 });
     }
   }, [resolvedIndex]);
 
+  // Use layoutEffect for immediate measurement after DOM paint
+  useLayoutEffect(() => {
+    measureIndicator();
+  }, [measureIndicator]);
+
   useEffect(() => {
-    updateIndicator();
-    window.addEventListener("resize", updateIndicator);
-    return () => window.removeEventListener("resize", updateIndicator);
-  }, [updateIndicator]);
+    window.addEventListener("resize", measureIndicator);
+    return () => window.removeEventListener("resize", measureIndicator);
+  }, [measureIndicator]);
 
   const handleNavigate = (path: string) => {
     navigate(path);
@@ -144,56 +232,38 @@ export default function BottomNav() {
           )}
         </AnimatePresence>
 
-        {/* Bottom nav bar — glassmorphism floating pill */}
+        {/* Bottom nav bar — macOS Dock style floating pill */}
         <div className="mx-3 mb-2 rounded-2xl bg-tyro-surface/70 backdrop-blur-2xl border border-white/20 shadow-[0_4px_30px_rgba(0,0,0,0.08)]">
-          <div ref={navRef} className="relative flex items-center justify-around px-1 h-16">
+          <div
+            ref={navRef}
+            className="relative flex items-end justify-around px-1 h-16 pb-1"
+            onPointerMove={handlePointerMove}
+            onPointerLeave={handlePointerLeave}
+          >
             {/* Sliding dot indicator under active icon */}
             {resolvedIndex >= 0 && (
               <motion.div
-                className="absolute bottom-1.5 h-[3px] rounded-full"
+                className="absolute bottom-1 h-[3px] rounded-full"
                 style={{ backgroundColor: accentColor }}
-                animate={{ left: indicatorStyle.left + 4, width: indicatorStyle.width - 8 }}
+                animate={{ left: indicatorStyle.left, width: indicatorStyle.width }}
                 transition={{ type: "spring", damping: 28, stiffness: 350, mass: 0.8 }}
               />
             )}
 
             {allNavItems.map((item) => {
-              const Icon = item.icon;
               const isMore = item.path === "__more__";
               const active = isMore ? (isMoreActive || moreOpen) : isActive(item.path);
 
               return (
-                <button
+                <DockItem
                   key={item.id}
-                  data-nav-item
+                  item={item}
+                  active={active}
+                  accentColor={accentColor}
+                  mouseX={mouseX}
+                  riskCount={item.id === "aksiyonlar" ? riskCount : undefined}
                   onClick={() => isMore ? setMoreOpen((prev) => !prev) : handleNavigate(item.path)}
-                  className="relative z-10 flex flex-col items-center justify-center min-w-[48px] min-h-[44px] gap-0.5 cursor-pointer"
-                >
-                  <motion.div
-                    animate={active ? { scale: [1, 1.15, 1], y: -2 } : { scale: 1, y: 0 }}
-                    transition={{ duration: 0.35, ease: [0.34, 1.56, 0.64, 1] }}
-                  >
-                    <Icon
-                      size={22}
-                      strokeWidth={active ? 2.5 : 1.8}
-                      className="transition-colors duration-200"
-                      style={{ color: active ? accentColor : undefined }}
-                    />
-                  </motion.div>
-                  {item.id === "aksiyonlar" && riskCount > 0 && (
-                    <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 rounded-full bg-red-500 text-white text-[11px] font-bold flex items-center justify-center">
-                      {riskCount}
-                    </span>
-                  )}
-                  <motion.span
-                    animate={{ opacity: active ? 1 : 0.5, scale: active ? 1 : 0.95 }}
-                    transition={{ duration: 0.2 }}
-                    className="text-[11px] font-semibold leading-tight"
-                    style={{ color: active ? accentColor : undefined }}
-                  >
-                    {item.label}
-                  </motion.span>
-                </button>
+                />
               );
             })}
           </div>

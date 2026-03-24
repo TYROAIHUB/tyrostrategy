@@ -12,8 +12,8 @@ const MyHedeflerList = lazy(() => import("@/components/workspace/MyProjectsList"
 const UpcomingDeadlines = lazy(() => import("@/components/workspace/UpcomingDeadlines"));
 const MyProgressWidget = lazy(() => import("@/components/workspace/MyProgressWidget"));
 const BentoKPI = lazy(() => import("@/components/workspace/BentoKPI"));
-const HedefAksiyonWizard = lazy(() => import("@/components/wizard/HedefAksiyonWizard"));
-const WizardHeader = lazy(() => import("@/components/wizard/WizardHeader"));
+import HedefAksiyonWizard from "@/components/wizard/HedefAksiyonWizard";
+import WizardHeader from "@/components/wizard/WizardHeader";
 
 function getGreetingKey(): string {
   const hour = new Date().getHours();
@@ -131,9 +131,7 @@ export default function WorkspacePage() {
         maxWidth={680}
         headerContent={<WizardHeader />}
       >
-        <Suspense fallback={<div className="flex items-center justify-center h-64 text-tyro-text-muted text-sm">{t("common.loading")}</div>}>
-          {wizardOpen && <HedefAksiyonWizard onClose={() => setWizardOpen(false)} />}
-        </Suspense>
+        {wizardOpen && <HedefAksiyonWizard onClose={() => setWizardOpen(false)} />}
       </SlidingPanel>
     </motion.div>
   );
