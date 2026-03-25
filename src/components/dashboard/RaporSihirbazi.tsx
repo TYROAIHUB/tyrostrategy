@@ -30,8 +30,8 @@ const SECTIONS = [
   { id: "progressChart", label: "İlerleme Dağılımı Grafiği", default: true },
   { id: "deptTable", label: "Departman Tablosu", default: true },
   { id: "attention", label: "Dikkat Gerektiren", default: true },
-  { id: "details", label: "Proje Detayları", default: true },
-  { id: "steps", label: "Proje Adımları", default: true },
+  { id: "details", label: "Hedef Detayları", default: true },
+  { id: "steps", label: "Aksiyonlar", default: true },
 ];
 
 const STATUS_LABELS: Record<EntityStatus, string> = {
@@ -89,7 +89,7 @@ export default function RaporSihirbazi() {
   // State
   const [activeTabId, setActiveTabId] = useState("turkiye");
   const [tabName, setTabName] = useState("Türkiye");
-  const [reportTitle, setReportTitle] = useState("Türkiye Projeleri Durum Raporu");
+  const [reportTitle, setReportTitle] = useState("Türkiye Hedefleri Durum Raporu");
   const [selectedHedefIds, setSelectedHedefIds] = useState<Set<string>>(new Set());
   const [initializedTabs, setInitializedTabs] = useState<Set<string>>(new Set());
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -229,7 +229,7 @@ export default function RaporSihirbazi() {
     const tab = REPORT_TABS.find((t) => t.id === tabId)!;
     setActiveTabId(tabId);
     setTabName(tab.label);
-    setReportTitle(`${tab.label} Projeleri Durum Raporu`);
+    setReportTitle(`${tab.label} Hedefleri Durum Raporu`);
     initTab(tabId);
     setStatusFilter("all");
     setCategoryFilter("all");
@@ -333,7 +333,7 @@ export default function RaporSihirbazi() {
           {/* Filters */}
           <div>
             <label className="text-[10px] font-bold uppercase text-tyro-text-muted tracking-wider mb-1.5 flex items-center gap-1.5">
-              <Filter size={11} /> Projeler
+              <Filter size={11} /> Hedefler
               <button onClick={selectAll} className="ml-auto text-[10px] text-tyro-gold hover:underline cursor-pointer">Tümü</button>
               <button onClick={clearAll} className="text-[10px] text-tyro-text-muted hover:underline cursor-pointer">Temizle</button>
             </label>
@@ -361,7 +361,7 @@ export default function RaporSihirbazi() {
               </select>
             </div>
 
-            {/* Project list */}
+            {/* Hedefct list */}
             <div className="max-h-[280px] overflow-y-auto space-y-0.5 border border-tyro-border/20 rounded-lg p-1">
               {filteredHedefler.map((h) => (
                 <button
@@ -607,12 +607,12 @@ export default function RaporSihirbazi() {
             </section>
           )}
 
-          {/* 4. Dikkat Gerektiren Projeler */}
+          {/* 4. Dikkat Gerektiren Hedefler */}
           {sections.attention && attentionItems.length > 0 && (
             <section className="mb-8">
               <h3 className="flex items-center gap-2 text-[13px] font-bold text-red-600 uppercase tracking-wider mb-4">
                 <span className="w-1 h-5 bg-red-500 rounded-full" />
-                4. Dikkat Gerektiren Projeler
+                4. Dikkat Gerektiren Hedefler
               </h3>
               <div className="space-y-2">
                 {attentionItems.map((h) => {
@@ -657,12 +657,12 @@ export default function RaporSihirbazi() {
             </section>
           )}
 
-          {/* 5. Proje Detayları */}
+          {/* 5. Hedef Detayları */}
           {sections.details && (
             <section className="mb-8">
               <h3 className="flex items-center gap-2 text-[13px] font-bold text-tyro-navy uppercase tracking-wider mb-4">
                 <span className="w-1 h-5 bg-tyro-navy rounded-full" />
-                5. Proje Detayları
+                5. Hedef Detayları
               </h3>
               <div className="space-y-4">
                 {reportHedefler.map((h) => {
@@ -684,7 +684,7 @@ export default function RaporSihirbazi() {
                           : "border-tyro-border/30 bg-white dark:bg-tyro-surface"
                       }`}
                     >
-                      {/* Project header */}
+                      {/* Hedefct header */}
                       <div
                         className={`px-5 py-4 flex items-start justify-between ${
                           h.status === "Behind" ? "bg-red-50/50" :
@@ -714,7 +714,7 @@ export default function RaporSihirbazi() {
                         </div>
                       </div>
 
-                      {/* Project meta */}
+                      {/* Hedefct meta */}
                       <div className="px-5 py-3 grid grid-cols-4 gap-4 border-t border-tyro-border/15 text-[11px]">
                         <div>
                           <span className="text-[9px] font-bold uppercase text-tyro-text-muted">Süreç Durumu</span>
@@ -747,7 +747,7 @@ export default function RaporSihirbazi() {
                             onClick={() => setExpandedHedef(isExpanded ? null : h.id)}
                             className="w-full flex items-center gap-2 px-5 py-2 text-[10px] font-bold uppercase text-tyro-text-muted tracking-wider hover:bg-tyro-bg/50 cursor-pointer"
                           >
-                            Proje Adımları ({hAksiyonlar.length})
+                            Aksiyonlar ({hAksiyonlar.length})
                             {isExpanded ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
                           </button>
                           <AnimatePresence>

@@ -143,37 +143,40 @@ export default function DashboardPage() {
     setSearchParams(tab === "dashboard" ? {} : { tab });
   };
 
+  const KpiTabs = () => (
+    <div className="flex items-center gap-1">
+      {[
+        { id: "dashboard", label: "Dashboard", icon: BarChart3 },
+        { id: "rapor", label: "Rapor Sihirbazı", icon: FileText },
+      ].map((tab) => (
+        <button
+          key={tab.id}
+          onClick={() => switchTab(tab.id)}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-semibold transition-colors cursor-pointer ${
+            activeTab === tab.id
+              ? "bg-tyro-navy text-white shadow-sm"
+              : "text-tyro-text-muted hover:text-tyro-text-secondary hover:bg-tyro-bg"
+          }`}
+        >
+          <tab.icon size={13} />
+          {tab.label}
+        </button>
+      ))}
+    </div>
+  );
+
   // ===== Rapor Sihirbazı tab =====
   if (activeTab === "rapor") {
     return (
       <div className="space-y-0">
-        {/* Page header with tabs */}
-        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-2 mb-1">
+        <div className="flex items-center justify-between mb-3">
           <div>
             <h1 className="text-[18px] font-extrabold tracking-tight text-tyro-text-primary">
               Yönetim Raporu
             </h1>
-            <p className="text-sm text-tyro-text-secondary">TYRO Strategy — Stratejik Hedef ve Aksiyon Yönetimi</p>
+            <p className="text-[12px] text-tyro-text-secondary">Stratejik hedef ve aksiyon raporları oluşturun</p>
           </div>
-          <div className="flex items-center gap-1">
-            {[
-              { id: "dashboard", label: "Dashboard", icon: BarChart3 },
-              { id: "rapor", label: "Rapor Sihirbazı", icon: FileText },
-            ].map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => switchTab(tab.id)}
-                className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-[12px] font-semibold transition-colors cursor-pointer ${
-                  activeTab === tab.id
-                    ? "bg-tyro-navy text-white"
-                    : "text-tyro-text-secondary hover:bg-tyro-bg"
-                }`}
-              >
-                <tab.icon size={14} />
-                {tab.label}
-              </button>
-            ))}
-          </div>
+          <KpiTabs />
         </div>
         <Suspense fallback={<div className="flex items-center justify-center py-20 text-tyro-text-muted">Yükleniyor...</div>}>
           <RaporSihirbazi />
@@ -201,26 +204,8 @@ export default function DashboardPage() {
             </p>
           </div>
 
-        <div className="flex items-center gap-2 shrink-0">
-            {/* Tab switcher */}
-            {[
-              { id: "dashboard", label: "Dashboard", icon: BarChart3 },
-              { id: "rapor", label: "Rapor Sihirbazı", icon: FileText },
-            ].map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => switchTab(tab.id)}
-                className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-[12px] font-semibold transition-colors cursor-pointer ${
-                  activeTab === tab.id
-                    ? "bg-tyro-navy text-white"
-                    : "text-tyro-text-secondary hover:bg-tyro-bg"
-                }`}
-              >
-                <tab.icon size={14} />
-                {tab.label}
-              </button>
-            ))}
-          </div>
+        <div className="flex items-center gap-3 shrink-0">
+          <KpiTabs />
           <div className="flex items-center gap-2 shrink-0">
           <button
             type="button"
@@ -241,6 +226,7 @@ export default function DashboardPage() {
             <SlidersHorizontal size={16} />
             <span className="text-[13px] font-semibold">{t("common.filter")}</span>
           </button>
+          </div>
         </div>
         </div>
       </motion.div>
