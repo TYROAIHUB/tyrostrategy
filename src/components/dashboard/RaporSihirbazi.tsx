@@ -824,39 +824,42 @@ ${clone.outerHTML}
         <div className="max-w-[900px] mx-auto px-6 py-6 print:max-w-full print:px-10">
           {/* COVER PAGE — Corporate Executive Style */}
           {sections.cover && (
-            <div className="mb-10 print:break-after-always print:!mb-0 print:!h-[100vh] print:!max-h-[100vh] print:!overflow-hidden print:m-0 print:rounded-none relative overflow-hidden rounded-xl" style={{ minHeight: 520 }}>
-              {/* Background — navy gradient with subtle pattern */}
-              <div className="absolute inset-0 bg-gradient-to-br from-[#0f1d2f] via-[#1e3a5f] to-[#0f2847] print:!bg-gradient-to-br" />
+            <div className="report-cover mb-10 relative overflow-hidden rounded-xl" style={{ minHeight: 480 }}>
+              {/* Background */}
+              <div className="absolute inset-0 bg-gradient-to-br from-[#0f1d2f] via-[#1e3a5f] to-[#0f2847]" />
               <div className="absolute inset-0 opacity-[0.04]" style={{ backgroundImage: "radial-gradient(circle at 1px 1px, rgba(255,255,255,0.4) 1px, transparent 0)", backgroundSize: "28px 28px" }} />
-              <div className="absolute top-0 right-0 w-[300px] h-[300px] rounded-full bg-tyro-gold/8 blur-[100px] print:hidden" />
-              <div className="absolute bottom-0 left-0 w-[200px] h-[200px] rounded-full bg-blue-500/6 blur-[80px] print:hidden" />
 
-              {/* Content — flex column, justify between for top/center/bottom */}
-              <div className="relative z-10 flex flex-col h-full px-10 py-8 print:!h-[100vh] print:!max-h-[100vh] print:px-16 print:py-12 print:justify-between print:overflow-hidden" style={{ minHeight: 520 }}>
-                {/* Top — Logo + branding (fixed at top) */}
+              {/* Content — table layout ensures footer stays at bottom */}
+              <div className="relative z-10 flex flex-col justify-between h-full px-10 py-8" style={{ minHeight: 480 }}>
+                {/* Top — Logo */}
                 <div className="flex items-center justify-between shrink-0">
                   <div className="flex items-center gap-3">
-                    <TyroLogo size={36} variant="sidebar" isDark />
+                    <div className="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center">
+                      <svg width="20" height="20" viewBox="0 0 32 32" fill="none">
+                        <path d="M8 4L24 4L28 16L16 28L4 16L8 4Z" fill="#c8922a" opacity="0.9"/>
+                        <path d="M12 8L20 8L22 14L16 20L10 14L12 8Z" fill="white" opacity="0.3"/>
+                      </svg>
+                    </div>
                     <div>
                       <p className="text-[16px] font-extrabold tracking-tight"><span className="text-white/90">tyro</span><span className="text-tyro-gold">strategy</span></p>
-                      <p className="text-[11px] text-white/40">Stratejik Hedef Yönetim Platformu</p>
+                      <p className="text-[10px] text-white/40">Stratejik Hedef Yönetim Platformu</p>
                     </div>
                   </div>
-                  <p className="text-[11px] text-white/30 uppercase tracking-wider">Gizli · Kurumsal Kullanım</p>
+                  <p className="text-[10px] text-white/30 uppercase tracking-wider">Gizli · Kurumsal Kullanım</p>
                 </div>
 
-                {/* Center — Title + Stats (vertically centered) */}
-                <div className="flex-1 flex flex-col items-center justify-center text-center">
-                  <p className="text-[11px] font-semibold text-tyro-gold uppercase tracking-[0.2em] mb-3">Yönetim Raporu</p>
-                  <h1 className="text-[30px] font-extrabold text-white tracking-tight leading-tight">{reportTitle}</h1>
-                  <div className="h-[2px] w-20 rounded-full bg-gradient-to-r from-tyro-gold to-tyro-gold-light mx-auto mt-5 mb-5" />
-                  <p className="text-[14px] text-white/70">{today}</p>
+                {/* Center — Title + Stats */}
+                <div className="flex-1 flex flex-col items-center justify-center text-center py-10">
+                  <p className="text-[10px] font-semibold text-tyro-gold uppercase tracking-[0.2em] mb-3">Yönetim Raporu</p>
+                  <h1 className="text-[28px] font-extrabold text-white tracking-tight leading-tight">{reportTitle}</h1>
+                  <div className="h-[2px] w-16 rounded-full bg-gradient-to-r from-tyro-gold to-tyro-gold-light mx-auto mt-4 mb-4" />
+                  <p className="text-[13px] text-white/70">{today}</p>
                   {effectiveDateRange && (
-                    <p className="text-[12px] text-white/40 mt-1">
+                    <p className="text-[11px] text-white/40 mt-1">
                       Dönem: {new Date(effectiveDateRange.from).toLocaleDateString("tr-TR")} — {new Date(effectiveDateRange.to).toLocaleDateString("tr-TR")}
                     </p>
                   )}
-                  <div className="flex items-center justify-center gap-10 mt-8">
+                  <div className="flex items-center justify-center gap-8 mt-6">
                     {[
                       { label: "Hedef", value: reportHedefler.length },
                       { label: "Aksiyon", value: reportAksiyonlar.length },
@@ -864,15 +867,15 @@ ${clone.outerHTML}
                       { label: "Ort. İlerleme", value: `%${avgProgress}` },
                     ].map((s) => (
                       <div key={s.label} className="text-center">
-                        <p className="text-[24px] font-extrabold text-white tabular-nums">{s.value}</p>
-                        <p className="text-[10px] text-white/40 uppercase tracking-wider mt-0.5">{s.label}</p>
+                        <p className="text-[22px] font-extrabold text-white tabular-nums">{s.value}</p>
+                        <p className="text-[9px] text-white/40 uppercase tracking-wider mt-0.5">{s.label}</p>
                       </div>
                     ))}
                   </div>
                 </div>
 
-                {/* Bottom — Footer (fixed at bottom) */}
-                <div className="flex items-center justify-between text-[10px] text-white/25 shrink-0">
+                {/* Bottom — Footer */}
+                <div className="flex items-center justify-between text-[9px] text-white/25 shrink-0">
                   <span>Powered by TTECH Business Solutions</span>
                   <span>© {new Date().getFullYear()} Tiryaki Agro</span>
                 </div>
