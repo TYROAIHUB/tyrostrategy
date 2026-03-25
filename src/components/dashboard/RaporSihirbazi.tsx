@@ -71,12 +71,6 @@ const DATE_PRESETS = [
   { id: "custom", label: "Özel Aralık" },
 ];
 
-const REPORT_TEMPLATES = [
-  { id: "full", label: "Tam Rapor", desc: "Tüm bölümleri içerir", sections: REPORT_SECTIONS.map((s) => s.id) },
-  { id: "monthly", label: "Aylık Yönetim", desc: "Özet + ilerleme + dikkat", sections: ["cover", "summary", "progressChart", "attention"] },
-  { id: "quarterly", label: "Çeyreklik Değerlendirme", desc: "Özet + pasta + departman + detaylar", sections: ["cover", "summary", "statusPie", "deptTable", "details", "actions"] },
-  { id: "dept", label: "Departman Bazlı", desc: "Departman tablosu + detaylar", sections: ["cover", "summary", "deptTable", "details"] },
-];
 
 function progressColor(p: number): string {
   if (p === 0) return "#94a3b8";
@@ -117,6 +111,7 @@ export default function RaporSihirbazi() {
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
   const [exportOpen, setExportOpen] = useState(false);
+  const [hideActionsInExport, setHideActionsInExport] = useState(false);
   const reportRef = useRef<HTMLDivElement>(null);
 
   // Derived
@@ -486,27 +481,6 @@ ${clone.outerHTML}
             </div>
 
             <div className="px-5 py-4 space-y-3.5 max-h-[75vh] overflow-y-auto">
-              {/* Rapor Şablonu */}
-              <div>
-                <label className="block text-[11px] font-bold text-tyro-text-secondary mb-2 uppercase tracking-wider">Rapor Şablonu</label>
-                <div className="grid grid-cols-4 gap-2">
-                  {REPORT_TEMPLATES.map((tpl) => (
-                    <button
-                      key={tpl.id}
-                      onClick={() => {
-                        const next: Record<string, boolean> = {};
-                        REPORT_SECTIONS.forEach((s) => { next[s.id] = tpl.sections.includes(s.id); });
-                        setSections(next);
-                      }}
-                      className="text-left px-3 py-2 rounded-lg border border-tyro-border/20 hover:bg-tyro-bg/50 cursor-pointer transition-colors"
-                    >
-                      <p className="text-[11px] font-semibold text-tyro-text-primary">{tpl.label}</p>
-                      <p className="text-[10px] text-tyro-text-muted mt-0.5">{tpl.desc}</p>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
               {/* Tarih Aralığı */}
               <div>
                 <label className="block text-[11px] font-bold text-tyro-text-secondary mb-2 uppercase tracking-wider">
@@ -838,6 +812,18 @@ ${clone.outerHTML}
                         </div>
                       </button>
                     ))}
+                    {/* Aksiyonları gizle toggle */}
+                    <div className="border-t border-tyro-border/20 px-4 py-2.5">
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={hideActionsInExport}
+                          onChange={(e) => setHideActionsInExport(e.target.checked)}
+                          className="w-4 h-4 rounded border-tyro-border accent-tyro-navy cursor-pointer"
+                        />
+                        <span className="text-[11px] font-semibold text-tyro-text-secondary">Aksiyonları gizle</span>
+                      </label>
+                    </div>
                   </motion.div>
                 </>
               )}
@@ -858,10 +844,10 @@ ${clone.outerHTML}
               <div className="absolute top-0 right-0 w-[300px] h-[300px] rounded-full bg-tyro-gold/8 blur-[100px]" />
               <div className="absolute bottom-0 left-0 w-[200px] h-[200px] rounded-full bg-blue-500/6 blur-[80px]" />
 
-              {/* Content */}
-              <div className="relative z-10 flex flex-col justify-between h-full px-10 py-10" style={{ minHeight: 480 }}>
-                {/* Top — Logo area */}
-                <div className="flex items-center justify-between">
+              {/* Content — flex column, justify between for top/center/bottom */}
+              <div className="relative z-10 flex flex-col h-full px-10 py-8" style={{ minHeight: 480 }}>
+                {/* Top — Logo + branding (fixed at top) */}
+                <div className="flex items-center justify-between shrink-0">
                   <div className="flex items-center gap-3">
                     <TyroLogo size={36} variant="sidebar" isDark />
                     <div>
@@ -872,8 +858,8 @@ ${clone.outerHTML}
                   <p className="text-[11px] text-white/30 uppercase tracking-wider">Gizli · Kurumsal Kullanım</p>
                 </div>
 
-                {/* Center — Title */}
-                <div className="text-center py-8">
+                {/* Center — Title + Stats (vertically centered) */}
+                <div className="flex-1 flex flex-col items-center justify-center text-center">
                   <p className="text-[11px] font-semibold text-tyro-gold uppercase tracking-[0.2em] mb-3">Yönetim Raporu</p>
                   <h1 className="text-[30px] font-extrabold text-white tracking-tight leading-tight">{reportTitle}</h1>
                   <div className="h-[2px] w-20 rounded-full bg-gradient-to-r from-tyro-gold to-tyro-gold-light mx-auto mt-5 mb-5" />
@@ -883,11 +869,7 @@ ${clone.outerHTML}
                       Dönem: {new Date(effectiveDateRange.from).toLocaleDateString("tr-TR")} — {new Date(effectiveDateRange.to).toLocaleDateString("tr-TR")}
                     </p>
                   )}
-                </div>
-
-                {/* Bottom — Stats + Footer */}
-                <div>
-                  <div className="flex items-center justify-center gap-10 mb-8">
+                  <div className="flex items-center justify-center gap-10 mt-8">
                     {[
                       { label: "Hedef", value: reportHedefler.length },
                       { label: "Aksiyon", value: reportAksiyonlar.length },
@@ -900,10 +882,12 @@ ${clone.outerHTML}
                       </div>
                     ))}
                   </div>
-                  <div className="flex items-center justify-between text-[10px] text-white/25">
-                    <span>Powered by TTECH Business Solutions</span>
-                    <span>© {new Date().getFullYear()} Tiryaki Agro</span>
-                  </div>
+                </div>
+
+                {/* Bottom — Footer (fixed at bottom) */}
+                <div className="flex items-center justify-between text-[10px] text-white/25 shrink-0">
+                  <span>Powered by TTECH Business Solutions</span>
+                  <span>© {new Date().getFullYear()} Tiryaki Agro</span>
                 </div>
               </div>
             </div>
@@ -1215,7 +1199,7 @@ ${clone.outerHTML}
                       </div>
 
                       {/* Actions (collapse) */}
-                      {sections.actions && ha.length > 0 && (
+                      {sections.actions && ha.length > 0 && !hideActionsInExport && (
                         <>
                           <button
                             onClick={() => setExpandedIds((prev) => {
@@ -1264,8 +1248,8 @@ ${clone.outerHTML}
                               </motion.div>
                             )}
                           </AnimatePresence>
-                          {/* Print — always show actions */}
-                          <div className="hidden print:block px-4 pb-3 space-y-0.5">
+                          {/* Print — show actions unless hidden */}
+                          <div className={`hidden ${hideActionsInExport ? "" : "print:block"} px-4 pb-3 space-y-0.5`}>
                             <p className="text-[11px] font-bold uppercase text-tyro-text-muted tracking-wider mb-1">Aksiyonlar ({ha.length})</p>
                             {ha.map((a) => {
                               const AIcon = STATUS_DOT[a.status];

@@ -190,7 +190,7 @@ export default function DashboardPage() {
       <motion.div variants={fadeUp} className="space-y-3 sm:space-y-0">
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
           <div className="min-w-0">
-            <div className="flex items-center gap-4 flex-wrap mb-2">
+            <div className="flex items-center gap-4 flex-wrap mb-4">
               {renderTabs()}
             </div>
             <div className="flex items-center gap-2.5 flex-wrap">
