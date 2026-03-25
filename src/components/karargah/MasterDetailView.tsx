@@ -486,11 +486,16 @@ function AksiyonRow({
       </div>
 
       {/* Owner + Dates */}
-      <div className="flex items-center gap-2 ml-7 mb-2">
+      <div className="flex items-center gap-2 ml-7 mb-1">
         <span className="text-[11px] text-tyro-text-muted">
           {aksiyon.owner || "—"} · {formatDate(aksiyon.startDate)} – {formatDate(aksiyon.endDate)}
         </span>
       </div>
+      {aksiyon.description && (
+        <p className="text-[11px] text-tyro-text-secondary leading-relaxed ml-7 mb-2 line-clamp-1">
+          {aksiyon.description}
+        </p>
+      )}
 
       {/* Progress bar + Quick buttons */}
       {(() => {

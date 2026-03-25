@@ -36,6 +36,49 @@ function buildParticipants(leader: string, hedefId: string): string[] {
 }
 
 // Deterministic tag assignment based on hedef name keywords
+// İsme bakarak kısa mock açıklama üret
+function generateHedefDescription(name: string, source: Source): string {
+  const n = name.toLocaleLowerCase("tr");
+  if (n.includes("erp")) return "Kurumsal kaynak planlama sisteminin devreye alınması ve iş süreçlerinin dijitalleştirilmesi.";
+  if (n.includes("ihracat") || n.includes("export")) return "Yeni pazarlara açılarak ihracat hacminin ve gelir çeşitliliğinin artırılması.";
+  if (n.includes("intranet")) return "Şirket içi iletişimi güçlendirecek dijital portal ve bilgi yönetim platformunun kurulması.";
+  if (n.includes("sigorta")) return "Grup şirketleri genelinde sigorta poliçelerinin konsolidasyonu ve risk yönetimi çerçevesinin oluşturulması.";
+  if (n.includes("risk")) return "Operasyonel ve finansal risklerin belirlenmesi, ölçülmesi ve azaltılmasına yönelik sistematik çalışma.";
+  if (n.includes("sulama")) return "Modern sulama altyapısı ile tarımsal verimliliğin artırılması ve su kaynaklarının etkin kullanımı.";
+  if (n.includes("mekanizasyon")) return "Tarımsal üretimde modern makine ve ekipman kullanımının yaygınlaştırılması.";
+  if (n.includes("yem") || n.includes("katkı")) return "Yem katkı ürünlerinde yeni pazar fırsatlarının değerlendirilmesi ve satış kanallarının geliştirilmesi.";
+  if (n.includes("rejeneratif") || n.includes("tarım")) return "Toprak sağlığını iyileştiren ve sürdürülebilir üretim modellerini destekleyen tarım uygulamaları.";
+  if (n.includes("protein") || n.includes("kapasite")) return "Üretim kapasitesinin artırılması ve tesislerin modernize edilmesi.";
+  if (n.includes("fıstık") || n.includes("çin")) return "Antep fıstığı ürünlerinin Çin pazarına girişi için pazar araştırması ve dağıtım ağının kurulması.";
+  if (n.includes("stok")) return "Stok seviyelerinin optimizasyonu, depo yönetimi ve tedarik zinciri verimliliğinin artırılması.";
+  if (n.includes("bütçe") || n.includes("kaynak")) return "Bütçe planlaması ve kaynakların stratejik önceliklere göre tahsisi.";
+  if (n.includes("lojistik")) return "Lojistik operasyonlarının iyileştirilmesi ve dağıtım maliyetlerinin düşürülmesi.";
+  if (n.includes("kalite") || n.includes("iso")) return "Kalite yönetim sistemlerinin güçlendirilmesi ve uluslararası standartlara uyum.";
+  if (n.includes("müşteri")) return "Müşteri memnuniyetinin artırılması ve uzun vadeli müşteri ilişkilerinin güçlendirilmesi.";
+  if (n.includes("dijital")) return "Dijital dönüşüm stratejisi kapsamında iş süreçlerinin teknoloji ile entegrasyonu.";
+  if (n.includes("operasyon")) return `${source} operasyonlarında verimlilik artışı ve süreç iyileştirme çalışmaları.`;
+  return `${source} stratejik hedefleri kapsamında planlanan çalışmaların yürütülmesi ve takibi.`;
+}
+
+function generateAksiyonDescription(name: string): string {
+  const n = name.toLocaleLowerCase("tr");
+  if (n.includes("milestone") || n.includes("discovery")) return "Proje kapsamının belirlenmesi, paydaş görüşmeleri ve mevcut durum analizi.";
+  if (n.includes("tasarım")) return "Sistem mimarisi, kullanıcı arayüzü ve teknik tasarım dökümanlarının hazırlanması.";
+  if (n.includes("bütçe") || n.includes("onay")) return "Maliyet analizi, bütçe taslağının hazırlanması ve yönetim onayının alınması.";
+  if (n.includes("test") || n.includes("pilot")) return "Geliştirilen çözümün pilot ortamda test edilmesi ve geri bildirim toplanması.";
+  if (n.includes("eğitim")) return "Kullanıcı eğitimlerinin planlanması ve gerçekleştirilmesi.";
+  if (n.includes("içerik")) return "Gerekli içeriklerin oluşturulması, çeviri ve lokalizasyon çalışmalarının yürütülmesi.";
+  if (n.includes("tedarikçi") || n.includes("satınalma")) return "Tedarikçi seçimi, teklif değerlendirmesi ve satınalma sürecinin yönetimi.";
+  if (n.includes("strateji") || n.includes("belirlenmesi")) return "Stratejik yönlendirmelerin netleştirilmesi ve eylem planının oluşturulması.";
+  if (n.includes("prosedür")) return "İş süreçleri için standart prosedürlerin yazılması ve onaylanması.";
+  if (n.includes("rapor")) return "İlerleme ve performans raporlarının hazırlanarak paydaşlara sunulması.";
+  if (n.includes("analiz") || n.includes("araştırma")) return "Veri toplama, analiz ve değerlendirme çalışmalarının gerçekleştirilmesi.";
+  if (n.includes("kurulum") || n.includes("devreye")) return "Sistem kurulumu, konfigürasyonu ve canlıya alma sürecinin yönetimi.";
+  if (n.includes("pazar")) return "Hedef pazar araştırması, rekabet analizi ve giriş stratejisinin belirlenmesi.";
+  if (n.includes("tebliğ") || n.includes("uygulama")) return "Onaylanan prosedürlerin ilgili birimlere tebliği ve uygulamaya alınması.";
+  return "Belirlenen zaman çizelgesine uygun olarak görevin planlanması ve tamamlanması.";
+}
+
 function assignTags(_name: string, _source: Source, progress: number, status: string): string[] {
   // Her hedefe durumuna göre tek bir aşama tag'i ata
   if (status === "Not Started" || progress === 0) return ["Ön Çalışma"];
@@ -66,6 +109,7 @@ function flattenHedefler(hedefler: CascadeHedef[], source: Source): Hedef[] {
       startDate: h.startDate,
       endDate: h.endDate,
       reviewDate: computeReviewDate(h.endDate),
+      description: generateHedefDescription(h.name, source),
       tags: assignTags(h.name, source, progress, mapStatus(h.status)),
       createdBy: h.leader,
       createdAt: h.startDate,
@@ -84,6 +128,7 @@ function flattenAksiyonlar(hedefler: CascadeHedef[]): Aksiyon[] {
           id: t.id,
           hedefId: h.id,
           name: t.name,
+          description: generateAksiyonDescription(t.name),
           owner: p.leader || h.leader,
           progress: t.progress,
           status: aksiyonStatus,
