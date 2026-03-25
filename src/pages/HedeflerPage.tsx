@@ -37,7 +37,7 @@ function formatDate(dateStr: string): string {
   }
 }
 
-const INITIAL_VISIBLE = new Set(["name", "owner", "source", "tags", "status", "startDate", "endDate", "aksiyonCount", "actions"]);
+const INITIAL_VISIBLE = new Set(["name", "owner", "source", "tags", "status", "startDate", "endDate", "reviewDate", "aksiyonCount", "actions"]);
 
 export default function HedeflerPage() {
   const { t } = useTranslation();
@@ -52,6 +52,7 @@ export default function HedeflerPage() {
     { uid: "status", name: t("common.status") },
     { uid: "startDate", name: t("common.startDate") },
     { uid: "endDate", name: t("common.endDate") },
+    { uid: "reviewDate", name: "Kontrol Tarihi" },
     { uid: "aksiyonCount", name: t("nav.actions") },
     { uid: "actions", name: t("common.edit") },
   ];
@@ -198,6 +199,8 @@ export default function HedeflerPage() {
         return <span className="text-[13px] text-tyro-text-secondary">{formatDate(hedef.startDate)}</span>;
       case "endDate":
         return <span className="text-[13px] text-tyro-text-secondary">{formatDate(hedef.endDate)}</span>;
+      case "reviewDate":
+        return <span className="text-[13px] text-tyro-text-secondary">{hedef.reviewDate ? formatDate(hedef.reviewDate) : "—"}</span>;
       case "aksiyonCount":
         return <span className="text-[13px] font-bold text-tyro-navy">{aksiyonCountMap.get(hedef.id) ?? 0}</span>;
       case "actions":
