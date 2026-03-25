@@ -839,7 +839,7 @@ ${clone.outerHTML}
                     <p className="text-[10px] text-white/40">Stratejik Hedef Yönetim Platformu</p>
                   </div>
                 </div>
-                <p className="text-[9px] text-white/25 mb-10">Powered by TTECH Business Solutions · © {new Date().getFullYear()} Tiryaki Agro</p>
+                <p className="text-[9px] text-white/25 mb-10">Powered by TTECH Business Solutions</p>
 
                 <p className="text-[9px] text-white/30 uppercase tracking-wider mb-6">Gizli · Kurumsal Kullanım</p>
 
