@@ -190,20 +190,7 @@ export default function DashboardPage() {
       <motion.div variants={fadeUp} className="space-y-3 sm:space-y-0">
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
           <div className="min-w-0">
-            <div className="flex items-center gap-4 flex-wrap mb-4">
-              {renderTabs()}
-            </div>
-            <div className="flex items-center gap-2.5 flex-wrap">
-              <h1 className="text-[22px] font-extrabold tracking-tight text-tyro-text-primary">
-                {getGreeting(t)}, Cenk Şayli
-              </h1>
-              <span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-tyro-gold/10 text-tyro-gold">
-                Mart 2026
-              </span>
-            </div>
-            <p className="mt-1 text-sm text-tyro-text-secondary">
-              {getSummaryText(aktivHedefler.length, gecikenAksiyonlar.length, achievedAksiyonlar.length, aksiyonlar.length, t)}
-            </p>
+            {renderTabs()}
           </div>
 
           <div className="flex items-center gap-2 shrink-0">
