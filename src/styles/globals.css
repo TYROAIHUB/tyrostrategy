@@ -711,13 +711,12 @@ tr[data-hover=true]:not([data-selected=true]) {
   .print\:break-inside-avoid { break-inside: avoid !important; }
   .print\:break-after-avoid { break-after: avoid !important; }
   .print\:break-after-always { break-after: page !important; }
-  /* Cover page — exact one page, no overflow, no footer */
+  /* Cover page — fits on one page, rounded border preserved */
   .report-cover {
-    height: 100vh !important;
-    max-height: 100vh !important;
+    max-height: 92vh !important;
     overflow: hidden !important;
-    margin: 0 !important;
-    border-radius: 0 !important;
+    margin: 0 auto !important;
+    border-radius: 16px !important;
     break-after: page !important;
     page-break-after: always !important;
   }

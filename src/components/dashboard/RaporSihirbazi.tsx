@@ -829,45 +829,51 @@ ${clone.outerHTML}
               <div className="absolute inset-0 bg-gradient-to-br from-[#0f1d2f] via-[#1e3a5f] to-[#0f2847]" />
               <div className="absolute inset-0 opacity-[0.04]" style={{ backgroundImage: "radial-gradient(circle at 1px 1px, rgba(255,255,255,0.4) 1px, transparent 0)", backgroundSize: "28px 28px" }} />
 
-              {/* Content — centered, no footer */}
-              <div className="relative z-10 flex flex-col items-center justify-center h-full px-10 py-8 text-center" style={{ minHeight: 480 }}>
-                {/* Logo + Branding */}
-                <div className="flex items-center gap-3 mb-2">
-                  <TyroLogo size={36} variant="sidebar" isDark />
-                  <div className="text-left">
-                    <p className="text-[16px] font-extrabold tracking-tight"><span className="text-white/90">tyro</span><span className="text-tyro-gold">strategy</span></p>
-                    <p className="text-[10px] text-white/40">Stratejik Hedef Yönetim Platformu</p>
+              {/* Content */}
+              <div className="relative z-10 flex flex-col h-full px-8 py-6" style={{ minHeight: 480 }}>
+                {/* Top bar: Logo left, Privacy right */}
+                <div className="flex items-start justify-between shrink-0 mb-auto">
+                  <div>
+                    <div className="flex items-center gap-2.5">
+                      <TyroLogo size={32} variant="sidebar" isDark />
+                      <div>
+                        <p className="text-[15px] font-extrabold tracking-tight"><span className="text-white/90">tyro</span><span className="text-tyro-gold">strategy</span></p>
+                        <p className="text-[9px] text-white/40">Stratejik Hedef Yönetim Platformu</p>
+                      </div>
+                    </div>
+                    <p className="text-[8px] text-white/20 mt-1 ml-[42px]">Powered by TTECH Business Solutions</p>
+                  </div>
+                  <p className="text-[9px] text-white/30 uppercase tracking-wider mt-1">Gizli · Kurumsal Kullanım</p>
+                </div>
+
+                {/* Center — Title + Stats */}
+                <div className="flex-1 flex flex-col items-center justify-center text-center">
+                  <p className="text-[10px] font-semibold text-tyro-gold uppercase tracking-[0.2em] mb-3">Yönetim Raporu</p>
+                  <h1 className="text-[28px] font-extrabold text-white tracking-tight leading-tight">{reportTitle}</h1>
+                  <div className="h-[2px] w-16 rounded-full bg-gradient-to-r from-tyro-gold to-tyro-gold-light mx-auto mt-4 mb-4" />
+                  <p className="text-[13px] text-white/70">{today}</p>
+                  {effectiveDateRange && (
+                    <p className="text-[11px] text-white/40 mt-1">
+                      Dönem: {new Date(effectiveDateRange.from).toLocaleDateString("tr-TR")} — {new Date(effectiveDateRange.to).toLocaleDateString("tr-TR")}
+                    </p>
+                  )}
+                  <div className="flex items-center justify-center gap-8 mt-8">
+                    {[
+                      { label: "Hedef", value: reportHedefler.length },
+                      { label: "Aksiyon", value: reportAksiyonlar.length },
+                      { label: "Departman", value: allDepartments.length },
+                      { label: "Ort. İlerleme", value: `%${avgProgress}` },
+                    ].map((s) => (
+                      <div key={s.label} className="text-center">
+                        <p className="text-[22px] font-extrabold text-white tabular-nums">{s.value}</p>
+                        <p className="text-[9px] text-white/40 uppercase tracking-wider mt-0.5">{s.label}</p>
+                      </div>
+                    ))}
                   </div>
                 </div>
-                <p className="text-[9px] text-white/25 mb-10">Powered by TTECH Business Solutions</p>
 
-                <p className="text-[9px] text-white/30 uppercase tracking-wider mb-6">Gizli · Kurumsal Kullanım</p>
-
-                {/* Title */}
-                <p className="text-[10px] font-semibold text-tyro-gold uppercase tracking-[0.2em] mb-3">Yönetim Raporu</p>
-                <h1 className="text-[28px] font-extrabold text-white tracking-tight leading-tight">{reportTitle}</h1>
-                <div className="h-[2px] w-16 rounded-full bg-gradient-to-r from-tyro-gold to-tyro-gold-light mx-auto mt-4 mb-4" />
-                <p className="text-[13px] text-white/70">{today}</p>
-                {effectiveDateRange && (
-                  <p className="text-[11px] text-white/40 mt-1">
-                    Dönem: {new Date(effectiveDateRange.from).toLocaleDateString("tr-TR")} — {new Date(effectiveDateRange.to).toLocaleDateString("tr-TR")}
-                  </p>
-                )}
-
-                {/* Stats */}
-                <div className="flex items-center justify-center gap-8 mt-8">
-                  {[
-                    { label: "Hedef", value: reportHedefler.length },
-                    { label: "Aksiyon", value: reportAksiyonlar.length },
-                    { label: "Departman", value: allDepartments.length },
-                    { label: "Ort. İlerleme", value: `%${avgProgress}` },
-                  ].map((s) => (
-                    <div key={s.label} className="text-center">
-                      <p className="text-[22px] font-extrabold text-white tabular-nums">{s.value}</p>
-                      <p className="text-[9px] text-white/40 uppercase tracking-wider mt-0.5">{s.label}</p>
-                    </div>
-                  ))}
-                </div>
+                {/* Bottom spacer — keeps center truly centered */}
+                <div className="shrink-0 h-8" />
               </div>
             </div>
           )}
