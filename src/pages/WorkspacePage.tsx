@@ -60,10 +60,10 @@ export default function WorkspacePage() {
                 {initials}
               </div>
               <div>
-                <h1 className="text-[18px] sm:text-[22px] font-extrabold tracking-tight text-tyro-text-primary">
-                  {t(getGreetingKey())}, {name.split(" ")[0]}
-                </h1>
-                <div className="flex items-center gap-2 mt-0.5">
+                <div className="flex items-center gap-2.5 flex-wrap">
+                  <h1 className="text-[18px] sm:text-[22px] font-extrabold tracking-tight text-tyro-text-primary">
+                    {t(getGreetingKey())}, {name.split(" ")[0]}
+                  </h1>
                   <span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-tyro-gold/10 text-tyro-gold">
                     {department}
                   </span>
