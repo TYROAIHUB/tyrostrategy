@@ -7,6 +7,7 @@ import { useMyWorkspace } from "@/hooks/useMyWorkspace";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useUIStore } from "@/stores/uiStore";
 import { useDataStore } from "@/stores/dataStore";
+import { useSidebarTheme } from "@/hooks/useSidebarTheme";
 import SlidingPanel from "@/components/shared/SlidingPanel";
 // Lazy load heavy components
 const MyHedeflerList = lazy(() => import("@/components/workspace/MyProjectsList"));
@@ -39,6 +40,7 @@ export default function WorkspacePage() {
   const { name, department, initials } = useCurrentUser();
   const openCommandPalette = useUIStore((s) => s.openCommandPalette);
   const ws = useMyWorkspace();
+  const accentColor = useSidebarTheme().accentColor ?? "#c8922a";
   const [wizardOpen, setWizardOpen] = useState(false);
 
   const projeler = useDataStore((s) => s.projeler);
@@ -77,7 +79,7 @@ export default function WorkspacePage() {
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-3">
-              <div className="w-11 h-11 rounded-full bg-tyro-navy flex items-center justify-center text-white text-sm font-bold shrink-0">
+              <div className="w-11 h-11 rounded-full flex items-center justify-center text-white text-sm font-bold shrink-0" style={{ backgroundColor: accentColor }}>
                 {initials}
               </div>
               <div>
