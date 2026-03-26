@@ -258,6 +258,14 @@ export default function MyProjectsList() {
                     );
                   })}
                 </div>
+                <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-1.5">
+                  {Array.from(hedefSourceMap.entries()).map(([source, count]) => (
+                    <span key={source} className="flex items-center gap-1 text-[10px] text-tyro-text-secondary">
+                      <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: SOURCE_COLORS[source] ?? "#94a3b8" }} />
+                      {source} · {count}
+                    </span>
+                  ))}
+                </div>
               </div>
             )}
 
@@ -265,25 +273,38 @@ export default function MyProjectsList() {
             {tab === "hedef" && hedefTagMap.size > 0 && (
               <div>
                 <p className="text-[12px] font-bold text-tyro-text-primary mb-2">{t("workspace.tagDistribution", "Etiket Dağılımı")}</p>
-                <div className="flex items-center gap-1 h-5 rounded-lg overflow-hidden bg-tyro-bg/40">
-                  {Array.from(hedefTagMap.entries())
-                    .sort((a, b) => b[1] - a[1])
-                    .map(([tag, count]) => {
-                      const total = ws.myHedefler.length;
-                      const pct = Math.round((count / total) * 100);
-                      const tagColor = getTagColor(tag);
-                      return (
-                        <Tooltip key={tag} content={`${tag}: ${count} (${pct}%)`} placement="top" size="sm">
-                          <div
-                            className="h-full rounded-lg flex items-center justify-center cursor-help hover:brightness-110 transition-all"
-                            style={{ width: `${(count / total) * 100}%`, backgroundColor: tagColor, minWidth: 28 }}
-                          >
-                            <span className="text-[10px] font-bold text-white/90 drop-shadow-sm truncate px-0.5">{pct >= 20 ? `${tag} · ${pct}%` : `${pct}%`}</span>
-                          </div>
-                        </Tooltip>
-                      );
-                    })}
-                </div>
+                {(() => {
+                  const sortedTags = Array.from(hedefTagMap.entries()).sort((a, b) => b[1] - a[1]);
+                  const total = ws.myHedefler.length;
+                  return (
+                    <>
+                      <div className="flex items-center gap-1 h-5 rounded-lg overflow-hidden bg-tyro-bg/40">
+                        {sortedTags.map(([tag, count]) => {
+                          const pct = Math.round((count / total) * 100);
+                          const tagColor = getTagColor(tag);
+                          return (
+                            <Tooltip key={tag} content={`${tag}: ${count} (${pct}%)`} placement="top" size="sm">
+                              <div
+                                className="h-full rounded-lg flex items-center justify-center cursor-help hover:brightness-110 transition-all"
+                                style={{ width: `${(count / total) * 100}%`, backgroundColor: tagColor, minWidth: 28 }}
+                              >
+                                <span className="text-[10px] font-bold text-white/90 drop-shadow-sm truncate px-0.5">{pct >= 20 ? `${tag} · ${pct}%` : `${pct}%`}</span>
+                              </div>
+                            </Tooltip>
+                          );
+                        })}
+                      </div>
+                      <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-1.5">
+                        {sortedTags.map(([tag, count]) => (
+                          <span key={tag} className="flex items-center gap-1 text-[10px] text-tyro-text-secondary">
+                            <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: getTagColor(tag) }} />
+                            {tag} · {count}
+                          </span>
+                        ))}
+                      </div>
+                    </>
+                  );
+                })()}
               </div>
             )}
           </motion.div>
