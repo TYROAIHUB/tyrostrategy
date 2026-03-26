@@ -267,7 +267,7 @@ function DetailPanel({
       initial={{ opacity: 0, x: 20 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ duration: 0.25, ease: "easeOut" }}
-      className="flex flex-col gap-3 overflow-y-auto h-full px-5 py-4"
+      className="flex flex-col gap-3 h-full px-5 py-4 overflow-hidden"
     >
       {/* === HERO SECTION === */}
       <div>
@@ -396,8 +396,8 @@ function DetailPanel({
         );
       })()}
 
-      {/* === ACTIONS LIST === */}
-      <div>
+      {/* === ACTIONS LIST === scrollable */}
+      <div className="flex-1 overflow-y-auto min-h-0">
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-[13px] font-bold text-tyro-text-primary">
             {t("kokpit.actionsCount", { count: totalCount })}

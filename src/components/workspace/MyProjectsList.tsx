@@ -1,7 +1,10 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { Crosshair, CircleCheckBig, BarChart3, ListChecks, ChevronRight } from "lucide-react";
+import { Crosshair, CircleCheckBig, BarChart3, ListChecks, ChevronRight, Eye } from "lucide-react";
+import SlidingPanel from "@/components/shared/SlidingPanel";
+import ProjeDetail from "@/components/projeler/ProjeDetail";
+import type { Proje } from "@/types";
 import { Tooltip } from "@heroui/react";
 import { motion, AnimatePresence } from "framer-motion";
 import GlassCard from "@/components/ui/GlassCard";
@@ -142,6 +145,8 @@ export default function MyProjectsList() {
   const ws = useMyWorkspace();
   const tab = "proje" as const;
   const [showAll, setShowAll] = useState(false);
+  const [selectedProje, setSelectedProje] = useState<Proje | null>(null);
+  const projeler = useDataStore((s) => s.projeler);
 
   // Stats
   const hedefSourceMap = new Map<string, number>();
@@ -328,7 +333,10 @@ export default function MyProjectsList() {
                 <ProgressCard
                   key={item.id}
                   item={item as any}
-                  onClick={() => navigate(`/projeler?selected=${item.id}`)}
+                  onClick={() => {
+                    const proje = projeler.find((p) => p.id === item.id);
+                    if (proje) setSelectedProje(proje);
+                  }}
                   showParent={false}
                 />
               ))}
@@ -355,6 +363,21 @@ export default function MyProjectsList() {
           </motion.div>
         </AnimatePresence>
       </GlassCard>
+
+      {/* Proje Detay SlidingPanel */}
+      <SlidingPanel
+        isOpen={!!selectedProje}
+        onClose={() => setSelectedProje(null)}
+        title="Proje Detayı"
+        icon={<Eye size={16} className="text-tyro-navy" />}
+      >
+        {selectedProje && (
+          <ProjeDetail
+            proje={selectedProje}
+            onEdit={() => setSelectedProje(null)}
+          />
+        )}
+      </SlidingPanel>
     </div>
   );
 }
