@@ -4,7 +4,6 @@ import { useTranslation } from "react-i18next";
 import { Crosshair, CalendarClock, TrendingUp, CheckCircle } from "lucide-react";
 import GlassCard from "@/components/ui/GlassCard";
 import { useMyWorkspace } from "@/hooks/useMyWorkspace";
-import { useDataStore } from "@/stores/dataStore";
 import type { EntityStatus } from "@/types";
 import { getStatusLabel } from "@/lib/constants";
 
@@ -24,17 +23,15 @@ export default function BentoKPI() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const ws = useMyWorkspace();
-  const projeler = useDataStore((s) => s.projeler);
-
   const overdueCount = useMemo(() => {
     const now = new Date();
     const oneMonthAgo = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
-    return projeler.filter((h) => {
+    return ws.myProjeler.filter((h) => {
       if (!h.reviewDate) return true;
       if (h.status === "Achieved" || h.status === "Cancelled") return false;
       return new Date(h.reviewDate) <= oneMonthAgo;
     }).length;
-  }, [projeler]);
+  }, [ws.myProjeler]);
 
   // Status counts for my projects
   const statusCounts = useMemo(() => {

@@ -6,6 +6,7 @@ import { Search, Sparkles, Wand2 } from "lucide-react";
 import { useMyWorkspace } from "@/hooks/useMyWorkspace";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useUIStore } from "@/stores/uiStore";
+import { useDataStore } from "@/stores/dataStore";
 import SlidingPanel from "@/components/shared/SlidingPanel";
 // Lazy load heavy components
 const MyHedeflerList = lazy(() => import("@/components/workspace/MyProjectsList"));
@@ -40,14 +41,34 @@ export default function WorkspacePage() {
   const ws = useMyWorkspace();
   const [wizardOpen, setWizardOpen] = useState(false);
 
-  const summaryText = useMemo(() => {
-    const parts: string[] = [];
-    if (ws.myProjeler.length > 0) parts.push(`${ws.myProjeler.length} ${t("workspace.objectivesCount")}`);
-    if (ws.achievedAksiyonlar > 0) parts.push(`${ws.achievedAksiyonlar} ${t("workspace.actionsCompleted")}`);
-    if (ws.behindAksiyonlar + ws.atRiskAksiyonlar > 0)
-      parts.push(`${ws.behindAksiyonlar + ws.atRiskAksiyonlar} ${t("workspace.actionsNeedAttention")}`);
-    return parts.length > 0 ? parts.join(", ") + "." : t("common.noResults");
-  }, [ws, t]);
+  const projeler = useDataStore((s) => s.projeler);
+  const aksiyonlar = useDataStore((s) => s.aksiyonlar);
+
+  const summaryItems = useMemo(() => {
+    const items: { text: string; color?: string }[] = [];
+    const totalProje = ws.myProjeler.length;
+    const achievedProje = ws.myProjeler.filter((p) => p.status === "Achieved").length;
+    const activeProje = totalProje - achievedProje;
+
+    // Bekleyen aksiyonlar (tamamlanmamış)
+    const myProjeIds = new Set(ws.myProjeler.map((p) => p.id));
+    const pendingAks = aksiyonlar.filter((a) => myProjeIds.has(a.projeId) && a.status !== "Achieved").length;
+
+    // Kontrol tarihi güncel olmayan
+    const now = new Date();
+    const oneMonthAgo = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
+    const overdueReview = ws.myProjeler.filter((h) => {
+      if (!h.reviewDate) return true;
+      if (h.status === "Achieved" || h.status === "Cancelled") return false;
+      return new Date(h.reviewDate) <= oneMonthAgo;
+    }).length;
+
+    items.push({ text: `${activeProje} aktif proje takipte` });
+    if (pendingAks > 0) items.push({ text: `${pendingAks} aksiyon tamamlanmayı bekliyor` });
+    if (overdueReview > 0) items.push({ text: `${overdueReview} proje 1 aydan fazla kontrol edilmemiş`, color: "text-amber-600" });
+
+    return items;
+  }, [ws, aksiyonlar]);
 
   return (
     <motion.div className="space-y-3 sm:space-y-5" variants={stagger} initial="hidden" animate="show">
@@ -70,7 +91,14 @@ export default function WorkspacePage() {
                 </div>
               </div>
             </div>
-            <p className="mt-2 text-sm text-tyro-text-secondary">{summaryText}</p>
+            <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1">
+              {summaryItems.map((item, i) => (
+                <span key={i} className={`text-[12px] font-medium ${item.color ?? "text-tyro-text-secondary"}`}>
+                  {i > 0 && <span className="text-tyro-border mr-3">·</span>}
+                  {item.text}
+                </span>
+              ))}
+            </div>
           </div>
 
           <div className="flex items-center gap-2 self-start w-full sm:w-auto">
