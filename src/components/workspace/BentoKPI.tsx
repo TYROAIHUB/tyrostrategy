@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { Crosshair, CalendarClock, TrendingUp } from "lucide-react";
+import { Crosshair, CalendarClock, TrendingUp, CheckCircle } from "lucide-react";
 import GlassCard from "@/components/ui/GlassCard";
 import { useMyWorkspace } from "@/hooks/useMyWorkspace";
 import { useDataStore } from "@/stores/dataStore";
@@ -83,23 +83,38 @@ export default function BentoKPI() {
       </div>
 
       {/* Bento Grid */}
-      <div className="grid grid-cols-12 gap-2.5">
-        {/* Left: Toplam + Status mini cards (8 col) */}
-        <div className="col-span-8 flex flex-col gap-2.5">
-          {/* Row 1: Toplam Proje + Ort İlerleme */}
-          <div className="grid grid-cols-2 gap-2.5">
-            {/* Toplam Proje */}
+      <div className="grid grid-cols-12 gap-3">
+        {/* Left section (9 col) */}
+        <div className="col-span-9 flex flex-col gap-2.5">
+          {/* Row 1: 3 summary cards */}
+          <div className="grid grid-cols-3 gap-2.5">
+            {/* Projelerim */}
             <div
               onClick={() => navigate("/projeler")}
               className="rounded-xl bg-tyro-navy/5 p-3 cursor-pointer hover:bg-tyro-navy/8 transition-colors"
             >
-              <div className="flex items-center gap-1.5 mb-1.5">
+              <div className="flex items-center gap-1.5 mb-2">
                 <Crosshair size={13} className="text-tyro-navy" />
                 <span className="text-[10px] font-semibold text-tyro-text-muted uppercase tracking-wider">Projelerim</span>
               </div>
               <div className="flex items-baseline gap-1.5">
-                <span className="text-[24px] font-extrabold text-tyro-text-primary tabular-nums leading-none">{ws.myProjeler.length}</span>
+                <span className="text-[26px] font-extrabold text-tyro-text-primary tabular-nums leading-none">{ws.myProjeler.length}</span>
                 <span className="text-[10px] text-tyro-text-muted">/ {ws.totalProjeler}</span>
+              </div>
+            </div>
+
+            {/* Tamamlanan */}
+            <div
+              onClick={() => navigate("/projeler")}
+              className="rounded-xl bg-emerald-500/5 p-3 cursor-pointer hover:bg-emerald-500/8 transition-colors"
+            >
+              <div className="flex items-center gap-1.5 mb-2">
+                <CheckCircle size={13} className="text-emerald-500" />
+                <span className="text-[10px] font-semibold text-tyro-text-muted uppercase tracking-wider">Tamamlanan</span>
+              </div>
+              <div className="flex items-baseline gap-1.5">
+                <span className="text-[26px] font-extrabold text-tyro-text-primary tabular-nums leading-none">{ws.achievedProjeler}</span>
+                <span className="text-[10px] text-tyro-text-muted">proje</span>
               </div>
             </div>
 
@@ -108,49 +123,30 @@ export default function BentoKPI() {
               onClick={() => navigate("/projeler?reviewOverdue=true")}
               className="rounded-xl bg-amber-500/5 p-3 cursor-pointer hover:bg-amber-500/8 transition-colors"
             >
-              <div className="flex items-center gap-1.5 mb-1.5">
+              <div className="flex items-center gap-1.5 mb-2">
                 <CalendarClock size={13} className="text-amber-500" />
                 <span className="text-[10px] font-semibold text-tyro-text-muted uppercase tracking-wider">Kontrol</span>
               </div>
               <div className="flex items-baseline gap-1.5">
-                <span className="text-[24px] font-extrabold text-tyro-text-primary tabular-nums leading-none">{overdueCount}</span>
+                <span className="text-[26px] font-extrabold text-tyro-text-primary tabular-nums leading-none">{overdueCount}</span>
                 <span className="text-[10px] text-tyro-text-muted">güncel değil</span>
               </div>
             </div>
           </div>
 
-          {/* Row 2: Status mini cards — first 4 */}
-          <div className="grid grid-cols-4 gap-2">
-            {statusCounts.slice(0, 4).map((s) => (
+          {/* Row 2: 6 status mini cards (Achieved excluded — shown above) */}
+          <div className="grid grid-cols-6 gap-2">
+            {statusCounts.filter((s) => s.status !== "Achieved").map((s) => (
               <div
                 key={s.status}
                 onClick={() => navigate("/projeler")}
-                className={`rounded-xl p-2.5 cursor-pointer hover:brightness-95 transition-all text-center ${s.count === 0 ? "opacity-40" : ""}`}
+                className={`rounded-xl p-2 cursor-pointer hover:brightness-95 transition-all text-center ${s.count === 0 ? "opacity-35" : ""}`}
                 style={{ backgroundColor: `${s.color}10` }}
               >
-                <span className="text-[18px] font-extrabold tabular-nums leading-none" style={{ color: s.color }}>
+                <span className="text-[16px] font-extrabold tabular-nums leading-none" style={{ color: s.color }}>
                   {s.count}
                 </span>
-                <p className="text-[9px] font-semibold mt-1 truncate" style={{ color: s.color }}>
-                  {s.label}
-                </p>
-              </div>
-            ))}
-          </div>
-
-          {/* Row 3: Remaining statuses */}
-          <div className="grid grid-cols-4 gap-2">
-            {statusCounts.slice(4).map((s) => (
-              <div
-                key={s.status}
-                onClick={() => navigate("/projeler")}
-                className={`rounded-xl p-2.5 cursor-pointer hover:brightness-95 transition-all text-center ${s.count === 0 ? "opacity-40" : ""}`}
-                style={{ backgroundColor: `${s.color}10` }}
-              >
-                <span className="text-[18px] font-extrabold tabular-nums leading-none" style={{ color: s.color }}>
-                  {s.count}
-                </span>
-                <p className="text-[9px] font-semibold mt-1 truncate" style={{ color: s.color }}>
+                <p className="text-[8px] font-semibold mt-1 truncate" style={{ color: s.color }}>
                   {s.label}
                 </p>
               </div>
@@ -158,48 +154,41 @@ export default function BentoKPI() {
           </div>
         </div>
 
-        {/* Right: Donut + Legend (4 col) */}
-        <div className="col-span-4 flex flex-col items-center justify-center">
-          {/* Donut */}
-          <div className="relative" style={{ width: 100, height: 100 }}>
-            <svg width={100} height={100} viewBox="0 0 100 100" className="-rotate-90">
-              <circle cx={50} cy={50} r={radius} fill="none" stroke="#e2e8f0" strokeWidth={8} />
-              {arcs.map((arc) => (
-                <circle
-                  key={arc.status}
-                  cx={50} cy={50} r={radius}
-                  fill="none"
-                  stroke={arc.color}
-                  strokeWidth={8}
-                  strokeLinecap="round"
-                  strokeDasharray={`${arc.dashLen} ${circumference - arc.dashLen}`}
-                  strokeDashoffset={arc.dashOffset}
-                  style={{ transition: "all 0.5s ease" }}
-                />
-              ))}
-            </svg>
-            <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <span className="text-[16px] font-extrabold tabular-nums text-tyro-text-primary leading-none">
-                %{avgProgress}
-              </span>
-              <span className="text-[8px] font-semibold text-tyro-text-muted mt-0.5 uppercase tracking-wider">
-                ort.
-              </span>
-            </div>
-          </div>
-
-          {/* Mini legend */}
-          <div className="mt-3 w-full space-y-1">
-            {statusCounts.map((s) => (
-              <div key={s.status} className="flex items-center justify-between">
-                <div className="flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: s.color }} />
-                  <span className="text-[9px] text-tyro-text-muted truncate">{s.label}</span>
+        {/* Right: Premium Circular Progress (3 col) — shows avgProgress % */}
+        <div className="col-span-3 flex items-center justify-center">
+          {(() => {
+            const r = 54;
+            const c = 2 * Math.PI * r;
+            const progressDash = (avgProgress / 100) * c;
+            // Color based on progress
+            const progColor = avgProgress >= 75 ? "#059669" : avgProgress >= 50 ? "#10b981" : avgProgress >= 25 ? "#f59e0b" : "#ef4444";
+            return (
+              <div className="relative" style={{ width: 130, height: 130 }}>
+                <div className="absolute inset-0 rounded-full" style={{ background: `radial-gradient(circle, ${progColor}12 0%, transparent 70%)` }} />
+                <svg width={130} height={130} viewBox="0 0 130 130" className="-rotate-90">
+                  <circle cx={65} cy={65} r={r} fill="none" stroke="#e2e8f0" strokeWidth={10} opacity={0.4} />
+                  <circle
+                    cx={65} cy={65} r={r}
+                    fill="none"
+                    stroke={progColor}
+                    strokeWidth={10}
+                    strokeLinecap="round"
+                    strokeDasharray={`${progressDash} ${c - progressDash}`}
+                    strokeDashoffset={0}
+                    style={{ transition: "all 0.8s ease", filter: `drop-shadow(0 0 4px ${progColor}50)` }}
+                  />
+                </svg>
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                  <span className="text-[24px] font-extrabold tabular-nums text-tyro-text-primary leading-none">
+                    %{avgProgress}
+                  </span>
+                  <span className="text-[9px] font-semibold text-tyro-text-muted mt-1">
+                    Ort. İlerleme
+                  </span>
                 </div>
-                <span className="text-[10px] font-bold tabular-nums" style={{ color: s.color }}>{s.count}</span>
               </div>
-            ))}
-          </div>
+            );
+          })()}
         </div>
       </div>
     </GlassCard>
