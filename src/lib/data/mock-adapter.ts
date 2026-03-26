@@ -79,10 +79,13 @@ function generateAksiyonDescription(name: string): string {
   return "Belirlenen zaman çizelgesine uygun olarak görevin planlanması ve tamamlanması.";
 }
 
-function assignTags(_name: string, _source: Source, progress: number, status: string): string[] {
-  // Her hedefe durumuna göre tek bir aşama tag'i ata
+function assignTags(name: string, _source: Source, progress: number, status: string): string[] {
+  // Her projeye durumuna göre tek bir aşama tag'i ata
+  // Behind/At Risk olan bazı projelere de Uygulama atansın (canlı uygulama aşamasında sorun yaşayan projeler)
   if (status === "Not Started" || progress === 0) return ["Ön Çalışma"];
   if (status === "Achieved" || progress >= 80) return ["Uygulama"];
+  // Bazı Behind/At Risk projelere Uygulama ata (deterministic — isim hash'i ile)
+  if ((status === "Behind" || status === "At Risk") && name.length % 3 === 0) return ["Uygulama"];
   return ["Geliştirme"];
 }
 
