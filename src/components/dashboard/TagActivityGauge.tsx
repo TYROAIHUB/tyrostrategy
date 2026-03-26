@@ -139,7 +139,7 @@ export default function TagActivityGauge() {
                 y="50%"
                 textAnchor="middle"
                 dominantBaseline="central"
-                style={{ fill: "var(--color-tyro-text-primary, #0f172a)", fontSize: 22, fontWeight: 700 }}
+                style={{ fill: "var(--color-tyro-text-primary, #0f172a)", fontSize: 15, fontWeight: 700 }}
               >
                 {totalTaggedHedef}
               </text>

@@ -19,21 +19,17 @@ export default function SourceChart() {
     const sources = ["Türkiye", "Kurumsal", "International"];
     return sources.map((source) => {
       const sp = projeler.filter((h) => h.source === source);
-      const achieved = sp.filter((h) => h.status === "Achieved").length;
-      const onTrack = sp.filter((h) => h.status === "On Track").length;
-      const behind = sp.filter((h) => h.status === "Behind").length;
-      const atRisk = sp.filter((h) => h.status === "At Risk").length;
-      const notStarted = sp.filter((h) => h.status === "Not Started").length;
-      const other = sp.length - achieved - onTrack - behind - atRisk - notStarted;
+      const count = (s: string) => sp.filter((h) => h.status === s).length;
 
       return {
         source: source === "International" ? "Intl" : source,
-        "Tamamlandı": achieved,
-        "Yolunda": onTrack,
-        "Gecikmeli": behind,
-        "Risk Altında": atRisk,
-        "Başlanmadı": notStarted,
-        "Diğer": Math.max(0, other),
+        "Yolunda": count("On Track"),
+        "Risk Altında": count("At Risk"),
+        "Gecikmeli": count("Behind"),
+        "Tamamlandı": count("Achieved"),
+        "Başlanmadı": count("Not Started"),
+        "Askıda": count("On Hold"),
+        "İptal": count("Cancelled"),
       };
     });
   }, [projeler]);
@@ -77,11 +73,13 @@ export default function SourceChart() {
               iconType="circle"
               iconSize={7}
             />
-            <Bar dataKey="Tamamlandı" fill="#10b981" radius={[4, 4, 0, 0]} animationDuration={1200} />
-            <Bar dataKey="Yolunda" fill="var(--tyro-navy)" radius={[4, 4, 0, 0]} animationDuration={1200} animationBegin={100} />
+            <Bar dataKey="Yolunda" fill="#10b981" radius={[4, 4, 0, 0]} animationDuration={1200} />
+            <Bar dataKey="Risk Altında" fill="#f59e0b" radius={[4, 4, 0, 0]} animationDuration={1200} animationBegin={100} />
             <Bar dataKey="Gecikmeli" fill="#ef4444" radius={[4, 4, 0, 0]} animationDuration={1200} animationBegin={200} />
-            <Bar dataKey="Risk Altında" fill="#f59e0b" radius={[4, 4, 0, 0]} animationDuration={1200} animationBegin={300} />
+            <Bar dataKey="Tamamlandı" fill="#06b6d4" radius={[4, 4, 0, 0]} animationDuration={1200} animationBegin={300} />
             <Bar dataKey="Başlanmadı" fill="#94a3b8" radius={[4, 4, 0, 0]} animationDuration={1200} animationBegin={400} />
+            <Bar dataKey="Askıda" fill="#8b5cf6" radius={[4, 4, 0, 0]} animationDuration={1200} animationBegin={500} />
+            <Bar dataKey="İptal" fill="#6b7280" radius={[4, 4, 0, 0]} animationDuration={1200} animationBegin={600} />
           </BarChart>
         </ResponsiveContainer>
       </div>
