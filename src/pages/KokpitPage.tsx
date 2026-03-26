@@ -9,6 +9,15 @@ import {
   ListChecks,
   GripVertical,
   Wand2,
+  Pencil,
+  Plus,
+  Trash2,
+  ArrowUpDown,
+  Eye,
+  CalendarCheck,
+  Sparkles,
+  CircleCheckBig,
+  ChevronUp,
 } from "lucide-react";
 import { clsx } from "clsx";
 import PageHeader from "@/components/layout/PageHeader";
@@ -17,9 +26,15 @@ import SlidingPanel from "@/components/shared/SlidingPanel";
 import ProjeDetail from "@/components/projeler/ProjeDetail";
 import AksiyonDetail from "@/components/aksiyonlar/AksiyonDetail";
 import { useDataStore } from "@/stores/dataStore";
+import { toast } from "@/stores/toastStore";
+import { usePermissions } from "@/hooks/usePermissions";
+import ConfirmDialog from "@/components/shared/ConfirmDialog";
 import ProjeAksiyonWizard from "@/components/wizard/ProjeAksiyonWizard";
 import WizardHeader from "@/components/wizard/WizardHeader";
 import MasterDetailView from "@/components/kokpit/MasterDetailView";
+import AksiyonForm from "@/components/aksiyonlar/AksiyonForm";
+import { Button } from "@heroui/react";
+import { Check } from "lucide-react";
 import { getStatusLabel } from "@/lib/constants";
 import { formatDate } from "@/lib/dateUtils";
 import type { Proje, Aksiyon, EntityStatus, Source } from "@/types";
@@ -68,8 +83,24 @@ export default function KokpitPage() {
   const aksiyonlar = useDataStore((s) => s.aksiyonlar);
   const updateAksiyon = useDataStore((s) => s.updateAksiyon);
 
+  const deleteProje = useDataStore((s) => s.deleteProje);
+  const { canDeleteProje, getProjeDeleteReason } = usePermissions();
   const [activeTab, setActiveTab] = useState<TabId>("master");
   const [wizardOpen, setWizardOpen] = useState(false);
+  const [toolbarSearch, setToolbarSearch] = useState("");
+  const [selectedProjeId, setSelectedProjeId] = useState<string | null>(null);
+  const selectedProje = projeler.find((p) => p.id === selectedProjeId) ?? null;
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [newMenuOpen, setNewMenuOpen] = useState(false);
+  const [editMenuOpen, setEditMenuOpen] = useState(false);
+  const [aksiyonPanelOpen, setAksiyonPanelOpen] = useState(false);
+  const [reviewPopoverOpen, setReviewPopoverOpen] = useState(false);
+  const [reviewDateDraft, setReviewDateDraft] = useState("");
+  const updateProje = useDataStore((s) => s.updateProje);
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [sourceFilter, setSourceFilter] = useState("all");
+  const [sortBy, setSortBy] = useState("name");
+  const [sortAsc, setSortAsc] = useState(true);
 
   // ─── Sliding panel state ─────────────────────────────────
   const [panelOpen, setPanelOpen] = useState(false);
@@ -145,11 +176,235 @@ export default function KokpitPage() {
         </div>
       </div>
 
+      {/* Toolbar — search + filters left, actions right */}
+      <div className="flex items-center gap-2 mb-4">
+        {/* Search */}
+        <div className="relative w-[200px] shrink-0">
+          <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-tyro-text-muted pointer-events-none" />
+          <input
+            type="text"
+            value={toolbarSearch}
+            onChange={(e) => setToolbarSearch(e.target.value)}
+            placeholder="Ara..."
+            className="w-full h-8 pl-8 pr-7 rounded-lg border border-tyro-border/60 bg-tyro-surface/80 text-[12px] text-tyro-text-primary placeholder:text-tyro-text-muted focus:outline-none focus:ring-1.5 focus:ring-tyro-navy/15 focus:border-tyro-navy/30 transition-all"
+          />
+          {toolbarSearch && (
+            <button
+              type="button"
+              onClick={() => setToolbarSearch("")}
+              className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-tyro-text-muted/20 hover:bg-tyro-text-muted/40 flex items-center justify-center transition-colors cursor-pointer"
+            >
+              <span className="text-[10px] font-bold text-tyro-text-muted leading-none">✕</span>
+            </button>
+          )}
+        </div>
+        {/* Status filter */}
+        <select
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+          className="h-8 px-2.5 rounded-lg border border-tyro-border/60 bg-tyro-surface/80 text-[12px] font-medium text-tyro-text-secondary cursor-pointer focus:outline-none focus:ring-1.5 focus:ring-tyro-navy/15 transition-all appearance-none pr-6 bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2210%22%20height%3D%226%22%20viewBox%3D%220%200%2010%206%22%3E%3Cpath%20fill%3D%22%2394a3b8%22%20d%3D%22M0%200l5%206%205-6z%22%2F%3E%3C%2Fsvg%3E')] bg-[right_8px_center] bg-no-repeat"
+        >
+          <option value="all">Tüm Durumlar</option>
+          <option value="On Track">Yolunda</option>
+          <option value="At Risk">Risk Altında</option>
+          <option value="Behind">Gecikmeli</option>
+          <option value="Achieved">Tamamlandı</option>
+          <option value="Not Started">Başlanmadı</option>
+          <option value="On Hold">Askıda</option>
+          <option value="Cancelled">İptal</option>
+        </select>
+        {/* Source filter */}
+        <select
+          value={sourceFilter}
+          onChange={(e) => setSourceFilter(e.target.value)}
+          className="h-8 px-2.5 rounded-lg border border-tyro-border/60 bg-tyro-surface/80 text-[12px] font-medium text-tyro-text-secondary cursor-pointer focus:outline-none focus:ring-1.5 focus:ring-tyro-navy/15 transition-all appearance-none pr-6 bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2210%22%20height%3D%226%22%20viewBox%3D%220%200%2010%206%22%3E%3Cpath%20fill%3D%22%2394a3b8%22%20d%3D%22M0%200l5%206%205-6z%22%2F%3E%3C%2Fsvg%3E')] bg-[right_8px_center] bg-no-repeat"
+        >
+          <option value="all">Tüm Kaynaklar</option>
+          <option value="Türkiye">Türkiye</option>
+          <option value="Kurumsal">Kurumsal</option>
+          <option value="International">International</option>
+        </select>
+        {/* Sort */}
+        <select
+          value={sortBy}
+          onChange={(e) => setSortBy(e.target.value)}
+          className="h-8 px-2.5 rounded-lg border border-tyro-border/60 bg-tyro-surface/80 text-[12px] font-medium text-tyro-text-secondary cursor-pointer focus:outline-none focus:ring-1.5 focus:ring-tyro-navy/15 transition-all appearance-none pr-6 bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2210%22%20height%3D%226%22%20viewBox%3D%220%200%2010%206%22%3E%3Cpath%20fill%3D%22%2394a3b8%22%20d%3D%22M0%200l5%206%205-6z%22%2F%3E%3C%2Fsvg%3E')] bg-[right_8px_center] bg-no-repeat"
+        >
+          <option value="name">Ada Göre</option>
+          <option value="progress">İlerlemeye Göre</option>
+          <option value="endDate">Bitiş Tarihine Göre</option>
+          <option value="status">Duruma Göre</option>
+        </select>
+        {/* Sort direction toggle */}
+        <button
+          type="button"
+          onClick={() => setSortAsc(!sortAsc)}
+          className="h-8 w-8 rounded-lg border border-tyro-border/60 bg-tyro-surface/80 flex items-center justify-center cursor-pointer hover:bg-tyro-navy/5 transition-all shrink-0"
+          title={sortAsc ? "Artan" : "Azalan"}
+        >
+          <ArrowUpDown size={13} className={`text-tyro-text-secondary transition-transform ${sortAsc ? "" : "rotate-180"}`} />
+        </button>
+
+        {/* Clear filters — show when any filter is active */}
+        {(toolbarSearch || statusFilter !== "all" || sourceFilter !== "all") && (
+          <button
+            type="button"
+            onClick={() => { setToolbarSearch(""); setStatusFilter("all"); setSourceFilter("all"); setSortBy("name"); setSortAsc(true); }}
+            className="h-8 px-2.5 rounded-lg text-[12px] font-medium text-red-500 hover:bg-red-50 transition-colors cursor-pointer shrink-0"
+          >
+            Temizle
+          </button>
+        )}
+
+        {/* Spacer */}
+        <div className="flex-1" />
+
+        {/* Action buttons — right aligned */}
+        <div className="flex items-center gap-1.5 shrink-0">
+          {/* Yeni — dropdown */}
+          <div className="relative">
+            <motion.button
+              type="button"
+              onClick={() => { setNewMenuOpen(!newMenuOpen); setEditMenuOpen(false); }}
+              className="h-8 px-3 rounded-lg bg-tyro-navy text-white flex items-center gap-1.5 cursor-pointer text-[12px] font-semibold"
+              whileTap={{ scale: 0.96 }}
+            >
+              <Plus size={13} strokeWidth={2.5} />
+              Yeni
+              <ChevronDown size={11} className={`transition-transform ${newMenuOpen ? "rotate-180" : ""}`} />
+            </motion.button>
+            <AnimatePresence>
+              {newMenuOpen && (
+                <>
+                  <motion.div className="fixed inset-0 z-40" onClick={() => setNewMenuOpen(false)} />
+                  <motion.div
+                    initial={{ opacity: 0, y: -4, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -4, scale: 0.95 }}
+                    transition={{ duration: 0.12 }}
+                    className="absolute right-0 top-10 z-50 w-[200px] rounded-xl bg-white dark:bg-tyro-surface border border-tyro-border/40 shadow-xl overflow-hidden py-1"
+                  >
+                    <button
+                      type="button"
+                      onClick={() => { setNewMenuOpen(false); setWizardOpen(true); }}
+                      className="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-[12px] font-medium text-tyro-text-primary hover:bg-tyro-navy/5 transition-colors cursor-pointer"
+                    >
+                      <Sparkles size={14} className="text-tyro-gold" />
+                      Proje Sihirbazı
+                    </button>
+                    <div className="h-px bg-tyro-border/20 mx-3" />
+                    <button
+                      type="button"
+                      onClick={() => { setNewMenuOpen(false); setAksiyonPanelOpen(true); }}
+                      className="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-[12px] font-medium text-tyro-text-primary hover:bg-tyro-navy/5 transition-colors cursor-pointer"
+                    >
+                      <CircleCheckBig size={14} className="text-emerald-500" />
+                      Yeni Aksiyon
+                    </button>
+                  </motion.div>
+                </>
+              )}
+            </AnimatePresence>
+          </div>
+          {/* Düzenle — dropdown */}
+          <div className="relative">
+            <motion.button
+              type="button"
+              onClick={() => { if (!selectedProje) return; setEditMenuOpen(!editMenuOpen); setNewMenuOpen(false); }}
+              className={`h-8 px-3 rounded-lg border flex items-center gap-1.5 text-[12px] font-semibold transition-all ${
+                selectedProje
+                  ? "border-tyro-border text-tyro-text-primary hover:bg-tyro-navy/5 cursor-pointer"
+                  : "border-tyro-border/40 text-tyro-text-muted/40 cursor-default"
+              }`}
+              whileTap={selectedProje ? { scale: 0.96 } : {}}
+            >
+              <Pencil size={12} />
+              Düzenle
+              <ChevronDown size={11} className={`transition-transform ${editMenuOpen ? "rotate-180" : ""}`} />
+            </motion.button>
+            <AnimatePresence>
+              {editMenuOpen && selectedProje && (
+                <>
+                  <motion.div className="fixed inset-0 z-40" onClick={() => setEditMenuOpen(false)} />
+                  <motion.div
+                    initial={{ opacity: 0, y: -4, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -4, scale: 0.95 }}
+                    transition={{ duration: 0.12 }}
+                    className="absolute right-0 top-10 z-50 w-[220px] rounded-xl bg-white dark:bg-tyro-surface border border-tyro-border/40 shadow-xl overflow-hidden py-1"
+                  >
+                    <button
+                      type="button"
+                      onClick={() => { setEditMenuOpen(false); openHedefPanel(selectedProje); }}
+                      className="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-[12px] font-medium text-tyro-text-primary hover:bg-tyro-navy/5 transition-colors cursor-pointer"
+                    >
+                      <Eye size={14} className="text-tyro-navy" />
+                      Projeyi Görüntüle
+                    </button>
+                    <div className="h-px bg-tyro-border/20 mx-3" />
+                    <button
+                      type="button"
+                      onClick={() => { setEditMenuOpen(false); openHedefPanel(selectedProje); }}
+                      className="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-[12px] font-medium text-tyro-text-primary hover:bg-tyro-navy/5 transition-colors cursor-pointer"
+                    >
+                      <Pencil size={14} className="text-amber-500" />
+                      Projeyi Düzenle
+                    </button>
+                    <div className="h-px bg-tyro-border/20 mx-3" />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setEditMenuOpen(false);
+                        setReviewDateDraft(selectedProje.reviewDate || new Date().toISOString().slice(0, 10));
+                        setReviewPopoverOpen(true);
+                      }}
+                      className="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-[12px] font-medium text-tyro-text-primary hover:bg-tyro-navy/5 transition-colors cursor-pointer"
+                    >
+                      <CalendarCheck size={14} className="text-teal-500" />
+                      Kontrol Tarihini Güncelle
+                    </button>
+                  </motion.div>
+                </>
+              )}
+            </AnimatePresence>
+          </div>
+          {/* Sil */}
+          <motion.button
+            type="button"
+            onClick={() => {
+              if (!selectedProje) return;
+              const reason = getProjeDeleteReason(selectedProje.id);
+              if (reason) {
+                toast.error("Silinemez", { field: reason });
+                return;
+              }
+              setConfirmOpen(true);
+            }}
+            className={`h-8 px-3 rounded-lg border flex items-center gap-1.5 text-[12px] font-semibold transition-all ${
+              selectedProje
+                ? "border-red-200 text-red-500 hover:bg-red-50 cursor-pointer"
+                : "border-tyro-border/40 text-tyro-text-muted/40 cursor-default"
+            }`}
+            whileHover={selectedProje ? { scale: 1.04 } : {}}
+            whileTap={selectedProje ? { scale: 0.96 } : {}}
+          >
+            <Trash2 size={12} />
+            Sil
+          </motion.button>
+        </div>
+      </div>
+
       {/* Tab content */}
       {activeTab === "master" && (
         <MasterDetailView
           projeler={projeler}
           onOpenWizard={() => setWizardOpen(true)}
+          externalSearch={toolbarSearch}
+          externalStatusFilter={statusFilter}
+          externalSourceFilter={sourceFilter}
+          externalSortBy={sortBy}
+          externalSortAsc={sortAsc}
+          onSelectionChange={setSelectedProjeId}
         />
       )}
       {activeTab === "tablo" && (
@@ -185,6 +440,91 @@ export default function KokpitPage() {
       >
         {wizardOpen && <ProjeAksiyonWizard onClose={() => setWizardOpen(false)} />}
       </SlidingPanel>
+
+      {/* Aksiyon Ekle from toolbar */}
+      <SlidingPanel
+        isOpen={aksiyonPanelOpen}
+        onClose={() => setAksiyonPanelOpen(false)}
+        title="Yeni Aksiyon Oluştur"
+        icon={<CircleCheckBig size={16} className="text-emerald-500" />}
+      >
+        {selectedProje && (
+          <AksiyonForm
+            defaultProjeId={selectedProje.id}
+            onSuccess={() => setAksiyonPanelOpen(false)}
+          />
+        )}
+      </SlidingPanel>
+
+      {/* Review Date Dialog */}
+      <AnimatePresence>
+        {reviewPopoverOpen && selectedProje && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-50 bg-black/20 backdrop-blur-sm"
+              onClick={() => setReviewPopoverOpen(false)}
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-[300px] rounded-2xl bg-white dark:bg-tyro-surface border border-tyro-border/40 shadow-2xl p-5"
+            >
+              <h3 className="text-[14px] font-bold text-tyro-text-primary mb-3">Kontrol Tarihini Güncelle</h3>
+              <p className="text-[11px] text-tyro-text-muted mb-3">{selectedProje.name}</p>
+              <input
+                type="date"
+                value={reviewDateDraft}
+                onChange={(e) => setReviewDateDraft(e.target.value)}
+                className="w-full text-[12px] px-3 py-2 rounded-lg border border-tyro-border bg-tyro-bg text-tyro-text-primary focus:outline-none focus:ring-2 focus:ring-teal-300/30 mb-3"
+              />
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setReviewPopoverOpen(false)}
+                  className="flex-1 h-9 rounded-lg border border-tyro-border text-[12px] font-semibold text-tyro-text-secondary hover:bg-tyro-bg transition-colors cursor-pointer"
+                >
+                  İptal
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    updateProje(selectedProje.id, { reviewDate: reviewDateDraft });
+                    toast.success("Güncellendi", { field: `Kontrol Tarihi: ${reviewDateDraft}` });
+                    setReviewPopoverOpen(false);
+                  }}
+                  className="flex-1 h-9 rounded-lg bg-teal-500 text-white text-[12px] font-semibold hover:bg-teal-600 transition-colors cursor-pointer flex items-center justify-center gap-1.5"
+                >
+                  <Check size={14} />
+                  Güncelle
+                </button>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* Delete confirmation */}
+      <ConfirmDialog
+        isOpen={confirmOpen}
+        onClose={() => setConfirmOpen(false)}
+        onConfirm={() => {
+          if (selectedProje) {
+            const name = selectedProje.name;
+            deleteProje(selectedProje.id);
+            setSelectedProjeId(null);
+            toast.success("Proje silindi", { field: name });
+          }
+          setConfirmOpen(false);
+        }}
+        title="Projeyi Sil"
+        message={`"${selectedProje?.name ?? ""}" projesini silmek istediğinize emin misiniz? Bu işlem geri alınamaz.`}
+        confirmLabel="Sil"
+        variant="danger"
+      />
     </div>
   );
 }
@@ -329,7 +669,7 @@ function TabloView({
                       </span>
                     )}
                   </div>
-                  <span className={clsx("text-[11px] font-semibold px-2 py-0.5 rounded-full text-center", sourceBadgeClasses[proje.source] || "bg-tyro-bg text-tyro-text-muted")}>
+                  <span className={clsx("text-[12px] font-semibold px-2 py-0.5 rounded-full text-center", sourceBadgeClasses[proje.source] || "bg-tyro-bg text-tyro-text-muted")}>
                     {proje.source}
                   </span>
                   <StatusBadge status={proje.status} />
@@ -338,7 +678,7 @@ function TabloView({
                     <div className="flex-1 h-1.5 rounded-full bg-tyro-border/50 overflow-hidden">
                       <div className="h-full rounded-full bg-tyro-navy transition-all" style={{ width: `${proje.progress}%` }} />
                     </div>
-                    <span className="text-[11px] font-semibold text-tyro-text-muted tabular-nums">%{proje.progress}</span>
+                    <span className="text-[12px] font-semibold text-tyro-text-muted tabular-nums">%{proje.progress}</span>
                   </div>
                   <span className="text-xs text-tyro-text-muted truncate">{proje.department}</span>
                   <span className="text-xs text-tyro-text-muted tabular-nums">{formatDate(proje.startDate)}</span>
@@ -376,7 +716,7 @@ function TabloView({
                             <div className="flex-1 h-1.5 rounded-full bg-tyro-border/50 overflow-hidden">
                               <div className="h-full rounded-full bg-tyro-info transition-all" style={{ width: `${aksiyon.progress}%` }} />
                             </div>
-                            <span className="text-[11px] font-semibold text-tyro-text-muted tabular-nums">%{aksiyon.progress}</span>
+                            <span className="text-[12px] font-semibold text-tyro-text-muted tabular-nums">%{aksiyon.progress}</span>
                           </div>
                           <span />
                           <span className="text-xs text-tyro-text-muted tabular-nums">{formatDate(aksiyon.startDate)}</span>
@@ -422,7 +762,7 @@ function TabloView({
                       {proje.name}
                     </button>
                     <div className="flex items-center gap-2 mt-1 flex-wrap">
-                      <span className={clsx("text-[11px] font-semibold px-2 py-0.5 rounded-full", sourceBadgeClasses[proje.source])}>
+                      <span className={clsx("text-[12px] font-semibold px-2 py-0.5 rounded-full", sourceBadgeClasses[proje.source])}>
                         {proje.source}
                       </span>
                       <StatusBadge status={proje.status} />
@@ -434,7 +774,7 @@ function TabloView({
                   <div className="flex-1 h-1.5 rounded-full bg-tyro-border/50 overflow-hidden">
                     <div className="h-full rounded-full bg-tyro-navy" style={{ width: `${proje.progress}%` }} />
                   </div>
-                  <span className="text-[11px] font-semibold text-tyro-text-muted tabular-nums">%{proje.progress}</span>
+                  <span className="text-[12px] font-semibold text-tyro-text-muted tabular-nums">%{proje.progress}</span>
                 </div>
                 <AnimatePresence>
                   {isExpanded && childAksiyonlar.length > 0 && (
@@ -452,7 +792,7 @@ function TabloView({
                         >
                           <ListChecks size={12} className="text-tyro-text-muted shrink-0" />
                           <span className="text-xs text-tyro-text-secondary flex-1 truncate">{a.name}</span>
-                          <span className="text-[11px] font-semibold text-tyro-text-muted tabular-nums">%{a.progress}</span>
+                          <span className="text-[12px] font-semibold text-tyro-text-muted tabular-nums">%{a.progress}</span>
                           <StatusBadge status={a.status} />
                         </button>
                       ))}
@@ -581,7 +921,7 @@ function KanbanView({
             <div className="flex items-center gap-2 mb-3 px-1">
               <span className={clsx("w-2.5 h-2.5 rounded-full", statusColumnColors[status])} />
               <span className="text-xs font-bold text-tyro-text-primary">{getStatusLabel(status, t)}</span>
-              <span className="text-[11px] font-semibold text-tyro-text-muted bg-tyro-surface px-2 py-0.5 rounded-full">
+              <span className="text-[12px] font-semibold text-tyro-text-muted bg-tyro-surface px-2 py-0.5 rounded-full">
                 {items.length}
               </span>
             </div>
@@ -617,7 +957,7 @@ function KanbanView({
                       <div className="flex-1 h-1.5 rounded-full bg-tyro-border/50 overflow-hidden">
                         <div className="h-full rounded-full bg-tyro-navy transition-all" style={{ width: `${aksiyon.progress}%` }} />
                       </div>
-                      <span className="text-[11px] font-semibold text-tyro-text-muted tabular-nums">%{aksiyon.progress}</span>
+                      <span className="text-[12px] font-semibold text-tyro-text-muted tabular-nums">%{aksiyon.progress}</span>
                     </div>
                     {/* Owner */}
                     <div className="flex items-center gap-1.5 mt-2">
@@ -907,7 +1247,7 @@ function GanttView({
                   {timeLabels.map((tl, idx) => (
                     <span
                       key={idx}
-                      className="absolute text-[11px] font-semibold text-tyro-text-muted whitespace-nowrap"
+                      className="absolute text-[12px] font-semibold text-tyro-text-muted whitespace-nowrap"
                       style={{ left: `${tl.pct}%`, bottom: 4 }}
                     >
                       {tl.label}
@@ -1029,7 +1369,7 @@ function WBSAksiyonNode({ aksiyon }: { aksiyon: Aksiyon }) {
       <span className="w-1.5 h-1.5 rounded-full bg-tyro-text-muted/40 shrink-0" />
       <ListChecks size={14} className="text-tyro-text-muted shrink-0" />
       <span className="text-xs text-tyro-text-secondary flex-1 min-w-0 truncate">{aksiyon.name}</span>
-      <span className="text-[11px] font-semibold text-tyro-text-muted tabular-nums shrink-0">
+      <span className="text-[12px] font-semibold text-tyro-text-muted tabular-nums shrink-0">
         %{aksiyon.progress}
       </span>
       <StatusBadge status={aksiyon.status} />
@@ -1062,7 +1402,7 @@ function WBSHedefNode({ proje }: { proje: Proje }) {
           </div>
           <div className="flex items-center gap-2 mt-1 sm:hidden">
             <StatusBadge status={proje.status} />
-            <span className="text-[11px] font-semibold text-tyro-text-muted bg-tyro-bg px-2 py-0.5 rounded-full">
+            <span className="text-[12px] font-semibold text-tyro-text-muted bg-tyro-bg px-2 py-0.5 rounded-full">
               {childAksiyonlar.length} aksiyon
             </span>
           </div>
@@ -1071,7 +1411,7 @@ function WBSHedefNode({ proje }: { proje: Proje }) {
           <div className="w-16 h-1.5 rounded-full bg-tyro-border/50 overflow-hidden">
             <div className="h-full rounded-full bg-tyro-navy transition-all" style={{ width: `${proje.progress}%` }} />
           </div>
-          <span className="text-[11px] font-semibold text-tyro-text-muted tabular-nums w-8 text-right">%{proje.progress}</span>
+          <span className="text-[12px] font-semibold text-tyro-text-muted tabular-nums w-8 text-right">%{proje.progress}</span>
           <StatusBadge status={proje.status} />
           <span className="text-xs font-semibold text-tyro-text-muted bg-tyro-bg px-2 py-0.5 rounded-full">
             {childAksiyonlar.length} aksiyon

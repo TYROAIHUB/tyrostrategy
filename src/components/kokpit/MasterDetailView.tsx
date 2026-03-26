@@ -49,6 +49,12 @@ const STATUS_HEX: Record<string, string> = {
 interface MasterDetailViewProps {
   projeler: Proje[];
   onOpenWizard?: () => void;
+  externalSearch?: string;
+  externalStatusFilter?: string;
+  externalSourceFilter?: string;
+  externalSortBy?: string;
+  externalSortAsc?: boolean;
+  onSelectionChange?: (projeId: string | null) => void;
 }
 
 // ========================================
@@ -66,11 +72,7 @@ function MasterListCard({
   onClick: () => void;
 }) {
   const { t } = useTranslation();
-  const pColor = progressColor(proje.progress);
-  // Mini circular progress (SVG)
-  const radius = 6;
-  const circumference = 2 * Math.PI * radius;
-  const offset = circumference - (proje.progress / 100) * circumference;
+  const statusColor = STATUS_BAR[proje.status] || "#10b981";
 
   return (
     <div
@@ -83,42 +85,38 @@ function MasterListCard({
           ? "moving-border shadow-[0_4px_16px_rgba(30,58,95,0.12)] scale-[1.01]"
           : "border border-transparent bg-tyro-bg/40 hover:bg-tyro-surface hover:border-tyro-border/30 hover:shadow-sm"
       }`}
-      style={isSelected ? { "--status-color": STATUS_BAR[proje.status] || "#10b981" } as React.CSSProperties : undefined}
+      style={isSelected ? { "--status-color": statusColor } as React.CSSProperties : undefined}
     >
-      {/* Status bar left edge — 6px, vivid color */}
-      <div
-        className="absolute left-0 top-0 bottom-0 w-1.5 rounded-l-xl"
-        style={{ backgroundColor: STATUS_BAR[proje.status] }}
-      />
+      {/* Status bar left edge — only on selected card */}
+      {isSelected && (
+        <div
+          className="absolute left-0 top-0 bottom-0 w-1.5 rounded-l-xl"
+          style={{ backgroundColor: statusColor }}
+        />
+      )}
 
-      <div className="pl-4 pr-3 py-2.5">
-        {/* Row 1: Name + Mini circular progress + % */}
+      <div className={`${isSelected ? "pl-4" : "pl-3"} pr-3 py-2.5`}>
+        {/* Row 1: Name + Mini circular progress */}
         <div className="flex items-start justify-between gap-2 mb-0.5">
           <h4 className="text-[12px] font-semibold text-tyro-text-primary leading-snug line-clamp-2 flex-1">
             {proje.name}
           </h4>
           <div className="relative w-[36px] h-[36px] shrink-0 flex items-center justify-center">
             <svg width="36" height="36" className="-rotate-90">
-              <defs>
-                <linearGradient id={`pg-${proje.id}`} x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor={pColor} stopOpacity="0.5" />
-                  <stop offset="100%" stopColor={pColor} />
-                </linearGradient>
-              </defs>
               <circle cx="18" cy="18" r="15" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-tyro-border/10" />
-              <circle cx="18" cy="18" r="15" fill="none" stroke={`url(#pg-${proje.id})`} strokeWidth="3"
+              <circle cx="18" cy="18" r="15" fill="none" stroke={statusColor} strokeWidth="3"
                 strokeDasharray={2 * Math.PI * 15} strokeDashoffset={2 * Math.PI * 15 - (proje.progress / 100) * 2 * Math.PI * 15} strokeLinecap="round"
                 style={{ transition: "stroke-dashoffset 0.6s cubic-bezier(0.4,0,0.2,1)" }}
               />
             </svg>
             {proje.progress >= 100 ? (
               <span className="absolute inset-0 flex items-center justify-center">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={pColor} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={statusColor} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
                   <polyline points="20 6 9 17 4 12" />
                 </svg>
               </span>
             ) : (
-              <span className="absolute inset-0 flex items-center justify-center text-[11px] font-black tabular-nums" style={{ color: pColor }}>
+              <span className="absolute inset-0 flex items-center justify-center text-[11px] font-black tabular-nums" style={{ color: statusColor }}>
                 {proje.progress}
               </span>
             )}
@@ -133,13 +131,10 @@ function MasterListCard({
           </span>
         </div>
 
-        {/* Row 3: Dates + Status */}
-        <div className="flex items-center justify-between gap-1">
-          <span className="text-[11px] text-tyro-text-muted">
-            {formatDate(proje.startDate)} → {formatDate(proje.endDate)}
-          </span>
-          <StatusBadge status={proje.status} showTooltip={false} />
-        </div>
+        {/* Row 3: Dates */}
+        <span className="text-[11px] text-tyro-text-muted">
+          {formatDate(proje.startDate)} → {formatDate(proje.endDate)}
+        </span>
       </div>
     </div>
   );
@@ -172,7 +167,7 @@ function QuickProgressButtons({
             key={step}
             type="button"
             onClick={(e) => { e.stopPropagation(); onChange(step); }}
-            className={`relative min-w-[28px] h-[22px] rounded-md text-[9px] font-bold tabular-nums cursor-pointer transition-all ${
+            className={`relative min-w-[28px] h-[22px] rounded-md text-[11px] font-bold tabular-nums cursor-pointer transition-all ${
               isExact
                 ? chipBg(step, true) + " scale-110"
                 : isPassed
@@ -524,7 +519,7 @@ function AksiyonRow({
 // ========================================
 // MAIN: MASTER-DETAIL VIEW
 // ========================================
-export default function MasterDetailView({ projeler, onOpenWizard }: MasterDetailViewProps) {
+export default function MasterDetailView({ projeler, onOpenWizard, externalSearch = "", externalStatusFilter, externalSourceFilter, externalSortBy, externalSortAsc, onSelectionChange }: MasterDetailViewProps) {
   const { t } = useTranslation();
   const sidebarTheme = useSidebarTheme();
   const { filterProjeler } = usePermissions();
@@ -539,6 +534,11 @@ export default function MasterDetailView({ projeler, onOpenWizard }: MasterDetai
   // Selected
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
+  // Notify parent of selection changes
+  useEffect(() => {
+    onSelectionChange?.(selectedId);
+  }, [selectedId, onSelectionChange]);
+
   // Mobile detail mode
   const [mobileDetail, setMobileDetail] = useState(false);
 
@@ -547,30 +547,37 @@ export default function MasterDetailView({ projeler, onOpenWizard }: MasterDetai
   // Filtered + sorted list
   const filtered = useMemo(() => {
     let list = filterProjeler(projeler);
-    if (search.trim()) {
-      const q = search.toLocaleLowerCase("tr");
+    const combinedSearch = (externalSearch || search).trim();
+    if (combinedSearch) {
+      const q = combinedSearch.toLocaleLowerCase("tr");
       list = list.filter((h) => {
         const fields = [h.name, h.owner, h.department, h.source, h.status, h.description, ...(h.tags ?? [])];
         return fields.filter(Boolean).join(" ").toLocaleLowerCase("tr").includes(q);
       });
     }
-    if (statusFilter !== "all") list = list.filter((h) => h.status === statusFilter);
-    if (sourceFilter !== "all") list = list.filter((h) => h.source === sourceFilter);
+    const effectiveStatus = externalStatusFilter ?? statusFilter;
+    const effectiveSource = externalSourceFilter ?? sourceFilter;
+    const effectiveSort = externalSortBy ?? sortBy;
+    const effectiveSortAsc = externalSortAsc ?? sortAsc;
+
+    if (effectiveStatus !== "all") list = list.filter((h) => h.status === effectiveStatus);
+    if (effectiveSource !== "all") list = list.filter((h) => h.source === effectiveSource);
 
     // Sort with direction
     const sorted = [...list].sort((a, b) => {
       let cmp = 0;
-      switch (sortBy) {
+      switch (effectiveSort) {
         case "name": cmp = a.name.localeCompare(b.name, "tr"); break;
-        case "date": cmp = new Date(a.startDate).getTime() - new Date(b.startDate).getTime(); break;
+        case "date":
+        case "endDate": cmp = new Date(a.endDate).getTime() - new Date(b.endDate).getTime(); break;
         case "status": cmp = a.status.localeCompare(b.status); break;
         case "progress":
         default: cmp = a.progress - b.progress;
       }
-      return sortAsc ? cmp : -cmp;
+      return effectiveSortAsc ? cmp : -cmp;
     });
     return sorted;
-  }, [projeler, search, statusFilter, sourceFilter, sortBy, sortAsc, filterProjeler]);
+  }, [projeler, search, statusFilter, sourceFilter, sortBy, sortAsc, externalSearch, externalStatusFilter, externalSourceFilter, externalSortBy, externalSortAsc, filterProjeler]);
 
   // Aksiyonlar from store — fetched once at top level
   const aksiyonlar = useDataStore((s) => s.aksiyonlar);
@@ -656,76 +663,7 @@ export default function MasterDetailView({ projeler, onOpenWizard }: MasterDetai
       onKeyDown={handleKeyDown}
       tabIndex={0}
     >
-      {/* Search */}
-      <div className="px-3 pt-3 pb-2">
-        <Input
-          isClearable
-          size="sm"
-          variant="bordered"
-          placeholder="Ad, sahip, departman, etiket..."
-          startContent={<Search size={14} className="text-tyro-text-muted" />}
-          value={search}
-          onClear={() => setSearch("")}
-          onValueChange={setSearch}
-          classNames={{ inputWrapper: "h-9 min-h-9" }}
-        />
-      </div>
-
-      {/* Compact filters + sort */}
-      <div className="px-3 pb-2 flex items-center gap-1.5">
-        <select
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-          className="text-[11px] px-2 py-1 rounded-md border border-tyro-border bg-tyro-bg text-tyro-text-secondary cursor-pointer focus:outline-none focus:ring-1 focus:ring-tyro-navy/30"
-        >
-          <option value="all">{t("common.status")}</option>
-          <option value="On Track">{t("status.onTrack")}</option>
-          <option value="At Risk">{t("status.atRisk")}</option>
-          <option value="Behind">{t("status.behind")}</option>
-          <option value="Not Started">{t("status.notStarted")}</option>
-          <option value="Achieved">{t("status.achieved")}</option>
-          <option value="On Hold">{t("status.onHold")}</option>
-          <option value="Cancelled">{t("status.cancelled")}</option>
-        </select>
-        <select
-          value={sourceFilter}
-          onChange={(e) => setSourceFilter(e.target.value)}
-          className="text-[11px] px-2 py-1 rounded-md border border-tyro-border bg-tyro-bg text-tyro-text-secondary cursor-pointer focus:outline-none focus:ring-1 focus:ring-tyro-navy/30"
-        >
-          <option value="all">{t("common.source")}</option>
-          <option value="Türkiye">Türkiye</option>
-          <option value="Kurumsal">Kurumsal</option>
-          <option value="International">International</option>
-        </select>
-        <select
-          value={sortBy}
-          onChange={(e) => setSortBy(e.target.value as any)}
-          className="text-[11px] px-2 py-1 rounded-md border border-tyro-border bg-tyro-bg text-tyro-text-secondary cursor-pointer focus:outline-none focus:ring-1 focus:ring-tyro-navy/30 flex-1 min-w-0"
-        >
-          <option value="progress">{t("kokpit.sortByProgress")}</option>
-          <option value="name">{t("kokpit.sortByName")}</option>
-          <option value="date">{t("kokpit.sortByDate")}</option>
-          <option value="status">{t("kokpit.sortByStatus")}</option>
-        </select>
-        {/* Sort direction toggle */}
-        <button
-          type="button"
-          onClick={() => setSortAsc((v) => !v)}
-          className="w-7 h-7 rounded-md flex items-center justify-center text-tyro-text-muted hover:text-tyro-navy hover:bg-tyro-navy/5 cursor-pointer transition-colors shrink-0"
-          title={sortAsc ? "Artan" : "Azalan"}
-        >
-          <ArrowUpDown size={13} className={sortAsc ? "" : "rotate-180"} />
-        </button>
-        {hasActiveFilters && (
-          <button
-            type="button"
-            onClick={clearFilters}
-            className="text-[11px] px-1.5 py-1 rounded-md bg-red-50 text-red-600 hover:bg-red-100 cursor-pointer font-medium shrink-0"
-          >
-            {t("kokpit.clearFilters")}
-          </button>
-        )}
-      </div>
+      {/* Filters moved to page-level toolbar */}
 
       {/* Divider */}
       <div className="h-px bg-tyro-border/30 mx-3" />
@@ -783,42 +721,17 @@ export default function MasterDetailView({ projeler, onOpenWizard }: MasterDetai
       </div>
 
       {selectedProje ? (
-        <>
-          <DetailPanel
-            proje={selectedProje}
-            aksiyonlar={selectedAksiyonlar}
-            onUpdateAksiyon={updateAksiyon}
-            onAddAksiyon={() => setAksiyonPanelOpen(true)}
-            onEditHedef={() => setHedefPanelOpen(true)}
-            onClickAksiyon={(a) => { setViewingAksiyon(a); }}
-            onEditAksiyon={(a) => { setEditingAksiyon(a); }}
-            onUpdateHedef={(data) => selectedProje && updateProje(selectedProje.id, data)}
-            parentHedefName={selectedProje.parentObjectiveId ? projeler.find((h) => h.id === selectedProje.parentObjectiveId)?.name : undefined}
-          />
-          {/* Inline action buttons — below detail, inside container */}
-          <div className="hidden lg:flex items-center justify-end gap-3 px-5 py-3 shrink-0 border-t border-tyro-border/15">
-            <motion.button
-              type="button"
-              onClick={() => setHedefPanelOpen(true)}
-              className="h-9 px-4 rounded-xl bg-tyro-navy text-white flex items-center gap-2 shadow-sm cursor-pointer text-[12px] font-semibold"
-              whileHover={{ scale: 1.03 }}
-              whileTap={{ scale: 0.97 }}
-            >
-              <Pencil size={14} />
-              Düzenle
-            </motion.button>
-            <motion.button
-              type="button"
-              onClick={() => setAksiyonPanelOpen(true)}
-              className="h-9 px-4 rounded-xl bg-tyro-gold text-white flex items-center gap-2 shadow-sm cursor-pointer text-[12px] font-semibold"
-              whileHover={{ scale: 1.03 }}
-              whileTap={{ scale: 0.97 }}
-            >
-              <Plus size={14} />
-              Yeni
-            </motion.button>
-          </div>
-        </>
+        <DetailPanel
+          proje={selectedProje}
+          aksiyonlar={selectedAksiyonlar}
+          onUpdateAksiyon={updateAksiyon}
+          onAddAksiyon={() => setAksiyonPanelOpen(true)}
+          onEditHedef={() => setHedefPanelOpen(true)}
+          onClickAksiyon={(a) => { setViewingAksiyon(a); }}
+          onEditAksiyon={(a) => { setEditingAksiyon(a); }}
+          onUpdateHedef={(data) => selectedProje && updateProje(selectedProje.id, data)}
+          parentHedefName={selectedProje.parentObjectiveId ? projeler.find((h) => h.id === selectedProje.parentObjectiveId)?.name : undefined}
+        />
       ) : (
         <div className="flex-1 flex flex-col items-center justify-center gap-3 text-center px-6">
           <div className="w-16 h-16 rounded-full bg-tyro-bg flex items-center justify-center">
@@ -835,6 +748,7 @@ export default function MasterDetailView({ projeler, onOpenWizard }: MasterDetai
     </div>
   );
 
+
   return (
     <div className="flex h-[calc(100vh-200px)] min-h-[500px] relative">
       {/* Left: 360px on desktop, full on mobile — hidden when detail open on mobile */}
@@ -843,12 +757,12 @@ export default function MasterDetailView({ projeler, onOpenWizard }: MasterDetai
       </div>
       {/* Panel divider */}
       <div className="hidden lg:block w-px bg-tyro-border/30 mx-1 shrink-0" />
-      {/* Right: flex-1, hidden on mobile until selected */}
+      {/* Right: flex-1 */}
       {rightPanel}
 
-      {/* ===== ACTIONS FAB — İşlemler (mobile only) ===== */}
-      {selectedProje && (
-      <div className="fixed bottom-24 right-20 z-40 lg:hidden">
+      {/* FABs removed — actions moved to page-level toolbar */}
+      {false && selectedProje && (
+      <div className="fixed bottom-24 right-20 lg:bottom-6 lg:right-[180px] z-40">
         <AnimatePresence>
           {actionsFabOpen && (
             <>
@@ -969,8 +883,8 @@ export default function MasterDetailView({ projeler, onOpenWizard }: MasterDetai
       </div>
       )}
 
-      {/* ===== CREATE FAB — Oluşturma (mobile only) ===== */}
-      <div className="fixed bottom-24 right-6 z-40 lg:hidden">
+      {false && (
+      <div className="fixed bottom-24 right-6 lg:bottom-6 lg:right-[68px] z-40">
         <AnimatePresence>
           {fabOpen && (
             <>
@@ -1034,6 +948,7 @@ export default function MasterDetailView({ projeler, onOpenWizard }: MasterDetai
           <span className="hidden lg:inline text-[12px] font-semibold">Yeni</span>
         </motion.button>
       </div>
+      )}
 
       {/* Aksiyon Ekle SlidingPanel */}
       <SlidingPanel
