@@ -422,6 +422,7 @@ export default function KokpitPage() {
             proje={panelHedef}
             onEdit={() => {}}
             onModeChange={() => {}}
+            onSelectHedef={(p) => setPanelHedef(p)}
           />
         )}
         {panelAksiyon && (

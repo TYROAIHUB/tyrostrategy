@@ -9,7 +9,7 @@ import StatusBadge from "@/components/ui/StatusBadge";
 import ProjeForm from "@/components/projeler/ProjeForm";
 import AksiyonForm from "@/components/aksiyonlar/AksiyonForm";
 import AksiyonDetail from "@/components/aksiyonlar/AksiyonDetail";
-import { progressColor } from "@/lib/colorUtils";
+import { progressColor, statusColor } from "@/lib/colorUtils";
 import { formatDate } from "@/lib/dateUtils";
 import type { Proje, Aksiyon } from "@/types";
 
@@ -125,9 +125,9 @@ export default function ProjeDetail({
         <button
           type="button"
           onClick={() => setMode("editing")}
-          className="shrink-0 h-7 px-2.5 rounded-lg border border-tyro-border/60 flex items-center gap-1.5 text-[11px] font-medium text-tyro-text-secondary hover:bg-tyro-navy/5 hover:text-tyro-navy transition-all cursor-pointer"
+          className="shrink-0 h-8 px-3 rounded-lg border border-tyro-border bg-tyro-surface flex items-center gap-1.5 text-[12px] font-semibold text-tyro-text-primary hover:bg-tyro-navy/5 hover:border-tyro-navy/30 transition-all cursor-pointer shadow-sm"
         >
-          <Pencil size={12} />
+          <Pencil size={13} />
           Düzenle
         </button>
       </div>
@@ -152,18 +152,18 @@ export default function ProjeDetail({
         )}
       </div>
 
-      {/* 4. İlerleme çubuğu */}
+      {/* 4. İlerleme çubuğu — renk statüye göre */}
       <div className="flex items-center gap-3">
         <div className="flex-1 h-2 rounded-full bg-tyro-bg overflow-hidden">
           <div
             className="h-full rounded-full transition-all duration-700"
             style={{
               width: `${currentHedef.progress}%`,
-              background: `linear-gradient(90deg, ${progressColor(currentHedef.progress)}cc, ${progressColor(currentHedef.progress)})`,
+              backgroundColor: statusColor(currentHedef.status),
             }}
           />
         </div>
-        <span className="text-[13px] font-bold tabular-nums shrink-0" style={{ color: progressColor(currentHedef.progress) }}>
+        <span className="text-[13px] font-bold tabular-nums shrink-0" style={{ color: statusColor(currentHedef.status) }}>
           %{currentHedef.progress}
         </span>
       </div>
@@ -244,12 +244,29 @@ export default function ProjeDetail({
             </h4>
             <div
               onClick={() => onSelectHedef?.(parentHedef)}
-              className={`flex items-center justify-between px-3 py-2.5 rounded-lg border border-tyro-border/20 bg-tyro-surface/60 ${onSelectHedef ? "cursor-pointer hover:bg-tyro-bg/60" : ""} transition-colors`}
+              className={`px-3 py-2.5 rounded-lg border border-tyro-border/20 bg-tyro-surface/60 ${onSelectHedef ? "cursor-pointer hover:bg-tyro-bg/60" : ""} transition-colors`}
             >
-              <p className="text-[13px] font-medium text-tyro-text-primary truncate">
-                {parentHedef.name}
-              </p>
-              {onSelectHedef && <ChevronRight size={14} className="text-tyro-text-muted shrink-0" />}
+              <div className="flex items-center justify-between mb-1.5">
+                <p className="text-[13px] font-medium text-tyro-text-primary leading-snug truncate flex-1">
+                  {parentHedef.name}
+                </p>
+                {onSelectHedef && <ChevronRight size={14} className="text-tyro-text-muted shrink-0 ml-2" />}
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[11px] font-semibold bg-tyro-bg text-tyro-text-secondary">
+                  {parentHedef.source}
+                </span>
+                <div className="flex-1 h-1.5 rounded-full bg-tyro-bg overflow-hidden">
+                  <div
+                    className="h-full rounded-full transition-all duration-500"
+                    style={{ width: `${parentHedef.progress}%`, backgroundColor: statusColor(parentHedef.status) }}
+                  />
+                </div>
+                <span className="text-[11px] font-medium text-tyro-text-secondary tabular-nums shrink-0">
+                  %{parentHedef.progress}
+                </span>
+                <StatusBadge status={parentHedef.status} />
+              </div>
             </div>
           </div>
         </>

@@ -1,3 +1,19 @@
+import type { EntityStatus } from "@/types";
+
+/** Returns hex color for a given status */
+export function statusColor(status: EntityStatus): string {
+  const map: Record<string, string> = {
+    "Not Started": "#94a3b8",
+    "On Track": "#10b981",
+    "At Risk": "#f59e0b",
+    "Behind": "#ef4444",
+    "Achieved": "#059669",
+    "Cancelled": "#9ca3af",
+    "On Hold": "#8b5cf6",
+  };
+  return map[status] ?? "#94a3b8";
+}
+
 /** Returns a color based on progress percentage — matches AksiyonForm gradient palette */
 export function progressColor(pct: number): string {
   if (pct === 0) return "#94a3b8";    // slate-400 — başlanmamış (gri)

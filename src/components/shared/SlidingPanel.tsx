@@ -78,21 +78,21 @@ export default function SlidingPanel({
                 </button>
               </div>
             ) : (
-              <div className="flex items-center justify-between px-5 py-2.5 border-b border-tyro-border">
-                <div className="flex items-center gap-2">
+              <div className="flex items-center justify-between px-5 py-3 border-b border-tyro-border/60">
+                <div className="flex items-center gap-2.5">
                   {icon && (
-                    <div className="w-7 h-7 rounded-lg bg-tyro-bg flex items-center justify-center">
+                    <div className="w-8 h-8 rounded-xl bg-tyro-navy/8 flex items-center justify-center">
                       {icon}
                     </div>
                   )}
-                  <h2 className="text-[14px] font-bold text-tyro-text-primary">{title}</h2>
+                  <h2 className="text-[15px] font-bold text-tyro-text-primary tracking-tight">{title}</h2>
                 </div>
                 <button
                   onClick={onClose}
                   aria-label={t("common.cancel")}
-                  className="w-7 h-7 rounded-md flex items-center justify-center text-tyro-text-muted hover:bg-tyro-bg transition-colors cursor-pointer"
+                  className="w-8 h-8 rounded-lg border border-tyro-border/60 flex items-center justify-center text-tyro-text-secondary hover:bg-tyro-navy/5 hover:text-tyro-text-primary hover:border-tyro-border transition-all cursor-pointer"
                 >
-                  <X size={15} />
+                  <X size={16} />
                 </button>
               </div>
             )}
