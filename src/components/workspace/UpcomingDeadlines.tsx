@@ -74,8 +74,8 @@ function DeadlineRow({ item, onClick, showExpand, t }: DeadlineRowProps) {
         {/* Content */}
         <div className="flex-1 min-w-0 overflow-hidden">
           <div className="flex items-center gap-1.5 mb-0.5">
-            <span className={`text-[11px] sm:text-[11px] font-bold uppercase tracking-wider ${tc.color}`}>{tc.label}</span>
-            <span className={`text-[11px] sm:text-[11px] font-bold px-1 sm:px-1.5 py-0.5 rounded-full ${urg.bg} ${urg.color}`}>
+            <span className={`text-[11px] font-bold uppercase tracking-wider ${tc.color}`}>{tc.label}</span>
+            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ml-auto shrink-0 ${urg.bg} ${urg.color}`}>
               {urg.text}
             </span>
           </div>
@@ -90,10 +90,10 @@ function DeadlineRow({ item, onClick, showExpand, t }: DeadlineRowProps) {
                 style={{ width: `${item.progress}%`, backgroundColor: pColor }}
               />
             </div>
-            <span className="text-[11px] sm:text-[11px] font-bold tabular-nums" style={{ color: pColor }}>
+            <span className="text-[11px] font-bold tabular-nums" style={{ color: pColor }}>
               %{item.progress}
             </span>
-            <span className="text-[11px] sm:text-[11px] text-tyro-text-muted">
+            <span className="text-[11px] text-tyro-text-muted">
               {new Date(item.endDate).toLocaleDateString("tr-TR", { day: "2-digit", month: "short" })}
             </span>
           </div>
