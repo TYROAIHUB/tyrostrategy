@@ -46,7 +46,7 @@ const STATUS_DOT: Record<EntityStatus, typeof Check> = {
 };
 
 const SOURCES: { id: Source | "all"; label: string; color: string }[] = [
-  { id: "all", label: "Tüm Kaynaklar", color: "#1e3a5f" },
+  { id: "all", label: "Tüm Kaynaklar", color: "" },
   { id: "Türkiye", label: "Türkiye", color: "#c8922a" },
   { id: "International", label: "International", color: "#10b981" },
   { id: "Kurumsal", label: "Kurumsal", color: "#3b82f6" },
@@ -495,9 +495,10 @@ ${clone.outerHTML}
                       onClick={() => setDatePreset(dp.id)}
                       className={`px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-all cursor-pointer ${
                         datePreset === dp.id
-                          ? "bg-tyro-navy text-white shadow-sm"
+                          ? "text-white shadow-sm"
                           : "bg-tyro-bg text-tyro-text-secondary hover:bg-tyro-border/30"
                       }`}
+                      style={datePreset === dp.id ? { backgroundColor: theme.accentColor } : undefined}
                     >
                       {dp.label}
                     </button>
@@ -525,7 +526,7 @@ ${clone.outerHTML}
                           ? "text-white shadow-sm"
                           : "bg-tyro-bg text-tyro-text-secondary hover:bg-tyro-border/30"
                       }`}
-                      style={sourceFilter === src.id ? { backgroundColor: src.color } : undefined}
+                      style={sourceFilter === src.id ? { backgroundColor: src.color || theme.accentColor } : undefined}
                     >
                       {src.label}
                     </button>
