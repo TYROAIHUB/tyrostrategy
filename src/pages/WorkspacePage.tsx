@@ -101,17 +101,14 @@ export default function WorkspacePage() {
         </div>
       </motion.div>
 
-      {/* Row 1: Yaklaşan Tarihler (6) + Bireysel İlerleme (3) + Bento KPI (3) */}
-      <Suspense fallback={<div className="grid grid-cols-1 lg:grid-cols-12 gap-3 sm:gap-5"><div className="col-span-12 lg:col-span-6 h-48 rounded-2xl bg-tyro-surface animate-pulse" /><div className="col-span-12 lg:col-span-3 h-48 rounded-2xl bg-tyro-surface animate-pulse" /><div className="col-span-12 lg:col-span-3 h-48 rounded-2xl bg-tyro-surface animate-pulse" /></div>}>
+      {/* Row 1: Bento KPI (5) + Bireysel İlerleme (7) */}
+      <Suspense fallback={<div className="grid grid-cols-1 lg:grid-cols-12 gap-3 sm:gap-5"><div className="col-span-12 lg:col-span-5 h-48 rounded-2xl bg-tyro-surface animate-pulse" /><div className="col-span-12 lg:col-span-7 h-48 rounded-2xl bg-tyro-surface animate-pulse" /></div>}>
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 sm:gap-5 items-stretch">
-          <motion.div variants={fadeUp} className="col-span-12 lg:col-span-6 flex">
-            <UpcomingDeadlines />
-          </motion.div>
-          <motion.div variants={fadeUp} className="col-span-12 lg:col-span-3 flex">
-            <MyProgressWidget />
-          </motion.div>
-          <motion.div variants={fadeUp} className="col-span-12 lg:col-span-3 flex">
+          <motion.div variants={fadeUp} className="col-span-12 lg:col-span-5 flex">
             <BentoKPI />
+          </motion.div>
+          <motion.div variants={fadeUp} className="col-span-12 lg:col-span-7 flex">
+            <MyProgressWidget />
           </motion.div>
         </div>
       </Suspense>

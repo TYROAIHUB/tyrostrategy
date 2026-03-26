@@ -19,7 +19,7 @@ const STATUS_COLORS: Record<string, string> = {
   "On Track": "#10b981", "Achieved": "#3b82f6", "Behind": "#ef4444", "At Risk": "#f59e0b", "Not Started": "#94a3b8",
 };
 
-type Tab = "proje" | "aksiyon";
+// Only project-based — no aksiyon tab
 
 /* ── Radial Gauge (compact) ── */
 function RadialGauge({ value, total, avgProgress: _avgProgress, color }: { value: number; total: number; avgProgress: number; color: string }) {
@@ -140,7 +140,7 @@ export default function MyProjectsList() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const ws = useMyWorkspace();
-  const [tab, setTab] = useState<Tab>("proje");
+  const tab = "proje" as const;
   const [showAll, setShowAll] = useState(false);
 
   // Stats
@@ -185,23 +185,7 @@ export default function MyProjectsList() {
             </div>
             <h3 className="text-[13px] font-bold text-tyro-text-primary">{t("workspace.personalKPI")}</h3>
           </div>
-          <div
-            className="flex items-center rounded-full p-1 border border-white/20"
-            style={{ background: "rgba(255,255,255,0.25)", backdropFilter: "blur(16px) saturate(1.6)", WebkitBackdropFilter: "blur(16px) saturate(1.6)" }}
-          >
-            {(["proje", "aksiyon"] as const).map((t2) => (
-              <button
-                key={t2}
-                type="button"
-                onClick={() => { setTab(t2); setShowAll(false); }}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold transition-all duration-200 cursor-pointer ${
-                  tab === t2 ? "bg-white/90 shadow-md text-tyro-navy" : "text-tyro-text-muted hover:text-tyro-text-secondary hover:bg-white/15"
-                }`}
-              >
-                {t2 === "proje" ? <Crosshair size={13} /> : <CircleCheckBig size={13} />}
-                {t2 === "proje" ? t("nav.objectives") : t("nav.actions")}
-              </button>
-            ))}
+          <div>
           </div>
         </div>
 
@@ -217,9 +201,9 @@ export default function MyProjectsList() {
             {/* Gauge + Status bars */}
             <div className="flex items-start gap-6">
               <RadialGauge
-                value={tab === "proje" ? hedefAchieved : ws.achievedAksiyonlar}
-                total={tab === "proje" ? ws.myProjeler.length : ws.totalAksiyonlar}
-                avgProgress={tab === "proje" ? hedefAvg : aksiyonAvg}
+                value={hedefAchieved}
+                total={ws.myProjeler.length}
+                avgProgress={hedefAvg}
                 color="var(--tyro-success)"
               />
               <div className="flex-1 min-w-0">
@@ -229,18 +213,18 @@ export default function MyProjectsList() {
                   </span>
                   <div className="flex items-baseline gap-1">
                     <span className="text-[11px] text-tyro-text-muted">{t("workspace.avgProgress")}</span>
-                    <span className="text-[16px] font-extrabold text-tyro-navy tabular-nums">%{tab === "proje" ? hedefAvg : aksiyonAvg}</span>
+                    <span className="text-[16px] font-extrabold text-tyro-navy tabular-nums">%{hedefAvg}</span>
                   </div>
                 </div>
                 <StackedStatusBar
-                  items={tab === "proje" ? ws.myProjeler : ws.myAksiyonlar}
+                  items={ws.myProjeler}
                   getStatus={(s) => getStatusLabel(s as EntityStatus, t)}
                 />
               </div>
             </div>
 
             {/* Source distribution (proje only) */}
-            {tab === "proje" && ws.myProjeler.length > 0 && (
+            {ws.myProjeler.length > 0 && (
               <div>
                 <p className="text-[12px] font-bold text-tyro-text-primary mb-2">{t("workspace.sourceDistribution")}</p>
                 <div className="flex items-center gap-1 h-5 rounded-lg overflow-hidden bg-tyro-bg/40">
@@ -315,12 +299,12 @@ export default function MyProjectsList() {
       <GlassCard className="p-4 sm:p-5 flex flex-col overflow-hidden">
         <div className="flex items-center justify-between mb-3">
           <h4 className="text-[13px] font-bold text-tyro-text-primary">
-            {tab === "proje" ? t("workspace.objectiveProgress") : t("workspace.actionProgress")}
+            {t("workspace.objectiveProgress")}
           </h4>
           {hasMore && (
             <button
               type="button"
-              onClick={() => navigate(tab === "proje" ? "/projeler" : "/aksiyonlar")}
+              onClick={() => navigate("/projeler")}
               className="flex items-center gap-1 text-[12px] font-semibold text-tyro-navy hover:text-tyro-navy-light transition-colors cursor-pointer"
             >
               {t("common.viewAll")}
@@ -343,8 +327,8 @@ export default function MyProjectsList() {
                 <ProgressCard
                   key={item.id}
                   item={item as any}
-                  onClick={() => navigate(tab === "proje" ? `/projeler?selected=${item.id}` : `/aksiyonlar?selected=${item.id}`)}
-                  showParent={tab === "aksiyon"}
+                  onClick={() => navigate(`/projeler?selected=${item.id}`)}
+                  showParent={false}
                 />
               ))}
             </div>
