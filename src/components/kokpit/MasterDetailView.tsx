@@ -458,40 +458,35 @@ function AksiyonRow({
   onClick?: () => void;
 }) {
   const { t } = useTranslation();
-  const statusIcon = aksiyon.status === "Achieved" ? "✅" : aksiyon.status === "On Track" ? "▶" : aksiyon.status === "At Risk" ? "⚠" : "○";
-
   return (
     <div className="glass-card rounded-xl p-3 hover:shadow-md transition-all group/row cursor-pointer relative hover:border-l-[3px] hover:border-l-tyro-navy/30" onClick={onClick}>
       {/* Top row: index + name + edit + status badge */}
-      <div className="flex items-start gap-2 mb-1.5">
+      <div className="flex items-start gap-2">
         <span className="text-[11px] font-bold text-tyro-text-muted w-5 shrink-0 mt-0.5">{index}</span>
-        <span className="text-[11px] mr-1">{statusIcon}</span>
-        <h4 className="text-[12px] font-semibold text-tyro-text-primary flex-1 leading-snug hover:text-tyro-navy transition-colors">
-          {aksiyon.name}
-        </h4>
-        {onEdit && (
-          <button
-            type="button"
-            onClick={(e) => { e.stopPropagation(); onEdit?.(); }}
-            className="w-6 h-6 rounded-lg flex items-center justify-center text-tyro-text-muted hover:text-tyro-navy hover:bg-tyro-navy/5 cursor-pointer opacity-0 group-hover/row:opacity-100 transition-all shrink-0"
-          >
-            <Pencil size={12} />
-          </button>
-        )}
-        <StatusBadge status={aksiyon.status} />
+        <div className="flex-1 min-w-0">
+          <div className="flex items-start gap-2">
+            <h4 className="text-[12px] font-semibold text-tyro-text-primary flex-1 leading-snug hover:text-tyro-navy transition-colors">
+              {aksiyon.name}
+            </h4>
+            {onEdit && (
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); onEdit?.(); }}
+                className="w-6 h-6 rounded-lg flex items-center justify-center text-tyro-text-muted hover:text-tyro-navy hover:bg-tyro-navy/5 cursor-pointer opacity-0 group-hover/row:opacity-100 transition-all shrink-0"
+              >
+                <Pencil size={12} />
+              </button>
+            )}
+            <StatusBadge status={aksiyon.status} />
+          </div>
+          <span className="text-[11px] text-tyro-text-muted mt-0.5 block">
+            {formatDate(aksiyon.startDate)} – {formatDate(aksiyon.endDate)}
+          </span>
+        </div>
       </div>
 
-      {/* Owner + Dates */}
-      <div className="flex items-center gap-2 ml-7 mb-1">
-        <span className="text-[11px] text-tyro-text-muted">
-          {aksiyon.owner || "—"} · {formatDate(aksiyon.startDate)} – {formatDate(aksiyon.endDate)}
-        </span>
-      </div>
-      {aksiyon.description && (
-        <p className="text-[11px] text-tyro-text-secondary leading-relaxed ml-7 mb-2 line-clamp-1">
-          {aksiyon.description}
-        </p>
-      )}
+      {/* Spacer */}
+      <div className="h-2" />
 
       {/* Progress bar + Quick buttons */}
       {(() => {
@@ -939,7 +934,8 @@ export default function MasterDetailView({ projeler, onOpenWizard, externalSearc
         <motion.button
           type="button"
           onClick={() => { setFabOpen((v) => !v); setActionsFabOpen(false); }}
-          className="h-12 rounded-full bg-tyro-gold text-white flex items-center justify-center shadow-[0_4px_12px_rgba(200,146,42,0.35)] cursor-pointer z-40 relative w-12 lg:w-auto lg:h-11 lg:px-4 lg:gap-2 lg:rounded-xl"
+          className="h-12 rounded-full text-white flex items-center justify-center shadow-lg cursor-pointer z-40 relative w-12 lg:w-auto lg:h-11 lg:px-4 lg:gap-2 lg:rounded-xl"
+          style={{ backgroundColor: sidebarTheme.accentColor ?? "#c8922a" }}
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           transition={{ type: "spring", stiffness: 400, damping: 25 }}

@@ -27,6 +27,7 @@ import AksiyonDetail from "@/components/aksiyonlar/AksiyonDetail";
 import { useDataStore } from "@/stores/dataStore";
 import { toast } from "@/stores/toastStore";
 import { usePermissions } from "@/hooks/usePermissions";
+import { useSidebarTheme } from "@/hooks/useSidebarTheme";
 import ConfirmDialog from "@/components/shared/ConfirmDialog";
 import ProjeAksiyonWizard from "@/components/wizard/ProjeAksiyonWizard";
 import WizardHeader from "@/components/wizard/WizardHeader";
@@ -78,6 +79,8 @@ const LABEL_COL_W = 240;
 // ─── Main Component ──────────────────────────────────────────
 export default function KokpitPage() {
   const { t } = useTranslation();
+  const sidebarTheme = useSidebarTheme();
+  const accentColor = sidebarTheme.accentColor ?? "#c8922a";
   const projeler = useDataStore((s) => s.projeler);
   const aksiyonlar = useDataStore((s) => s.aksiyonlar);
   const updateAksiyon = useDataStore((s) => s.updateAksiyon);
@@ -255,7 +258,8 @@ export default function KokpitPage() {
             <motion.button
               type="button"
               onClick={() => { setNewMenuOpen(!newMenuOpen); setEditMenuOpen(false); }}
-              className="h-10 px-4 rounded-xl bg-tyro-navy text-white flex items-center gap-2 cursor-pointer text-sm font-semibold"
+              className="h-10 px-4 rounded-xl text-white flex items-center gap-2 cursor-pointer text-sm font-semibold shadow-sm"
+              style={{ backgroundColor: accentColor }}
               whileTap={{ scale: 0.96 }}
             >
               <Plus size={15} strokeWidth={2.5} />

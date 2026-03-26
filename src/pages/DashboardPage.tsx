@@ -1,6 +1,7 @@
 import { useState, useMemo, lazy, Suspense } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { useSidebarTheme } from "@/hooks/useSidebarTheme";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, SlidersHorizontal, ArrowRight, BarChart3, FileText } from "lucide-react";
 import { useDataStore } from "@/stores/dataStore";
@@ -59,6 +60,7 @@ const fadeUp = {
 
 export default function DashboardPage() {
   const { t } = useTranslation();
+  const sidebarTheme = useSidebarTheme();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [filterOpen, setFilterOpen] = useState(false);
@@ -156,9 +158,10 @@ export default function DashboardPage() {
             onClick={() => switchTab(tab.id)}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-semibold transition-all cursor-pointer ${
               isActive
-                ? "bg-tyro-navy text-white shadow-sm"
+                ? "text-white shadow-sm"
                 : "text-tyro-text-muted hover:bg-tyro-bg hover:text-tyro-text-secondary"
             }`}
+            style={isActive ? { backgroundColor: sidebarTheme.bg } : undefined}
           >
             <Icon size={14} />
             {tab.label}
