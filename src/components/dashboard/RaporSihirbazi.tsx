@@ -7,6 +7,7 @@ import {
   CheckSquare, Square, PieChart, CalendarRange,
   FileText, FileSpreadsheet, FileCode, Printer,
   TrendingDown, TrendingUp, Trophy, BarChart3, CircleAlert, Target,
+  Bookmark, Save,
 } from "lucide-react";
 import { useDataStore } from "@/stores/dataStore";
 import { useUIStore } from "@/stores/uiStore";
@@ -96,10 +97,34 @@ export default function RaporSihirbazi() {
   const theme = sidebarThemes[sidebarThemeId];
   const accentColor = theme.accentColor;
 
+  // ===== Report Template System =====
+  interface ReportTemplate {
+    id: string;
+    name: string;
+    sourceFilter: Source | "all";
+    statusFilters: string[];
+    deptFilter: string;
+    sections: Record<string, boolean>;
+    datePreset: string;
+    dateFrom: string;
+    dateTo: string;
+    updatedAt: string;
+  }
+
+  const TEMPLATES_KEY = "tyro-report-templates";
+  const loadTemplates = (): ReportTemplate[] => {
+    try { return JSON.parse(localStorage.getItem(TEMPLATES_KEY) || "[]"); } catch { return []; }
+  };
+  const saveTemplates = (t: ReportTemplate[]) => localStorage.setItem(TEMPLATES_KEY, JSON.stringify(t));
+
   // State
   const [reportGenerated, setReportGenerated] = useState(false);
   const [filterOpen, setFilterOpen] = useState(false);
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
+  const [templates, setTemplates] = useState<ReportTemplate[]>(loadTemplates);
+  const [activeTemplateId, setActiveTemplateId] = useState<string | null>(null);
+  const [templateName, setTemplateName] = useState("");
+  const [showSaveTemplate, setShowSaveTemplate] = useState(false);
 
   // Filter state
   const [sourceFilter, setSourceFilter] = useState<Source | "all">("all");
@@ -114,6 +139,62 @@ export default function RaporSihirbazi() {
   const [dateTo, setDateTo] = useState("");
   const [exportOpen, setExportOpen] = useState(false);
   const [hideActionsInExport, setHideActionsInExport] = useState(false);
+
+  // Load template into filters
+  const loadTemplate = (tmpl: ReportTemplate) => {
+    setSourceFilter(tmpl.sourceFilter);
+    setStatusFilters(new Set(tmpl.statusFilters as EntityStatus[]));
+    setDeptFilter(tmpl.deptFilter);
+    setSections(tmpl.sections);
+    setDatePreset(tmpl.datePreset);
+    setDateFrom(tmpl.dateFrom);
+    setDateTo(tmpl.dateTo);
+    setSelectedProjeIds(null);
+    setActiveTemplateId(tmpl.id);
+  };
+
+  // Save current filters as new template
+  const saveNewTemplate = () => {
+    if (!templateName.trim()) return;
+    const tmpl: ReportTemplate = {
+      id: `tmpl-${Date.now()}`,
+      name: templateName.trim(),
+      sourceFilter,
+      statusFilters: Array.from(statusFilters),
+      deptFilter,
+      sections,
+      datePreset,
+      dateFrom,
+      dateTo,
+      updatedAt: new Date().toISOString(),
+    };
+    const updated = [...templates, tmpl];
+    setTemplates(updated);
+    saveTemplates(updated);
+    setActiveTemplateId(tmpl.id);
+    setShowSaveTemplate(false);
+    setTemplateName("");
+  };
+
+  // Update existing template with current filters
+  const updateActiveTemplate = () => {
+    if (!activeTemplateId) return;
+    const updated = templates.map((t) =>
+      t.id === activeTemplateId
+        ? { ...t, sourceFilter, statusFilters: Array.from(statusFilters), deptFilter, sections, datePreset, dateFrom, dateTo, updatedAt: new Date().toISOString() }
+        : t
+    );
+    setTemplates(updated);
+    saveTemplates(updated);
+  };
+
+  // Delete template
+  const deleteTemplate = (id: string) => {
+    const updated = templates.filter((t) => t.id !== id);
+    setTemplates(updated);
+    saveTemplates(updated);
+    if (activeTemplateId === id) setActiveTemplateId(null);
+  };
   const reportRef = useRef<HTMLDivElement>(null);
 
   // Derived
@@ -483,6 +564,43 @@ ${clone.outerHTML}
             </div>
 
             <div className="px-5 py-4 space-y-3.5 max-h-[75vh] overflow-y-auto">
+              {/* Rapor Şablonları */}
+              {templates.length > 0 && (
+                <div>
+                  <label className="block text-[11px] font-bold text-tyro-text-secondary mb-2 uppercase tracking-wider">Rapor Şablonu</label>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      onClick={() => { setActiveTemplateId(null); }}
+                      className={`px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-all cursor-pointer ${
+                        !activeTemplateId ? "text-white shadow-sm" : "bg-tyro-bg text-tyro-text-secondary hover:bg-tyro-border/30"
+                      }`}
+                      style={!activeTemplateId ? { backgroundColor: accentColor } : undefined}
+                    >
+                      Özel
+                    </button>
+                    {templates.map((tmpl) => (
+                      <div key={tmpl.id} className="relative group">
+                        <button
+                          onClick={() => loadTemplate(tmpl)}
+                          className={`px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-all cursor-pointer pr-7 ${
+                            activeTemplateId === tmpl.id ? "text-white shadow-sm" : "bg-tyro-bg text-tyro-text-secondary hover:bg-tyro-border/30"
+                          }`}
+                          style={activeTemplateId === tmpl.id ? { backgroundColor: accentColor } : undefined}
+                        >
+                          {tmpl.name}
+                        </button>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); deleteTemplate(tmpl.id); }}
+                          className="absolute top-1/2 -translate-y-1/2 right-1.5 w-4 h-4 rounded-full flex items-center justify-center text-[9px] opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer hover:bg-red-100 text-red-500"
+                        >
+                          <X size={10} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* Tarih Aralığı */}
               <div>
                 <label className="block text-[11px] font-bold text-tyro-text-secondary mb-2 uppercase tracking-wider">
@@ -625,20 +743,72 @@ ${clone.outerHTML}
             </div>
 
             {/* Footer */}
-            <div className="flex items-center justify-end gap-2 px-5 py-3 border-t border-tyro-border">
-              <button
-                onClick={() => setFilterOpen(false)}
-                className="px-4 py-2 rounded-lg text-[12px] font-semibold text-tyro-text-secondary hover:bg-tyro-bg cursor-pointer transition-colors"
-              >
-                İptal
-              </button>
-              <button
-                onClick={() => { setFilterOpen(false); setReportGenerated(true); }}
-                className="px-5 py-2 rounded-lg text-white text-[12px] font-semibold cursor-pointer transition-all hover:brightness-110"
-                style={{ backgroundColor: theme.accentColor }}
-              >
-                Raporu Çalıştır
-              </button>
+            <div className="flex items-center justify-between px-5 py-3 border-t border-tyro-border">
+              {/* Left: template actions */}
+              <div className="flex items-center gap-2">
+                {!showSaveTemplate ? (
+                  <>
+                    <button
+                      onClick={() => setShowSaveTemplate(true)}
+                      className="px-3 py-1.5 rounded-lg text-[11px] font-semibold text-tyro-text-secondary border border-tyro-border/50 hover:bg-tyro-bg cursor-pointer transition-colors flex items-center gap-1.5"
+                    >
+                      <Bookmark size={12} />
+                      Şablon Kaydet
+                    </button>
+                    {activeTemplateId && (
+                      <button
+                        onClick={() => { updateActiveTemplate(); }}
+                        className="px-3 py-1.5 rounded-lg text-[11px] font-semibold text-tyro-gold border border-tyro-gold/30 hover:bg-tyro-gold/5 cursor-pointer transition-colors flex items-center gap-1.5"
+                      >
+                        <Save size={12} />
+                        Şablonu Güncelle
+                      </button>
+                    )}
+                  </>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      value={templateName}
+                      onChange={(e) => setTemplateName(e.target.value)}
+                      onKeyDown={(e) => e.key === "Enter" && saveNewTemplate()}
+                      placeholder="Şablon adı..."
+                      className="h-8 px-3 rounded-lg text-[12px] border border-tyro-border bg-tyro-bg text-tyro-text-primary w-40 focus:outline-none focus:ring-2 focus:ring-tyro-gold/30"
+                      autoFocus
+                    />
+                    <button
+                      onClick={saveNewTemplate}
+                      className="px-3 py-1.5 rounded-lg text-[11px] font-semibold text-white cursor-pointer"
+                      style={{ backgroundColor: accentColor }}
+                    >
+                      Kaydet
+                    </button>
+                    <button
+                      onClick={() => { setShowSaveTemplate(false); setTemplateName(""); }}
+                      className="px-2 py-1.5 rounded-lg text-[11px] text-tyro-text-muted hover:bg-tyro-bg cursor-pointer"
+                    >
+                      İptal
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* Right: run report */}
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setFilterOpen(false)}
+                  className="px-4 py-2 rounded-lg text-[12px] font-semibold text-tyro-text-secondary hover:bg-tyro-bg cursor-pointer transition-colors"
+                >
+                  Kapat
+                </button>
+                <button
+                  onClick={() => { setFilterOpen(false); setReportGenerated(true); }}
+                  className="px-5 py-2 rounded-lg text-white text-[12px] font-semibold cursor-pointer transition-all hover:brightness-110"
+                  style={{ backgroundColor: theme.accentColor }}
+                >
+                  Raporu Çalıştır
+                </button>
+              </div>
             </div>
           </motion.div>
         </>
