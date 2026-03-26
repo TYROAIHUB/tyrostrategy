@@ -1,10 +1,24 @@
 import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { Crosshair, AlertTriangle, CalendarClock } from "lucide-react";
+import { Crosshair, CalendarClock, TrendingUp } from "lucide-react";
 import GlassCard from "@/components/ui/GlassCard";
 import { useMyWorkspace } from "@/hooks/useMyWorkspace";
 import { useDataStore } from "@/stores/dataStore";
+import type { EntityStatus } from "@/types";
+import { getStatusLabel } from "@/lib/constants";
+
+const STATUS_COLORS: Record<string, string> = {
+  "On Track": "#10b981",
+  "At Risk": "#f59e0b",
+  "Behind": "#ef4444",
+  "Achieved": "#059669",
+  "Not Started": "#94a3b8",
+  "Cancelled": "#6b7280",
+  "On Hold": "#8b5cf6",
+};
+
+const STATUS_ORDER: EntityStatus[] = ["On Track", "At Risk", "Behind", "Achieved", "Not Started", "On Hold", "Cancelled"];
 
 export default function BentoKPI() {
   const { t } = useTranslation();
@@ -12,92 +26,184 @@ export default function BentoKPI() {
   const ws = useMyWorkspace();
   const projeler = useDataStore((s) => s.projeler);
 
-  const overdueReviewProjeler = useMemo(() => {
+  const overdueCount = useMemo(() => {
     const now = new Date();
     const oneMonthAgo = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
     return projeler.filter((h) => {
       if (!h.reviewDate) return true;
       if (h.status === "Achieved" || h.status === "Cancelled") return false;
-      const rd = new Date(h.reviewDate);
-      return rd <= oneMonthAgo;
-    });
+      return new Date(h.reviewDate) <= oneMonthAgo;
+    }).length;
   }, [projeler]);
 
+  // Status counts for my projects
+  const statusCounts = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const h of ws.myProjeler) counts.set(h.status, (counts.get(h.status) ?? 0) + 1);
+    return STATUS_ORDER.filter((s) => counts.has(s)).map((s) => ({
+      status: s,
+      label: getStatusLabel(s, t),
+      count: counts.get(s)!,
+      color: STATUS_COLORS[s] ?? "#94a3b8",
+    }));
+  }, [ws.myProjeler, t]);
+
+  const avgProgress = ws.overallProgress;
+
+  // Donut segments
+  const radius = 42;
+  const circumference = 2 * Math.PI * radius;
+  let accOffset = 0;
+  const total = ws.myProjeler.length || 1;
+  const arcs = statusCounts.map((seg) => {
+    const pct = (seg.count / total) * 100;
+    const dashLen = (pct / 100) * circumference;
+    const dashOffset = circumference - accOffset;
+    accOffset += dashLen;
+    return { ...seg, pct, dashLen, dashOffset };
+  });
+
   return (
-    <div className="grid grid-cols-3 gap-3 flex-1">
-      {/* Card 1: Projelerim + Tamamlanan + Ort İlerleme */}
-      <GlassCard
-        className="p-4 flex flex-col justify-between cursor-pointer"
-        onClick={() => navigate("/projeler")}
-      >
-        <div className="flex items-center gap-2 mb-3">
+    <GlassCard className="p-4 sm:p-5 flex-1">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-xl bg-tyro-navy/8 flex items-center justify-center">
-            <Crosshair size={16} className="text-tyro-navy" />
+            <TrendingUp size={15} className="text-tyro-navy" />
           </div>
-          <span className="text-[11px] font-semibold text-tyro-text-secondary">{t("workspace.myObjectives")}</span>
+          <h3 className="text-[13px] font-bold text-tyro-text-primary">Proje Özeti</h3>
         </div>
-        <div className="flex items-baseline gap-2 mb-1">
-          <span className="text-[28px] font-extrabold text-tyro-text-primary tabular-nums leading-none">{ws.myProjeler.length}</span>
-          <span className="text-[11px] text-tyro-text-muted">/ {ws.totalProjeler} toplam</span>
-        </div>
-        <div className="flex items-center gap-2 mt-2">
-          <span className="text-[11px] text-emerald-600 font-bold">{ws.achievedProjeler} tamamlandı</span>
-        </div>
-        <div className="mt-3">
-          <div className="flex items-center justify-between mb-1">
-            <span className="text-[10px] text-tyro-text-muted">{t("workspace.avgProgress")}</span>
-            <span className="text-[12px] font-extrabold text-tyro-navy tabular-nums">%{ws.overallProgress}</span>
-          </div>
-          <div className="h-2 rounded-full bg-tyro-bg overflow-hidden">
-            <div className="h-full rounded-full bg-tyro-navy transition-all" style={{ width: `${ws.overallProgress}%` }} />
-          </div>
-        </div>
-      </GlassCard>
+        <button
+          type="button"
+          onClick={() => navigate("/projeler")}
+          className="text-[11px] font-semibold text-tyro-navy hover:underline cursor-pointer"
+        >
+          Tümünü Gör &rsaquo;
+        </button>
+      </div>
 
-      {/* Card 2: Geciken / Riskli */}
-      <GlassCard
-        className="p-4 flex flex-col justify-between cursor-pointer"
-        onClick={() => navigate("/projeler")}
-      >
-        <div className="flex items-center gap-2 mb-3">
-          <div className="w-8 h-8 rounded-xl bg-red-500/8 flex items-center justify-center">
-            <AlertTriangle size={16} className="text-red-500" />
-          </div>
-          <span className="text-[11px] font-semibold text-tyro-text-secondary">Dikkat Gerektiren</span>
-        </div>
-        <div className="flex items-baseline gap-2 mb-1">
-          <span className="text-[28px] font-extrabold text-tyro-text-primary tabular-nums leading-none">{ws.behindProjeler + ws.atRiskProjeler}</span>
-        </div>
-        <div className="flex flex-col gap-1 mt-2">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] text-tyro-text-secondary">Gecikmeli</span>
-            <span className="text-[12px] font-bold text-red-500 tabular-nums">{ws.behindProjeler}</span>
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] text-tyro-text-secondary">Risk Altında</span>
-            <span className="text-[12px] font-bold text-amber-500 tabular-nums">{ws.atRiskProjeler}</span>
-          </div>
-        </div>
-      </GlassCard>
+      {/* Bento Grid */}
+      <div className="grid grid-cols-12 gap-2.5">
+        {/* Left: Toplam + Status mini cards (8 col) */}
+        <div className="col-span-8 flex flex-col gap-2.5">
+          {/* Row 1: Toplam Proje + Ort İlerleme */}
+          <div className="grid grid-cols-2 gap-2.5">
+            {/* Toplam Proje */}
+            <div
+              onClick={() => navigate("/projeler")}
+              className="rounded-xl bg-tyro-navy/5 p-3 cursor-pointer hover:bg-tyro-navy/8 transition-colors"
+            >
+              <div className="flex items-center gap-1.5 mb-1.5">
+                <Crosshair size={13} className="text-tyro-navy" />
+                <span className="text-[10px] font-semibold text-tyro-text-muted uppercase tracking-wider">Projelerim</span>
+              </div>
+              <div className="flex items-baseline gap-1.5">
+                <span className="text-[24px] font-extrabold text-tyro-text-primary tabular-nums leading-none">{ws.myProjeler.length}</span>
+                <span className="text-[10px] text-tyro-text-muted">/ {ws.totalProjeler}</span>
+              </div>
+            </div>
 
-      {/* Card 3: Kontrol Tarihi Güncel Değil */}
-      <GlassCard
-        className="p-4 flex flex-col justify-between cursor-pointer"
-        onClick={() => navigate("/projeler?reviewOverdue=true")}
-      >
-        <div className="flex items-center gap-2 mb-3">
-          <div className="w-8 h-8 rounded-xl bg-amber-500/8 flex items-center justify-center">
-            <CalendarClock size={16} className="text-amber-500" />
+            {/* Kontrol Tarihi */}
+            <div
+              onClick={() => navigate("/projeler?reviewOverdue=true")}
+              className="rounded-xl bg-amber-500/5 p-3 cursor-pointer hover:bg-amber-500/8 transition-colors"
+            >
+              <div className="flex items-center gap-1.5 mb-1.5">
+                <CalendarClock size={13} className="text-amber-500" />
+                <span className="text-[10px] font-semibold text-tyro-text-muted uppercase tracking-wider">Kontrol</span>
+              </div>
+              <div className="flex items-baseline gap-1.5">
+                <span className="text-[24px] font-extrabold text-tyro-text-primary tabular-nums leading-none">{overdueCount}</span>
+                <span className="text-[10px] text-tyro-text-muted">güncel değil</span>
+              </div>
+            </div>
           </div>
-          <span className="text-[11px] font-semibold text-tyro-text-secondary">Kontrol Tarihi</span>
+
+          {/* Row 2: Status mini cards */}
+          <div className="grid grid-cols-4 gap-2">
+            {statusCounts.slice(0, 4).map((s) => (
+              <div
+                key={s.status}
+                onClick={() => navigate("/projeler")}
+                className="rounded-xl p-2.5 cursor-pointer hover:brightness-95 transition-all text-center"
+                style={{ backgroundColor: `${s.color}10` }}
+              >
+                <span className="text-[18px] font-extrabold tabular-nums leading-none" style={{ color: s.color }}>
+                  {s.count}
+                </span>
+                <p className="text-[9px] font-semibold mt-1 truncate" style={{ color: s.color }}>
+                  {s.label}
+                </p>
+              </div>
+            ))}
+          </div>
+
+          {/* Row 3: Remaining statuses if any */}
+          {statusCounts.length > 4 && (
+            <div className="grid grid-cols-4 gap-2">
+              {statusCounts.slice(4).map((s) => (
+                <div
+                  key={s.status}
+                  onClick={() => navigate("/projeler")}
+                  className="rounded-xl p-2.5 cursor-pointer hover:brightness-95 transition-all text-center"
+                  style={{ backgroundColor: `${s.color}10` }}
+                >
+                  <span className="text-[18px] font-extrabold tabular-nums leading-none" style={{ color: s.color }}>
+                    {s.count}
+                  </span>
+                  <p className="text-[9px] font-semibold mt-1 truncate" style={{ color: s.color }}>
+                    {s.label}
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
-        <div className="flex items-baseline gap-2 mb-1">
-          <span className="text-[28px] font-extrabold text-tyro-text-primary tabular-nums leading-none">{overdueReviewProjeler.length}</span>
+
+        {/* Right: Donut + Legend (4 col) */}
+        <div className="col-span-4 flex flex-col items-center justify-center">
+          {/* Donut */}
+          <div className="relative" style={{ width: 100, height: 100 }}>
+            <svg width={100} height={100} viewBox="0 0 100 100" className="-rotate-90">
+              <circle cx={50} cy={50} r={radius} fill="none" stroke="#e2e8f0" strokeWidth={8} />
+              {arcs.map((arc) => (
+                <circle
+                  key={arc.status}
+                  cx={50} cy={50} r={radius}
+                  fill="none"
+                  stroke={arc.color}
+                  strokeWidth={8}
+                  strokeLinecap="round"
+                  strokeDasharray={`${arc.dashLen} ${circumference - arc.dashLen}`}
+                  strokeDashoffset={arc.dashOffset}
+                  style={{ transition: "all 0.5s ease" }}
+                />
+              ))}
+            </svg>
+            <div className="absolute inset-0 flex flex-col items-center justify-center">
+              <span className="text-[16px] font-extrabold tabular-nums text-tyro-text-primary leading-none">
+                %{avgProgress}
+              </span>
+              <span className="text-[8px] font-semibold text-tyro-text-muted mt-0.5 uppercase tracking-wider">
+                ort.
+              </span>
+            </div>
+          </div>
+
+          {/* Mini legend */}
+          <div className="mt-3 w-full space-y-1">
+            {statusCounts.map((s) => (
+              <div key={s.status} className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: s.color }} />
+                  <span className="text-[9px] text-tyro-text-muted truncate">{s.label}</span>
+                </div>
+                <span className="text-[10px] font-bold tabular-nums" style={{ color: s.color }}>{s.count}</span>
+              </div>
+            ))}
+          </div>
         </div>
-        <p className="text-[11px] text-tyro-text-muted mt-2">
-          1 ay veya daha fazla güncellenmemiş kontrol tarihi olan projeler
-        </p>
-      </GlassCard>
-    </div>
+      </div>
+    </GlassCard>
   );
 }
