@@ -1,10 +1,12 @@
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { ArrowLeft } from "lucide-react";
+import { useSidebarTheme } from "@/hooks/useSidebarTheme";
 
 export default function NotFoundPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const theme = useSidebarTheme();
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 p-8 text-center">
@@ -17,8 +19,9 @@ export default function NotFoundPage() {
       </p>
       <button
         type="button"
-        onClick={() => navigate("/dashboard")}
-        className="flex items-center gap-2 mt-2 px-4 py-2 rounded-lg bg-tyro-navy text-white text-sm font-medium hover:opacity-90 transition-opacity"
+        onClick={() => navigate("/workspace")}
+        className="flex items-center gap-2 mt-2 px-4 py-2 rounded-lg text-white text-sm font-medium hover:opacity-90 transition-opacity"
+        style={{ backgroundColor: theme.accentColor ?? "#c8922a" }}
       >
         <ArrowLeft size={14} />
         {t("pages.notFound.goHome")}
