@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { Crosshair, CircleCheckBig, TrendingUp, ChevronRight } from "lucide-react";
+import { Crosshair, CircleCheckBig, BarChart3, ListChecks, ChevronRight } from "lucide-react";
 import { Tooltip } from "@heroui/react";
 import { motion, AnimatePresence } from "framer-motion";
 import GlassCard from "@/components/ui/GlassCard";
@@ -180,7 +180,7 @@ export default function MyProjectsList() {
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2.5">
-            <TrendingUp size={18} className="text-tyro-navy" />
+            <BarChart3 size={18} className="text-tyro-navy" />
             <h3 className="text-[14px] font-bold text-tyro-text-primary">{t("workspace.personalKPI")}</h3>
           </div>
           <div>
@@ -234,7 +234,7 @@ export default function MyProjectsList() {
                           className="h-full rounded-lg flex items-center justify-center cursor-help hover:brightness-110 transition-all"
                           style={{ width: `${(count / ws.myProjeler.length) * 100}%`, backgroundColor: SOURCE_COLORS[source] ?? "#94a3b8", minWidth: 28 }}
                         >
-                          <span className="text-[10px] font-bold text-white/90 drop-shadow-sm truncate px-0.5">{pct >= 20 ? `${source} · ${pct}%` : `${pct}%`}</span>
+                          <span className="text-[11px] font-bold text-white/90 drop-shadow-sm truncate px-0.5">{pct >= 20 ? `${source} · ${pct}%` : `${pct}%`}</span>
                         </div>
                       </Tooltip>
                     );
@@ -242,7 +242,7 @@ export default function MyProjectsList() {
                 </div>
                 <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-1.5">
                   {Array.from(hedefSourceMap.entries()).map(([source, count]) => (
-                    <span key={source} className="flex items-center gap-1 text-[10px] text-tyro-text-secondary">
+                    <span key={source} className="flex items-center gap-1 text-[11px] text-tyro-text-secondary">
                       <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: SOURCE_COLORS[source] ?? "#94a3b8" }} />
                       {source} · {count}
                     </span>
@@ -270,7 +270,7 @@ export default function MyProjectsList() {
                                 className="h-full rounded-lg flex items-center justify-center cursor-help hover:brightness-110 transition-all"
                                 style={{ width: `${(count / total) * 100}%`, backgroundColor: tagColor, minWidth: 28 }}
                               >
-                                <span className="text-[10px] font-bold text-white/90 drop-shadow-sm truncate px-0.5">{pct >= 20 ? `${tag} · ${pct}%` : `${pct}%`}</span>
+                                <span className="text-[11px] font-bold text-white/90 drop-shadow-sm truncate px-0.5">{pct >= 20 ? `${tag} · ${pct}%` : `${pct}%`}</span>
                               </div>
                             </Tooltip>
                           );
@@ -278,7 +278,7 @@ export default function MyProjectsList() {
                       </div>
                       <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-1.5">
                         {sortedTags.map(([tag, count]) => (
-                          <span key={tag} className="flex items-center gap-1 text-[10px] text-tyro-text-secondary">
+                          <span key={tag} className="flex items-center gap-1 text-[11px] text-tyro-text-secondary">
                             <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: getTagColor(tag) }} />
                             {tag} · {count}
                           </span>
@@ -296,9 +296,12 @@ export default function MyProjectsList() {
       {/* RIGHT — Progress List Card */}
       <GlassCard className="p-4 sm:p-5 flex flex-col overflow-hidden">
         <div className="flex items-center justify-between mb-3">
-          <h4 className="text-[14px] font-bold text-tyro-text-primary">
-            {t("workspace.objectiveProgress")}
-          </h4>
+          <div className="flex items-center gap-2.5">
+            <ListChecks size={18} className="text-emerald-500" />
+            <h4 className="text-[14px] font-bold text-tyro-text-primary">
+              {t("workspace.objectiveProgress")}
+            </h4>
+          </div>
           {hasMore && (
             <button
               type="button"
