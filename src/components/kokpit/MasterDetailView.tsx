@@ -426,7 +426,29 @@ function DetailPanel({
         </div>
       </div>
 
-      {/* Footer meta moved to expandable info card */}
+      {/* Footer — Action Buttons */}
+      <div className="flex items-center justify-end gap-2 pt-3 pb-1 shrink-0">
+        <motion.button
+          type="button"
+          onClick={() => onEditHedef?.()}
+          className="h-10 px-4 rounded-xl bg-tyro-navy text-white flex items-center gap-2 shadow-sm cursor-pointer text-[12px] font-semibold"
+          whileHover={{ scale: 1.03 }}
+          whileTap={{ scale: 0.97 }}
+        >
+          <Pencil size={14} />
+          Düzenle
+        </motion.button>
+        <motion.button
+          type="button"
+          onClick={() => onAddAksiyon?.()}
+          className="h-10 px-4 rounded-xl bg-tyro-gold text-white flex items-center gap-2 shadow-sm cursor-pointer text-[12px] font-semibold"
+          whileHover={{ scale: 1.03 }}
+          whileTap={{ scale: 0.97 }}
+        >
+          <Plus size={14} />
+          Yeni
+        </motion.button>
+      </div>
     </motion.div>
   );
 }
@@ -821,9 +843,9 @@ export default function MasterDetailView({ projeler, onOpenWizard }: MasterDetai
       {/* Right: flex-1, hidden on mobile until selected */}
       {rightPanel}
 
-      {/* ===== ACTIONS FAB — İşlemler ===== */}
+      {/* ===== ACTIONS FAB — İşlemler (mobile only) ===== */}
       {selectedProje && (
-      <div className="fixed bottom-24 right-6 lg:bottom-6 lg:right-[140px] z-40">
+      <div className="fixed bottom-24 right-20 z-40 lg:hidden">
         <AnimatePresence>
           {actionsFabOpen && (
             <>
@@ -945,7 +967,7 @@ export default function MasterDetailView({ projeler, onOpenWizard }: MasterDetai
       )}
 
       {/* ===== CREATE FAB — Oluşturma ===== */}
-      <div className="fixed bottom-24 right-6 lg:bottom-6 lg:right-6 z-40">
+      <div className="fixed bottom-24 right-6 z-40 lg:hidden">
         <AnimatePresence>
           {fabOpen && (
             <>
