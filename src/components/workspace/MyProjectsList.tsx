@@ -174,138 +174,149 @@ export default function MyProjectsList() {
   const hasMore = currentItems.length > 3;
 
   return (
-    <GlassCard className="p-4 sm:p-5 flex-1 flex flex-col overflow-hidden">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2.5">
-          <div className="w-9 h-9 rounded-xl bg-tyro-navy/10 flex items-center justify-center">
-            <TrendingUp size={16} className="text-tyro-navy" />
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      {/* LEFT — Stats Card */}
+      <GlassCard className="p-4 sm:p-5 flex flex-col overflow-hidden">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-xl bg-tyro-navy/10 flex items-center justify-center">
+              <TrendingUp size={16} className="text-tyro-navy" />
+            </div>
+            <h3 className="text-[13px] font-bold text-tyro-text-primary">{t("workspace.personalKPI")}</h3>
           </div>
-          <h3 className="text-[13px] font-bold text-tyro-text-primary">{t("workspace.personalKPI")}</h3>
+          <div
+            className="flex items-center rounded-full p-1 border border-white/20"
+            style={{ background: "rgba(255,255,255,0.25)", backdropFilter: "blur(16px) saturate(1.6)", WebkitBackdropFilter: "blur(16px) saturate(1.6)" }}
+          >
+            {(["hedef", "aksiyon"] as const).map((t2) => (
+              <button
+                key={t2}
+                type="button"
+                onClick={() => { setTab(t2); setShowAll(false); }}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold transition-all duration-200 cursor-pointer ${
+                  tab === t2 ? "bg-white/90 shadow-md text-tyro-navy" : "text-tyro-text-muted hover:text-tyro-text-secondary hover:bg-white/15"
+                }`}
+              >
+                {t2 === "hedef" ? <Crosshair size={13} /> : <CircleCheckBig size={13} />}
+                {t2 === "hedef" ? t("nav.objectives") : t("nav.actions")}
+              </button>
+            ))}
+          </div>
         </div>
-        <div
-          className="flex items-center rounded-full p-1 border border-white/20"
-          style={{ background: "rgba(255,255,255,0.25)", backdropFilter: "blur(16px) saturate(1.6)", WebkitBackdropFilter: "blur(16px) saturate(1.6)" }}
-        >
-          {(["hedef", "aksiyon"] as const).map((t2) => (
-            <button
-              key={t2}
-              type="button"
-              onClick={() => { setTab(t2); setShowAll(false); }}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold transition-all duration-200 cursor-pointer ${
-                tab === t2 ? "bg-white/90 shadow-md text-tyro-navy" : "text-tyro-text-muted hover:text-tyro-text-secondary hover:bg-white/15"
-              }`}
-            >
-              {t2 === "hedef" ? <Crosshair size={13} /> : <CircleCheckBig size={13} />}
-              {t2 === "hedef" ? t("nav.objectives") : t("nav.actions")}
-            </button>
-          ))}
-        </div>
-      </div>
 
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={tab}
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -8 }}
-          transition={{ duration: 0.2 }}
-          className="flex flex-col gap-5 flex-1 overflow-hidden"
-        >
-          {/* Top: Gauge + Stats Side by Side */}
-          <div className="flex items-start gap-6">
-            {/* Gauge */}
-            <RadialGauge
-              value={tab === "hedef" ? hedefAchieved : ws.achievedAksiyonlar}
-              total={tab === "hedef" ? ws.myHedefler.length : ws.totalAksiyonlar}
-              avgProgress={tab === "hedef" ? hedefAvg : aksiyonAvg}
-              color="var(--tyro-success)"
-            />
-
-            {/* Right: Status bars + avg */}
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-[13px] font-bold text-tyro-text-primary">
-                  {tab === "hedef" ? t("workspace.statusDistribution") : t("workspace.statusDistribution")}
-                </span>
-                <div className="flex items-baseline gap-1">
-                  <span className="text-[11px] text-tyro-text-muted">{t("workspace.avgProgress")}</span>
-                  <span className="text-[16px] font-extrabold text-tyro-navy tabular-nums">%{tab === "hedef" ? hedefAvg : aksiyonAvg}</span>
-                </div>
-              </div>
-              <StackedStatusBar
-                items={tab === "hedef" ? ws.myHedefler : ws.myAksiyonlar}
-                getStatus={(s) => getStatusLabel(s as EntityStatus, t)}
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={`stats-${tab}`}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.2 }}
+            className="flex flex-col gap-5 flex-1"
+          >
+            {/* Gauge + Status bars */}
+            <div className="flex items-start gap-6">
+              <RadialGauge
+                value={tab === "hedef" ? hedefAchieved : ws.achievedAksiyonlar}
+                total={tab === "hedef" ? ws.myHedefler.length : ws.totalAksiyonlar}
+                avgProgress={tab === "hedef" ? hedefAvg : aksiyonAvg}
+                color="var(--tyro-success)"
               />
-            </div>
-          </div>
-
-          {/* Source distribution (hedef only) */}
-          {tab === "hedef" && ws.myHedefler.length > 0 && (
-            <div>
-              <p className="text-[12px] font-bold text-tyro-text-primary mb-2">{t("workspace.sourceDistribution")}</p>
-              <div className="flex items-center gap-1 h-5 rounded-lg overflow-hidden bg-tyro-bg/40">
-                {Array.from(hedefSourceMap.entries()).map(([source, count]) => {
-                  const pct = Math.round((count / ws.myHedefler.length) * 100);
-                  return (
-                    <Tooltip key={source} content={`${source}: ${count} (${pct}%)`} placement="top" size="sm">
-                      <div
-                        className="h-full rounded-lg flex items-center justify-center cursor-help hover:brightness-110 transition-all"
-                        style={{ width: `${(count / ws.myHedefler.length) * 100}%`, backgroundColor: SOURCE_COLORS[source] ?? "#94a3b8", minWidth: 40 }}
-                      >
-                        <span className="text-[11px] font-bold text-white/90 drop-shadow-sm">{source} · {pct}%</span>
-                      </div>
-                    </Tooltip>
-                  );
-                })}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-[13px] font-bold text-tyro-text-primary">
+                    {t("workspace.statusDistribution")}
+                  </span>
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-[11px] text-tyro-text-muted">{t("workspace.avgProgress")}</span>
+                    <span className="text-[16px] font-extrabold text-tyro-navy tabular-nums">%{tab === "hedef" ? hedefAvg : aksiyonAvg}</span>
+                  </div>
+                </div>
+                <StackedStatusBar
+                  items={tab === "hedef" ? ws.myHedefler : ws.myAksiyonlar}
+                  getStatus={(s) => getStatusLabel(s as EntityStatus, t)}
+                />
               </div>
             </div>
-          )}
 
-          {/* Tag distribution (hedef only) — stacked bar like source distribution */}
-          {tab === "hedef" && hedefTagMap.size > 0 && (
-            <div>
-              <p className="text-[12px] font-bold text-tyro-text-primary mb-2">{t("workspace.tagDistribution", "Etiket Dağılımı")}</p>
-              <div className="flex items-center gap-1 h-5 rounded-lg overflow-hidden bg-tyro-bg/40">
-                {Array.from(hedefTagMap.entries())
-                  .sort((a, b) => b[1] - a[1])
-                  .map(([tag, count]) => {
-                    const total = ws.myHedefler.length;
-                    const pct = Math.round((count / total) * 100);
-                    const tagColor = getTagColor(tag);
+            {/* Source distribution (hedef only) */}
+            {tab === "hedef" && ws.myHedefler.length > 0 && (
+              <div>
+                <p className="text-[12px] font-bold text-tyro-text-primary mb-2">{t("workspace.sourceDistribution")}</p>
+                <div className="flex items-center gap-1 h-5 rounded-lg overflow-hidden bg-tyro-bg/40">
+                  {Array.from(hedefSourceMap.entries()).map(([source, count]) => {
+                    const pct = Math.round((count / ws.myHedefler.length) * 100);
                     return (
-                      <Tooltip key={tag} content={`${tag}: ${count} (${pct}%)`} placement="top" size="sm">
+                      <Tooltip key={source} content={`${source}: ${count} (${pct}%)`} placement="top" size="sm">
                         <div
                           className="h-full rounded-lg flex items-center justify-center cursor-help hover:brightness-110 transition-all"
-                          style={{ width: `${(count / total) * 100}%`, backgroundColor: tagColor, minWidth: 40 }}
+                          style={{ width: `${(count / ws.myHedefler.length) * 100}%`, backgroundColor: SOURCE_COLORS[source] ?? "#94a3b8", minWidth: 28 }}
                         >
-                          <span className="text-[11px] font-bold text-white/90 drop-shadow-sm truncate px-1">{tag} · {pct}%</span>
+                          <span className="text-[10px] font-bold text-white/90 drop-shadow-sm truncate px-0.5">{pct >= 20 ? `${source} · ${pct}%` : `${pct}%`}</span>
                         </div>
                       </Tooltip>
                     );
                   })}
+                </div>
               </div>
-            </div>
+            )}
+
+            {/* Tag distribution (hedef only) */}
+            {tab === "hedef" && hedefTagMap.size > 0 && (
+              <div>
+                <p className="text-[12px] font-bold text-tyro-text-primary mb-2">{t("workspace.tagDistribution", "Etiket Dağılımı")}</p>
+                <div className="flex items-center gap-1 h-5 rounded-lg overflow-hidden bg-tyro-bg/40">
+                  {Array.from(hedefTagMap.entries())
+                    .sort((a, b) => b[1] - a[1])
+                    .map(([tag, count]) => {
+                      const total = ws.myHedefler.length;
+                      const pct = Math.round((count / total) * 100);
+                      const tagColor = getTagColor(tag);
+                      return (
+                        <Tooltip key={tag} content={`${tag}: ${count} (${pct}%)`} placement="top" size="sm">
+                          <div
+                            className="h-full rounded-lg flex items-center justify-center cursor-help hover:brightness-110 transition-all"
+                            style={{ width: `${(count / total) * 100}%`, backgroundColor: tagColor, minWidth: 28 }}
+                          >
+                            <span className="text-[10px] font-bold text-white/90 drop-shadow-sm truncate px-0.5">{pct >= 20 ? `${tag} · ${pct}%` : `${pct}%`}</span>
+                          </div>
+                        </Tooltip>
+                      );
+                    })}
+                </div>
+              </div>
+            )}
+          </motion.div>
+        </AnimatePresence>
+      </GlassCard>
+
+      {/* RIGHT — Progress List Card */}
+      <GlassCard className="p-4 sm:p-5 flex flex-col overflow-hidden">
+        <div className="flex items-center justify-between mb-3">
+          <h4 className="text-[13px] font-bold text-tyro-text-primary">
+            {tab === "hedef" ? t("workspace.objectiveProgress") : t("workspace.actionProgress")}
+          </h4>
+          {hasMore && (
+            <button
+              type="button"
+              onClick={() => navigate(tab === "hedef" ? "/hedefler" : "/aksiyonlar")}
+              className="flex items-center gap-1 text-[12px] font-semibold text-tyro-navy hover:text-tyro-navy-light transition-colors cursor-pointer"
+            >
+              {t("common.viewAll")}
+              <ChevronRight size={14} />
+            </button>
           )}
+        </div>
 
-          {/* Progress list */}
-          <div className="flex-1 min-h-0">
-            <div className="flex items-center justify-between mb-3">
-              <h4 className="text-[12px] font-bold text-tyro-text-primary">
-                {tab === "hedef" ? t("workspace.objectiveProgress") : t("workspace.actionProgress")}
-              </h4>
-              {hasMore && (
-                <button
-                  type="button"
-                  onClick={() => navigate(tab === "hedef" ? "/hedefler" : "/aksiyonlar")}
-                  className="flex items-center gap-1 text-[12px] font-semibold text-tyro-navy hover:text-tyro-navy-light transition-colors cursor-pointer"
-                >
-                  {t("common.viewAll")}
-                  <ChevronRight size={14} />
-                </button>
-              )}
-            </div>
-
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={`list-${tab}`}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.2 }}
+            className="flex-1 min-h-0"
+          >
             <div className={`flex flex-col gap-2 ${showAll ? "overflow-y-auto max-h-[320px]" : ""}`}>
               {visibleItems.map((item) => (
                 <ProgressCard
@@ -335,9 +346,9 @@ export default function MyProjectsList() {
                 {t("common.showLess")}
               </button>
             )}
-          </div>
-        </motion.div>
-      </AnimatePresence>
-    </GlassCard>
+          </motion.div>
+        </AnimatePresence>
+      </GlassCard>
+    </div>
   );
 }
