@@ -141,7 +141,7 @@ export default function AyarlarPage() {
             variant="bordered" size="sm" className="w-[100px]"
             classNames={{ trigger: "border-tyro-border", value: "font-semibold text-tyro-text-primary" }}
           >
-            {[10, 15, 20, 25, 30].map((v) => <SelectItem key={String(v)}>%{v}</SelectItem>)}
+            {[10, 15, 20, 25, 30].map((v) => <SelectItem key={String(v)} textValue={`%${v}`}>%{v}</SelectItem>)}
           </Select>
         </SettingsRow>
         <SettingsRow label="Risk altında eşiği" description={`Beklenen ilerlemeye göre %${atRiskThreshold}'den fazla geride → Risk Altında`}>
@@ -151,7 +151,7 @@ export default function AyarlarPage() {
             variant="bordered" size="sm" className="w-[100px]"
             classNames={{ trigger: "border-tyro-border", value: "font-semibold text-tyro-text-primary" }}
           >
-            {[5, 10, 15, 20].map((v) => <SelectItem key={String(v)}>%{v}</SelectItem>)}
+            {[5, 10, 15, 20].map((v) => <SelectItem key={String(v)} textValue={`%${v}`}>%{v}</SelectItem>)}
           </Select>
         </SettingsRow>
       </SettingsCard>
