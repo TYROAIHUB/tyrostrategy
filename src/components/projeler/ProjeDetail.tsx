@@ -21,6 +21,7 @@ interface ProjeDetailProps {
   onModeChange?: (mode: string) => void;
   onSelectHedef?: (proje: Proje) => void;
   onClose?: () => void;
+  initialMode?: DetailMode;
 }
 
 export default function ProjeDetail({
@@ -29,9 +30,10 @@ export default function ProjeDetail({
   onModeChange,
   onSelectHedef,
   onClose,
+  initialMode = "detail",
 }: ProjeDetailProps) {
   const { t } = useTranslation();
-  const [mode, _setMode] = useState<DetailMode>("detail");
+  const [mode, _setMode] = useState<DetailMode>(initialMode);
   const [selectedAksiyon, setSelectedAksiyon] = useState<Aksiyon | null>(null);
   const setMode = (m: DetailMode) => {
     _setMode(m);

@@ -46,6 +46,13 @@ const STATUS_HEX: Record<string, string> = {
   "On Hold": "#8b5cf6",
 };
 
+interface AksiyonFilters {
+  statuses?: string[];
+  owners?: string[];
+  progressMin?: number;
+  progressMax?: number;
+}
+
 interface MasterDetailViewProps {
   projeler: Proje[];
   onOpenWizard?: () => void;
@@ -54,6 +61,7 @@ interface MasterDetailViewProps {
   externalSourceFilter?: string;
   externalSortBy?: string;
   externalSortAsc?: boolean;
+  aksiyonFilters?: AksiyonFilters | null;
   onSelectionChange?: (projeId: string | null) => void;
 }
 
@@ -514,7 +522,7 @@ function AksiyonRow({
 // ========================================
 // MAIN: MASTER-DETAIL VIEW
 // ========================================
-export default function MasterDetailView({ projeler, onOpenWizard, externalSearch = "", externalStatusFilter, externalSourceFilter, externalSortBy, externalSortAsc, onSelectionChange }: MasterDetailViewProps) {
+export default function MasterDetailView({ projeler, onOpenWizard, externalSearch = "", externalStatusFilter, externalSourceFilter, externalSortBy, externalSortAsc, aksiyonFilters, onSelectionChange }: MasterDetailViewProps) {
   const { t } = useTranslation();
   const sidebarTheme = useSidebarTheme();
   const { filterProjeler } = usePermissions();
@@ -565,12 +573,14 @@ export default function MasterDetailView({ projeler, onOpenWizard, externalSearc
     const sorted = [...list].sort((a, b) => {
       let cmp = 0;
       switch (effectiveSort) {
+        case "id": cmp = a.id.localeCompare(b.id); break;
         case "name": cmp = a.name.localeCompare(b.name, "tr"); break;
         case "date":
         case "endDate": cmp = new Date(a.endDate).getTime() - new Date(b.endDate).getTime(); break;
+        case "reviewDate": cmp = new Date(a.reviewDate ?? "9999").getTime() - new Date(b.reviewDate ?? "9999").getTime(); break;
         case "status": cmp = a.status.localeCompare(b.status); break;
-        case "progress":
-        default: cmp = a.progress - b.progress;
+        case "progress": cmp = a.progress - b.progress; break;
+        default: cmp = a.id.localeCompare(b.id);
       }
       return effectiveSortAsc ? cmp : -cmp;
     });
@@ -618,10 +628,17 @@ export default function MasterDetailView({ projeler, onOpenWizard, externalSearc
     [projeler, selectedId]
   );
 
-  const selectedAksiyonlar = useMemo(
-    () => selectedId ? aksiyonlar.filter((a) => a.projeId === selectedId) : [],
-    [aksiyonlar, selectedId]
-  );
+  const selectedAksiyonlar = useMemo(() => {
+    if (!selectedId) return [];
+    let list = aksiyonlar.filter((a) => a.projeId === selectedId);
+    if (aksiyonFilters) {
+      if (aksiyonFilters.statuses?.length) list = list.filter((a) => aksiyonFilters.statuses!.includes(a.status));
+      if (aksiyonFilters.owners?.length) list = list.filter((a) => aksiyonFilters.owners!.includes(a.owner));
+      if (aksiyonFilters.progressMin !== undefined && aksiyonFilters.progressMin > 0) list = list.filter((a) => a.progress >= aksiyonFilters.progressMin!);
+      if (aksiyonFilters.progressMax !== undefined && aksiyonFilters.progressMax < 100) list = list.filter((a) => a.progress <= aksiyonFilters.progressMax!);
+    }
+    return list;
+  }, [aksiyonlar, selectedId, aksiyonFilters]);
 
   // Keyboard navigation
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
@@ -984,13 +1001,12 @@ export default function MasterDetailView({ projeler, onOpenWizard, externalSearc
         isOpen={!!viewingAksiyon}
         onClose={() => setViewingAksiyon(null)}
         title="Aksiyon Detayı"
-        icon={<CircleCheckBig size={16} className="text-tyro-navy" />}
+        hideHeader
       >
         {viewingAksiyon && (
           <AksiyonDetail
             aksiyon={viewingAksiyon}
-            onBackToParent={() => setViewingAksiyon(null)}
-            parentLabel={t("detail.backToObjective", "Geri")}
+            onClose={() => setViewingAksiyon(null)}
             onDelete={() => {
               setConfirmMessage(`"${viewingAksiyon.name}" aksiyonunu silmek istediğinize emin misiniz?`);
               setConfirmAction(() => () => {

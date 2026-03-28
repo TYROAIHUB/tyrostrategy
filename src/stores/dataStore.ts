@@ -61,10 +61,10 @@ function uid(): string {
  */
 function generateSystematicId(
   prefix: "P" | "A",
-  startDate: string,
+  _startDate: string,
   existingIds: string[]
 ): string {
-  const year = startDate ? new Date(startDate).getFullYear() : new Date().getFullYear();
+  const year = new Date().getFullYear();
   const yy = String(year).slice(-2);
   const yearPrefix = `${prefix}${yy}-`;
 

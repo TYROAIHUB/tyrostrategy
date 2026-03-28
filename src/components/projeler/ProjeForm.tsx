@@ -13,6 +13,8 @@ import { getStatusOptions, getSourceOptions } from "@/lib/constants";
 import { departments } from "@/config/departments";
 import { DEFAULT_TAG_COLOR } from "@/config/tagColors";
 import TagChip from "@/components/ui/TagChip";
+import EntityHeader from "@/components/shared/EntityHeader";
+import FormSection from "@/components/shared/FormSection";
 import { useSidebarTheme } from "@/hooks/useSidebarTheme";
 import type { Proje } from "@/types";
 
@@ -126,6 +128,20 @@ export default function ProjeForm({ proje, onSuccess }: ProjeFormProps) {
 
   return (
     <form onSubmit={handleSubmit(onSubmit) as any} className="flex flex-col gap-3">
+      {/* Entity Header — edit mode only */}
+      {proje && (
+        <EntityHeader
+          id={proje.id}
+          name={watch("name") || proje.name}
+          description={proje.description}
+          status={watch("status") as any}
+          progress={proje.progress}
+          tags={watch("tags")}
+        />
+      )}
+
+      {/* Section: Temel Bilgiler */}
+      <FormSection title="Temel Bilgiler">
       <Controller
         name="name"
         control={control}
@@ -167,7 +183,10 @@ export default function ProjeForm({ proje, onSuccess }: ProjeFormProps) {
           </div>
         )}
       />
+      </FormSection>
 
+      {/* Section: Sorumluluk */}
+      <FormSection title="Sorumluluk">
       <Controller
         name="owner"
         control={control}
@@ -249,7 +268,10 @@ export default function ProjeForm({ proje, onSuccess }: ProjeFormProps) {
           </div>
         )}
       />
+      </FormSection>
 
+      {/* Section: Sınıflandırma */}
+      <FormSection title="Sınıflandırma">
       <div className="grid grid-cols-2 gap-3">
         <Controller
           name="source"
@@ -412,7 +434,10 @@ export default function ProjeForm({ proje, onSuccess }: ProjeFormProps) {
           );
         }}
       />
+      </FormSection>
 
+      {/* Section: Tarihler */}
+      <FormSection title="Tarihler">
       <div className="grid grid-cols-2 gap-3">
         <Controller
           name="startDate"
@@ -474,6 +499,7 @@ export default function ProjeForm({ proje, onSuccess }: ProjeFormProps) {
           </div>
         )}
       />
+      </FormSection>
 
       <Button
         type="submit"

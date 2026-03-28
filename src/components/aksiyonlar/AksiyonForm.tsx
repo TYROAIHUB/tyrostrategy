@@ -14,6 +14,7 @@ import { getStatusOptions } from "@/lib/constants";
 import { formatDate } from "@/lib/dateUtils";
 import { departments } from "@/config/departments";
 import StatusBadge from "@/components/ui/StatusBadge";
+import FormSection from "@/components/shared/FormSection";
 import type { Aksiyon, EntityStatus } from "@/types";
 
 const CURRENT_USER = "Cenk \u015eayli";
@@ -42,10 +43,12 @@ interface AksiyonFormProps {
 export default function AksiyonForm({ aksiyon, defaultProjeId, onSuccess }: AksiyonFormProps) {
   const { t } = useTranslation();
   const projeler = useDataStore((s) => s.projeler);
+  const proje = aksiyon ? projeler.find((p) => p.id === aksiyon.projeId) : null;
   const addAksiyon = useDataStore((s) => s.addAksiyon);
   const updateAksiyon = useDataStore((s) => s.updateAksiyon);
   const [isLoading, setIsLoading] = useState(false);
-  const accentColor = useSidebarTheme().accentColor ?? "#c8922a";
+  const sidebarTheme = useSidebarTheme();
+  const accentColor = sidebarTheme.accentColor ?? "#c8922a";
 
   const aksiyonSchema = createAksiyonSchema(t);
 
@@ -73,6 +76,12 @@ export default function AksiyonForm({ aksiyon, defaultProjeId, onSuccess }: Aksi
   const watchProgress = watch("progress");
   const watchStartDate = watch("startDate");
   const watchEndDate = watch("endDate");
+  const watchStatus = watch("status");
+
+  const STATUS_HEX: Record<string, string> = {
+    "On Track": "#10b981", "At Risk": "#f59e0b", "Behind": "#ef4444",
+    "Achieved": "#3b82f6", "Not Started": "#94a3b8", "Cancelled": "#6b7280", "On Hold": "#8b5cf6",
+  };
 
   const suggestStatus = (progress: number, start: string, end: string): EntityStatus => {
     if (progress === 0) return "Not Started";
@@ -139,48 +148,107 @@ export default function AksiyonForm({ aksiyon, defaultProjeId, onSuccess }: Aksi
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-3">
-      <Controller
-        name="name"
-        control={control}
-        render={({ field }) => (
-          <div>
-            <label className="block text-[11px] font-semibold text-tyro-text-secondary mb-1">
-              {t("forms.action.name")}<span className="text-tyro-danger ml-0.5">*</span>
-            </label>
-            <Input
-              {...field}
-              placeholder={t("forms.action.namePlaceholder")}
-              isInvalid={!!errors.name}
-              errorMessage={errors.name?.message}
-              variant="bordered"
-              size="sm"
-              classNames={{ inputWrapper: "border-tyro-border" }}
-            />
+      {/* Themed Header — edit mode only (same style as AksiyonDetail) */}
+      {aksiyon && (
+        <div className="relative rounded-xl overflow-hidden px-4 py-3" style={{ background: sidebarTheme.bg }}>
+          <div className="absolute inset-0 opacity-[0.06]" style={{
+            backgroundImage: `radial-gradient(circle at 1px 1px, ${sidebarTheme.accentColor ?? "rgba(255,255,255,0.4)"} 1px, transparent 0)`,
+            backgroundSize: "20px 20px",
+          }} />
+          <div className="absolute -top-6 -right-6 w-24 h-24 rounded-full blur-2xl opacity-20" style={{ backgroundColor: sidebarTheme.accentColor ?? "#c8922a" }} />
+          <div className="relative z-10">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-[13px] font-bold tabular-nums" style={{ color: sidebarTheme.isDark !== false ? "rgba(255,255,255,0.7)" : "rgba(30,41,59,0.6)" }}>{aksiyon.id}</span>
+              <span className="text-[11px] font-medium uppercase tracking-wider" style={{ color: sidebarTheme.isDark !== false ? "rgba(255,255,255,0.5)" : "rgba(30,41,59,0.4)" }}>Aksiyon Düzenleme</span>
+            </div>
+            <div className="h-px rounded-full mb-2" style={{ background: `linear-gradient(to right, transparent, ${sidebarTheme.isDark !== false ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.08)"} 30%, ${sidebarTheme.isDark !== false ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.08)"} 70%, transparent)` }} />
+            <h3 className="text-[15px] font-bold leading-snug" style={{ color: sidebarTheme.textPrimary ?? "#ffffff" }}>
+              {watch("name") || aksiyon.name}
+            </h3>
+            <div className="flex items-center flex-wrap gap-2 mt-2">
+              <StatusBadge status={watchStatus} />
+              <span className="ml-auto text-[13px] font-extrabold tabular-nums" style={{ color: sidebarTheme.isDark !== false ? "#ffffff" : "#1e293b" }}>
+                %{watchProgress}
+              </span>
+            </div>
+            <div className="mt-2 h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: sidebarTheme.isDark !== false ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.08)" }}>
+              <div className="h-full rounded-full transition-all duration-700" style={{ width: `${watchProgress}%`, backgroundColor: STATUS_HEX[watchStatus] ?? "#94a3b8" }} />
+            </div>
           </div>
-        )}
-      />
+        </div>
+      )}
 
-      <Controller
-        name="description"
-        control={control}
-        render={({ field }) => (
-          <div>
-            <label className="block text-[11px] font-semibold text-tyro-text-secondary mb-1">
-              {t("forms.objective.description")}
-            </label>
-            <Textarea
-              {...field}
-              placeholder={t("forms.action.descriptionPlaceholder", "Aksiyon açıklaması giriniz (isteğe bağlı)")}
-              variant="bordered"
-              size="sm"
-              minRows={2}
-              maxRows={4}
-              classNames={{ inputWrapper: "border-tyro-border" }}
-            />
+      {/* Parent Project Card — edit mode only (brandStrategy color) */}
+      {aksiyon && proje && (
+        <div className="relative rounded-xl overflow-hidden px-4 py-3" style={{ background: sidebarTheme.brandStrategy ?? sidebarTheme.accentColor ?? "#c8922a" }}>
+          <div className="absolute inset-0 opacity-[0.08]" style={{
+            backgroundImage: `radial-gradient(circle at 1px 1px, rgba(255,255,255,0.5) 1px, transparent 0)`,
+            backgroundSize: "16px 16px",
+          }} />
+          <div className="relative z-10">
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-white/60 block mb-1.5">Bağlı Proje</span>
+            <div className="flex items-center gap-2 mb-1.5">
+              <span className="text-[11px] font-bold tabular-nums text-white/70">{proje.id}</span>
+              <span className="ml-auto text-[12px] font-bold tabular-nums text-white/80">%{proje.progress}</span>
+            </div>
+            <p className="text-[13px] font-semibold text-white leading-snug">{proje.name}</p>
+            <div className="flex items-center gap-2 flex-wrap mt-1.5">
+              <StatusBadge status={proje.status} />
+              <span className="text-[10px] px-1.5 py-0.5 rounded font-medium bg-white/15 text-white/80">{proje.source}</span>
+              <span className="text-[11px] text-white/70">{proje.owner}</span>
+            </div>
           </div>
-        )}
-      />
+        </div>
+      )}
 
+      {/* Section: Temel Bilgiler */}
+      <FormSection title="Temel Bilgiler">
+        <Controller
+          name="name"
+          control={control}
+          render={({ field }) => (
+            <div>
+              <label className="block text-[11px] font-semibold text-tyro-text-secondary mb-1">
+                {t("forms.action.name")}<span className="text-tyro-danger ml-0.5">*</span>
+              </label>
+              <Input
+                {...field}
+                placeholder={t("forms.action.namePlaceholder")}
+                isInvalid={!!errors.name}
+                errorMessage={errors.name?.message}
+                variant="bordered"
+                size="sm"
+                classNames={{ inputWrapper: "border-tyro-border" }}
+              />
+            </div>
+          )}
+        />
+
+        <Controller
+          name="description"
+          control={control}
+          render={({ field }) => (
+            <div>
+              <label className="block text-[11px] font-semibold text-tyro-text-secondary mb-1">
+                {t("forms.objective.description")}
+              </label>
+              <Textarea
+                {...field}
+                placeholder={t("forms.action.descriptionPlaceholder", "Aksiyon açıklaması giriniz (isteğe bağlı)")}
+                variant="bordered"
+                size="sm"
+                minRows={2}
+                maxRows={4}
+                classNames={{ inputWrapper: "border-tyro-border" }}
+              />
+            </div>
+          )}
+        />
+      </FormSection>
+
+      {/* Section: Sorumluluk — only in create mode */}
+      {!aksiyon && (
+        <FormSection title="Sorumluluk">
       <Controller
         name="owner"
         control={control}
@@ -200,6 +268,7 @@ export default function AksiyonForm({ aksiyon, defaultProjeId, onSuccess }: Aksi
               errorMessage={errors.owner?.message}
               classNames={{ base: "w-full" }}
               allowsCustomValue
+              isDisabled={!!aksiyon}
             >
               {allUsers.map((name) => (
                 <AutocompleteItem key={name}>{name}</AutocompleteItem>
@@ -229,6 +298,7 @@ export default function AksiyonForm({ aksiyon, defaultProjeId, onSuccess }: Aksi
               errorMessage={errors.projeId?.message}
               classNames={{ trigger: "border-tyro-border" }}
               placeholder={t("forms.action.objectivePlaceholder")}
+              isDisabled={!!aksiyon}
             >
               {projeler.map((h) => (
                 <SelectItem key={h.id}>{h.name}</SelectItem>
@@ -237,31 +307,17 @@ export default function AksiyonForm({ aksiyon, defaultProjeId, onSuccess }: Aksi
           </div>
         )}
       />
+        </FormSection>
+      )}
 
+      {/* Section: İlerleme & Durum */}
+      <FormSection title="İlerleme & Durum">
       <Controller
         name="progress"
         control={control}
         render={({ field }) => {
           const val = field.value;
-          const getBarColor = (v: number) => {
-            if (v <= 25) return "from-red-400 to-red-500";
-            if (v <= 50) return "from-amber-400 to-amber-500";
-            if (v <= 75) return "from-yellow-400 to-emerald-400";
-            return "from-emerald-400 to-emerald-500";
-          };
-          const getTextColor = (v: number) => {
-            if (v <= 25) return "text-red-500";
-            if (v <= 50) return "text-amber-500";
-            if (v <= 75) return "text-yellow-600";
-            return "text-emerald-500";
-          };
-          const getChipBg = (v: number, selected: boolean) => {
-            if (!selected) return "bg-tyro-bg text-tyro-text-muted hover:bg-tyro-border/30";
-            if (v <= 25) return "bg-red-500 text-white shadow-tyro-sm";
-            if (v <= 50) return "bg-amber-500 text-white shadow-tyro-sm";
-            if (v <= 75) return "bg-yellow-500 text-white shadow-tyro-sm";
-            return "bg-emerald-500 text-white shadow-tyro-sm";
-          };
+          const barColor = STATUS_HEX[watchStatus] ?? "#94a3b8";
 
           return (
             <div>
@@ -269,7 +325,7 @@ export default function AksiyonForm({ aksiyon, defaultProjeId, onSuccess }: Aksi
                 <label className="text-[11px] font-semibold text-tyro-text-secondary">
                   {t("forms.action.progress")}
                 </label>
-                <span className={`text-lg font-extrabold tabular-nums ${getTextColor(val)}`}>
+                <span className="text-lg font-extrabold tabular-nums" style={{ color: barColor }}>
                   %{val}
                 </span>
               </div>
@@ -277,14 +333,14 @@ export default function AksiyonForm({ aksiyon, defaultProjeId, onSuccess }: Aksi
               <div className="relative mb-3 h-4 flex items-center">
                 <div className="absolute inset-x-0 h-2.5 rounded-full bg-tyro-border/15" />
                 <div
-                  className={`absolute left-0 h-2.5 rounded-full bg-gradient-to-r ${getBarColor(val)}`}
-                  style={{ width: `${val}%`, transition: "width 50ms linear, background 300ms ease" }}
+                  className="absolute left-0 h-2.5 rounded-full"
+                  style={{ width: `${val}%`, backgroundColor: barColor, transition: "width 50ms linear, background-color 300ms ease" }}
                 />
                 <input
                   type="range"
                   min={0}
                   max={100}
-                  step={1}
+                  step={10}
                   value={val}
                   onChange={(e) => field.onChange(Number(e.target.value))}
                   className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
@@ -294,22 +350,33 @@ export default function AksiyonForm({ aksiyon, defaultProjeId, onSuccess }: Aksi
                   style={{
                     left: `calc(${val}% - 10px)`,
                     transition: "left 50ms linear, border-color 300ms ease",
-                    borderColor: val <= 25 ? "#ef4444" : val <= 50 ? "#f59e0b" : val <= 75 ? "#eab308" : "#10b981",
+                    borderColor: barColor,
                   }}
                 />
               </div>
 
-              <div className="flex gap-1.5">
-                {[0, 10, 25, 50, 75, 100].map((v) => (
-                  <button
-                    key={v}
-                    type="button"
-                    onClick={() => field.onChange(v)}
-                    className={`flex-1 py-1.5 rounded-button text-[11px] font-semibold transition-all cursor-pointer ${getChipBg(v, val === v)}`}
-                  >
-                    %{v}
-                  </button>
-                ))}
+              <div className="flex gap-[3px]">
+                {[0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100].map((v) => {
+                  const isExact = val === v;
+                  const isPassed = val > v;
+                  return (
+                    <button
+                      key={v}
+                      type="button"
+                      onClick={() => field.onChange(v)}
+                      className={`flex-1 min-w-0 py-1 rounded text-[10px] font-bold tabular-nums transition-all cursor-pointer ${
+                        isExact
+                          ? "text-white shadow-sm scale-105"
+                          : isPassed
+                            ? "text-white/70"
+                            : "bg-tyro-bg text-tyro-text-muted hover:bg-tyro-border/20"
+                      }`}
+                      style={isExact || isPassed ? { backgroundColor: isExact ? barColor : `${barColor}60` } : undefined}
+                    >
+                      {v}%
+                    </button>
+                  );
+                })}
               </div>
             </div>
           );
@@ -356,7 +423,10 @@ export default function AksiyonForm({ aksiyon, defaultProjeId, onSuccess }: Aksi
           </div>
         )}
       />
+      </FormSection>
 
+      {/* Section: Tarihler */}
+      <FormSection title="Tarihler">
       <div className="grid grid-cols-2 gap-3">
         <Controller
           name="startDate"
@@ -399,25 +469,24 @@ export default function AksiyonForm({ aksiyon, defaultProjeId, onSuccess }: Aksi
           )}
         />
       </div>
+      </FormSection>
 
       {aksiyon && (aksiyon.createdBy || aksiyon.createdAt || aksiyon.completedAt) && (
-        <div className="mt-4 pt-4 border-t border-tyro-border/30 flex flex-wrap gap-x-6 gap-y-2">
-          {aksiyon.createdBy && (
-            <div>
-              <p className="text-[11px] uppercase tracking-wider text-tyro-text-muted font-semibold mb-0.5">{t("common.createdBy").toUpperCase()}</p>
-              <p className="text-xs text-tyro-text-secondary">{aksiyon.createdBy}</p>
+        <div className="rounded-xl bg-white/70 dark:bg-white/5 backdrop-blur-xl border border-white/40 dark:border-white/10 shadow-[0_2px_16px_rgba(0,0,0,0.04)] overflow-hidden divide-y divide-tyro-border/15">
+          <div className="grid grid-cols-2 divide-x divide-tyro-border/15">
+            <div className="px-3.5 py-2.5">
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-tyro-text-muted/70 block mb-1">{t("common.createdAt")}</span>
+              <p className="text-[12px] font-semibold text-tyro-text-primary">{aksiyon.createdAt ? formatDate(aksiyon.createdAt) : "—"}</p>
             </div>
-          )}
-          {aksiyon.createdAt && (
-            <div>
-              <p className="text-[11px] uppercase tracking-wider text-tyro-text-muted font-semibold mb-0.5">{t("common.createdAt").toUpperCase()}</p>
-              <p className="text-xs text-tyro-text-secondary">{formatDate(aksiyon.createdAt)}</p>
+            <div className="px-3.5 py-2.5">
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-tyro-text-muted/70 block mb-1">{t("common.createdBy")}</span>
+              <p className="text-[12px] font-semibold text-tyro-text-primary">{aksiyon.createdBy ?? "—"}</p>
             </div>
-          )}
+          </div>
           {aksiyon.completedAt && (
-            <div>
-              <p className="text-[11px] uppercase tracking-wider text-tyro-text-muted font-semibold mb-0.5">{t("common.completedAt").toUpperCase()}</p>
-              <p className="text-xs text-emerald-600 font-medium">{formatDate(aksiyon.completedAt)}</p>
+            <div className="px-3.5 py-2.5">
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-tyro-text-muted/70 block mb-1">{t("common.completedAt")}</span>
+              <p className="text-[12px] font-semibold text-emerald-600">{formatDate(aksiyon.completedAt)}</p>
             </div>
           )}
         </div>

@@ -17,7 +17,10 @@ import {
   Eye,
   CalendarCheck,
   CircleCheckBig,
+  SlidersHorizontal,
   ChevronUp,
+  LayoutDashboard,
+  LayoutList,
 } from "lucide-react";
 import { clsx } from "clsx";
 import PageHeader from "@/components/layout/PageHeader";
@@ -34,15 +37,26 @@ import ProjeAksiyonWizard from "@/components/wizard/ProjeAksiyonWizard";
 import WizardHeader from "@/components/wizard/WizardHeader";
 import MasterDetailView from "@/components/kokpit/MasterDetailView";
 import AksiyonForm from "@/components/aksiyonlar/AksiyonForm";
-import { Button } from "@heroui/react";
+import { Button, Dropdown, DropdownTrigger, DropdownMenu, DropdownItem, Tooltip } from "@heroui/react";
 import { Check } from "lucide-react";
 import { getStatusLabel } from "@/lib/constants";
 import { formatDate } from "@/lib/dateUtils";
-import type { Proje, Aksiyon, EntityStatus, Source } from "@/types";
+import type { Proje, Aksiyon, EntityStatus, Source, AdvancedFilters } from "@/types";
 import i18n from "@/lib/i18n";
+
+const KokpitAdvancedFilter = lazy(() => import("@/components/kokpit/KokpitAdvancedFilter"));
 
 // ─── Tab types ────────────────────────────────────────────────
 type TabId = "master" | "tablo";
+
+const SORT_LABELS: Record<string, string> = {
+  id: "Proje No",
+  name: "Ada Göre",
+  progress: "İlerlemeye Göre",
+  endDate: "Bitiş Tarihine Göre",
+  reviewDate: "Kontrol Tarihine Göre",
+  status: "Duruma Göre",
+};
 
 // ─── Shared colour maps ──────────────────────────────────────
 const sourceColors: Record<string, string> = {
@@ -87,18 +101,39 @@ export default function KokpitPage() {
   const reviewOverdue = searchParams.get("reviewOverdue") === "true";
   const allProjeler = useDataStore((s) => s.projeler);
   const aksiyonlar = useDataStore((s) => s.aksiyonlar);
+  const [advFilterOpen, setAdvFilterOpen] = useState(false);
+  const urlStatus = searchParams.get("status");
+  const [advFilters, setAdvFilters] = useState<AdvancedFilters | null>(
+    urlStatus ? { statuses: urlStatus.includes(",") ? urlStatus.split(",").map((s) => s.trim()) : [urlStatus] } : null
+  );
 
-  // Apply reviewOverdue pre-filter when navigated from dashboard
+  // Apply reviewOverdue + advanced filters
   const projeler = useMemo(() => {
-    if (!reviewOverdue) return allProjeler;
-    const now = new Date();
-    const oneMonthAgo = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
-    return allProjeler.filter((h) => {
-      if (h.status === "Achieved" || h.status === "Cancelled") return false;
-      if (!h.reviewDate) return true;
-      return new Date(h.reviewDate) <= oneMonthAgo;
-    });
-  }, [allProjeler, reviewOverdue]);
+    let list = allProjeler;
+    if (reviewOverdue) {
+      const now = new Date();
+      const oneMonthAgo = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
+      list = list.filter((h) => {
+        if (h.status === "Achieved" || h.status === "Cancelled") return false;
+        if (!h.reviewDate) return true;
+        return new Date(h.reviewDate) <= oneMonthAgo;
+      });
+    }
+    if (advFilters) {
+      if (advFilters.statuses?.length) list = list.filter((h) => advFilters.statuses!.includes(h.status));
+      if (advFilters.sources?.length) list = list.filter((h) => advFilters.sources!.includes(h.source));
+      if (advFilters.departments?.length) list = list.filter((h) => advFilters.departments!.includes(h.department));
+      if (advFilters.owners?.length) list = list.filter((h) => advFilters.owners!.includes(h.owner));
+      if (advFilters.tags?.length) list = list.filter((h) => h.tags?.some((t) => advFilters.tags!.includes(t)));
+      if (advFilters.dateFrom) list = list.filter((h) => h.startDate >= advFilters.dateFrom!);
+      if (advFilters.dateTo) list = list.filter((h) => h.endDate <= advFilters.dateTo!);
+      if (advFilters.reviewDateFrom) list = list.filter((h) => h.reviewDate && h.reviewDate >= advFilters.reviewDateFrom!);
+      if (advFilters.reviewDateTo) list = list.filter((h) => h.reviewDate && h.reviewDate <= advFilters.reviewDateTo!);
+      if (advFilters.progressMin !== undefined && advFilters.progressMin > 0) list = list.filter((h) => h.progress >= advFilters.progressMin!);
+      if (advFilters.progressMax !== undefined && advFilters.progressMax < 100) list = list.filter((h) => h.progress <= advFilters.progressMax!);
+    }
+    return list;
+  }, [allProjeler, reviewOverdue, advFilters]);
   const updateAksiyon = useDataStore((s) => s.updateAksiyon);
 
   const deleteProje = useDataStore((s) => s.deleteProje);
@@ -115,19 +150,38 @@ export default function KokpitPage() {
   const [reviewPopoverOpen, setReviewPopoverOpen] = useState(false);
   const [reviewDateDraft, setReviewDateDraft] = useState("");
   const updateProje = useDataStore((s) => s.updateProje);
-  const [statusFilter, setStatusFilter] = useState(searchParams.get("status") ?? "all");
-  const [sourceFilter, setSourceFilter] = useState("all");
-  const [sortBy, setSortBy] = useState("name");
-  const [sortAsc, setSortAsc] = useState(true);
+  // statusFilter/sourceFilter removed — handled by advFilters now
+  const [sortBy, setSortBy] = useState("id");
+  const [sortAsc, setSortAsc] = useState(false);
+  const advFilterCount = useMemo(() => {
+    if (!advFilters) return 0;
+    let c = 0;
+    if (advFilters.statuses?.length) c += advFilters.statuses.length;
+    if (advFilters.sources?.length) c += advFilters.sources.length;
+    if (advFilters.departments?.length) c += advFilters.departments.length;
+    if (advFilters.owners?.length) c += advFilters.owners.length;
+    if (advFilters.tags?.length) c += advFilters.tags.length;
+    if (advFilters.aksiyonStatuses?.length) c += advFilters.aksiyonStatuses.length;
+    if (advFilters.aksiyonOwners?.length) c += advFilters.aksiyonOwners.length;
+    if (advFilters.dateFrom) c++;
+    if (advFilters.dateTo) c++;
+    if (advFilters.reviewDateFrom) c++;
+    if (advFilters.reviewDateTo) c++;
+    if (advFilters.progressMin && advFilters.progressMin > 0) c++;
+    if (advFilters.progressMax !== undefined && advFilters.progressMax < 100) c++;
+    return c;
+  }, [advFilters]);
 
   // ─── Sliding panel state ─────────────────────────────────
   const [panelOpen, setPanelOpen] = useState(false);
   const [panelHedef, setPanelHedef] = useState<Proje | null>(null);
   const [panelAksiyon, setPanelAksiyon] = useState<Aksiyon | null>(null);
+  const [panelInitialMode, setPanelInitialMode] = useState<"detail" | "editing">("detail");
 
-  const openHedefPanel = useCallback((h: Proje) => {
+  const openHedefPanel = useCallback((h: Proje, mode: "detail" | "editing" = "detail") => {
     setPanelHedef(h);
     setPanelAksiyon(null);
+    setPanelInitialMode(mode);
     setPanelOpen(true);
   }, []);
 
@@ -149,12 +203,11 @@ export default function KokpitPage() {
       ? t("detail.actionDetail")
       : "";
 
-  // ─── Tabs ────────────────────────────────────────────────
+  // ─── Tabs & sort labels ──────────────────────────────────
   const tabs: { id: TabId; label: string }[] = [
     { id: "master", label: "Genel" },
     { id: "tablo", label: "Liste" },
   ];
-
   return (
     <div>
       {/* Header with tabs on the right */}
@@ -163,38 +216,20 @@ export default function KokpitPage() {
           <h1 className="text-[20px] sm:text-[22px] font-bold text-tyro-text-primary">{t("pages.strategicHQ.title")}</h1>
           <p className="text-[12px] sm:text-[13px] text-tyro-text-muted mt-0.5">{t("pages.strategicHQ.subtitle")}</p>
         </div>
-        <div className="flex items-center gap-2 shrink-0">
-          <div className="flex bg-tyro-bg rounded-xl p-1 gap-1">
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={clsx(
-                  "px-5 py-2 rounded-lg text-sm font-semibold transition-all cursor-pointer whitespace-nowrap",
-                  activeTab === tab.id
-                    ? "bg-tyro-surface text-tyro-navy shadow-tyro-sm"
-                    : "text-tyro-text-muted hover:text-tyro-text-secondary"
-                )}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
-          {/* Sihirbaz butonu toolbar'a taşındı */}
-        </div>
+        {/* Tabs removed — moved to toolbar as view select */}
       </div>
 
       {/* Toolbar — search + filters left, actions right */}
-      <div className="flex items-center gap-3 mb-4">
+      <div className="flex items-center gap-2 mb-3">
         {/* Search */}
-        <div className="relative w-[280px] shrink-0">
-          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-tyro-text-muted pointer-events-none" />
+        <div className="relative w-[220px] shrink-0">
+          <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-tyro-text-muted pointer-events-none" />
           <input
             type="text"
             value={toolbarSearch}
             onChange={(e) => setToolbarSearch(e.target.value)}
             placeholder="Ara..."
-            className="w-full h-10 pl-9 pr-8 rounded-xl border-2 border-tyro-border bg-tyro-surface text-sm text-tyro-text-primary placeholder:text-tyro-text-muted focus:outline-none focus:border-tyro-navy focus:ring-2 focus:ring-tyro-navy/10 transition-all"
+            className="w-full h-9 pl-8 pr-7 rounded-lg border border-tyro-border bg-tyro-surface text-[13px] text-tyro-text-primary placeholder:text-tyro-text-muted focus:outline-none focus:border-tyro-navy focus:ring-2 focus:ring-tyro-navy/10 transition-all"
           />
           {toolbarSearch && (
             <button
@@ -202,66 +237,93 @@ export default function KokpitPage() {
               onClick={() => setToolbarSearch("")}
               className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center justify-center cursor-pointer text-tyro-text-muted hover:text-tyro-text-secondary transition-colors"
             >
-              <span className="text-[12px] leading-none">✕</span>
+              <span className="text-[11px] leading-none">✕</span>
             </button>
           )}
         </div>
-        {/* Status filter */}
-        <select
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-          className="h-10 px-3 rounded-xl border-2 border-tyro-border bg-tyro-surface text-sm font-medium text-tyro-text-secondary cursor-pointer focus:outline-none focus:border-tyro-navy focus:ring-2 focus:ring-tyro-navy/10 transition-all appearance-none pr-7 bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2210%22%20height%3D%226%22%20viewBox%3D%220%200%2010%206%22%3E%3Cpath%20fill%3D%22%2394a3b8%22%20d%3D%22M0%200l5%206%205-6z%22%2F%3E%3C%2Fsvg%3E')] bg-[right_10px_center] bg-no-repeat"
-        >
-          <option value="all">Durum: Tümü</option>
-          <option value="On Track">Yolunda</option>
-          <option value="At Risk">Risk Altında</option>
-          <option value="Behind">Gecikmeli</option>
-          <option value="Achieved">Tamamlandı</option>
-          <option value="Not Started">Başlanmadı</option>
-          <option value="On Hold">Askıda</option>
-          <option value="Cancelled">İptal</option>
-        </select>
-        {/* Source filter */}
-        <select
-          value={sourceFilter}
-          onChange={(e) => setSourceFilter(e.target.value)}
-          className="h-10 px-3 rounded-xl border-2 border-tyro-border bg-tyro-surface text-sm font-medium text-tyro-text-secondary cursor-pointer focus:outline-none focus:border-tyro-navy focus:ring-2 focus:ring-tyro-navy/10 transition-all appearance-none pr-7 bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2210%22%20height%3D%226%22%20viewBox%3D%220%200%2010%206%22%3E%3Cpath%20fill%3D%22%2394a3b8%22%20d%3D%22M0%200l5%206%205-6z%22%2F%3E%3C%2Fsvg%3E')] bg-[right_10px_center] bg-no-repeat"
-        >
-          <option value="all">Kaynak: Tümü</option>
-          <option value="Türkiye">Türkiye</option>
-          <option value="Kurumsal">Kurumsal</option>
-          <option value="International">International</option>
-        </select>
-        {/* Sort */}
-        <select
-          value={sortBy}
-          onChange={(e) => setSortBy(e.target.value)}
-          className="h-10 px-3 rounded-xl border-2 border-tyro-border bg-tyro-surface text-sm font-medium text-tyro-text-secondary cursor-pointer focus:outline-none focus:border-tyro-navy focus:ring-2 focus:ring-tyro-navy/10 transition-all appearance-none pr-7 bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2210%22%20height%3D%226%22%20viewBox%3D%220%200%2010%206%22%3E%3Cpath%20fill%3D%22%2394a3b8%22%20d%3D%22M0%200l5%206%205-6z%22%2F%3E%3C%2Fsvg%3E')] bg-[right_10px_center] bg-no-repeat"
-        >
-          <option value="name">Ada Göre</option>
-          <option value="progress">İlerlemeye Göre</option>
-          <option value="endDate">Bitiş Tarihine Göre</option>
-          <option value="status">Duruma Göre</option>
-        </select>
-        {/* Sort direction toggle */}
-        <button
-          type="button"
-          onClick={() => setSortAsc(!sortAsc)}
-          className="h-10 w-10 rounded-xl border-2 border-tyro-border bg-tyro-surface flex items-center justify-center cursor-pointer hover:bg-tyro-navy/5 transition-all shrink-0"
-          title={sortAsc ? "Artan" : "Azalan"}
-        >
-          <ArrowUpDown size={15} className={`text-tyro-text-secondary transition-transform ${sortAsc ? "" : "rotate-180"}`} />
-        </button>
-
-        {/* Clear filters — show when any filter is active */}
-        {(toolbarSearch || statusFilter !== "all" || sourceFilter !== "all") && (
+        {/* View mode dropdown */}
+        <Dropdown>
+          <DropdownTrigger>
+            <button
+              type="button"
+              className="h-9 px-3 rounded-lg border border-tyro-border bg-tyro-surface flex items-center gap-1.5 cursor-pointer hover:bg-tyro-navy/5 transition-all shrink-0"
+            >
+              {activeTab === "master" ? <LayoutDashboard size={14} className="text-tyro-text-secondary" /> : <LayoutList size={14} className="text-tyro-text-secondary" />}
+              <span className="text-[13px] font-medium text-tyro-text-secondary">Görünüm</span>
+              <ChevronDown size={12} className="text-tyro-text-muted" />
+            </button>
+          </DropdownTrigger>
+          <DropdownMenu
+            aria-label="Görünüm"
+            selectionMode="single"
+            selectedKeys={new Set([activeTab])}
+            onSelectionChange={(keys) => setActiveTab(Array.from(keys)[0] as TabId)}
+          >
+            <DropdownItem key="master" startContent={<LayoutDashboard size={14} />}>Genel</DropdownItem>
+            <DropdownItem key="tablo" startContent={<LayoutList size={14} />}>Liste</DropdownItem>
+          </DropdownMenu>
+        </Dropdown>
+        {/* Advanced filter button */}
+        <Tooltip content="Gelişmiş filtreleme seçenekleri" placement="bottom" delay={500} closeDelay={0}>
           <button
             type="button"
-            onClick={() => { setToolbarSearch(""); setStatusFilter("all"); setSourceFilter("all"); setSortBy("name"); setSortAsc(true); }}
-            className="h-10 px-3 rounded-xl text-sm font-medium text-red-500 hover:bg-red-50 transition-colors cursor-pointer shrink-0"
+            onClick={() => setAdvFilterOpen(true)}
+            className="h-9 px-3 rounded-lg border border-tyro-border bg-tyro-surface flex items-center gap-1.5 cursor-pointer hover:bg-tyro-navy/5 transition-all shrink-0 relative"
           >
-            Temizle
+            <SlidersHorizontal size={14} className="text-tyro-text-secondary" />
+            <span className="text-[13px] font-medium text-tyro-text-secondary">Filtre</span>
+            {advFilterCount > 0 && (
+              <span className="flex items-center justify-center w-4 h-4 rounded-full text-white text-[10px] font-bold" style={{ backgroundColor: brandColor }}>{advFilterCount}</span>
+            )}
           </button>
+        </Tooltip>
+        {/* Sort dropdown */}
+        <Dropdown>
+          <DropdownTrigger>
+            <button
+              type="button"
+              className="h-9 px-3 rounded-lg border border-tyro-border bg-tyro-surface flex items-center gap-1.5 cursor-pointer hover:bg-tyro-navy/5 transition-all shrink-0"
+            >
+              <ArrowUpDown size={14} className="text-tyro-text-secondary" />
+              <span className="text-[13px] font-medium text-tyro-text-secondary">{SORT_LABELS[sortBy] ?? "Sırala"}</span>
+              <ChevronDown size={12} className="text-tyro-text-muted" />
+            </button>
+          </DropdownTrigger>
+          <DropdownMenu
+            aria-label="Sıralama"
+            selectionMode="single"
+            selectedKeys={new Set([sortBy])}
+            onSelectionChange={(keys) => setSortBy(Array.from(keys)[0] as string)}
+          >
+            <DropdownItem key="id">Proje No</DropdownItem>
+            <DropdownItem key="name">Ada Göre</DropdownItem>
+            <DropdownItem key="progress">İlerlemeye Göre</DropdownItem>
+            <DropdownItem key="endDate">Bitiş Tarihine Göre</DropdownItem>
+            <DropdownItem key="reviewDate">Kontrol Tarihine Göre</DropdownItem>
+            <DropdownItem key="status">Duruma Göre</DropdownItem>
+          </DropdownMenu>
+        </Dropdown>
+        {/* Sort direction toggle */}
+        <Tooltip content={sortAsc ? "Artan sıralama (tıkla: azalan)" : "Azalan sıralama (tıkla: artan)"} placement="bottom" delay={500} closeDelay={0}>
+          <button
+            type="button"
+            onClick={() => setSortAsc(!sortAsc)}
+            className="h-9 w-9 rounded-lg border border-tyro-border bg-tyro-surface flex items-center justify-center cursor-pointer hover:bg-tyro-navy/5 transition-all shrink-0"
+          >
+            <ArrowUpDown size={13} className={`text-tyro-text-secondary transition-transform ${sortAsc ? "" : "rotate-180"}`} />
+          </button>
+        </Tooltip>
+        {/* Clear filters — show when any filter is active */}
+        {(toolbarSearch || advFilterCount > 0) && (
+          <Tooltip content="Tüm filtreleri ve aramayı temizle" placement="bottom" delay={500} closeDelay={0}>
+            <button
+              type="button"
+              onClick={() => { setToolbarSearch(""); setSortBy("id"); setSortAsc(false); setAdvFilters(null); setAdvFilterOpen(false); }}
+              className="h-9 px-2.5 rounded-lg text-[13px] font-medium text-red-500 hover:bg-red-50 transition-colors cursor-pointer shrink-0"
+            >
+              Temizle
+            </button>
+          </Tooltip>
         )}
 
         {/* Spacer */}
@@ -271,17 +333,19 @@ export default function KokpitPage() {
         <div className="flex items-center gap-2 shrink-0">
           {/* Yeni — dropdown */}
           <div className="relative">
-            <motion.button
-              type="button"
-              onClick={() => { setNewMenuOpen(!newMenuOpen); setEditMenuOpen(false); }}
-              className="h-10 px-4 rounded-xl text-white flex items-center gap-2 cursor-pointer text-sm font-semibold shadow-sm"
-              style={{ backgroundColor: brandColor }}
-              whileTap={{ scale: 0.96 }}
-            >
-              <Plus size={15} strokeWidth={2.5} />
-              Yeni
+            <Tooltip content="Yeni proje veya aksiyon oluştur" placement="bottom" delay={500} closeDelay={0}>
+              <motion.button
+                type="button"
+                onClick={() => { setNewMenuOpen(!newMenuOpen); setEditMenuOpen(false); }}
+                className="h-9 px-3.5 rounded-lg text-white flex items-center gap-1.5 cursor-pointer text-[13px] font-semibold shadow-sm"
+                style={{ backgroundColor: brandColor }}
+                whileTap={{ scale: 0.96 }}
+              >
+                <Plus size={15} strokeWidth={2.5} />
+                Yeni
               <ChevronDown size={12} className={`transition-transform ${newMenuOpen ? "rotate-180" : ""}`} />
-            </motion.button>
+              </motion.button>
+            </Tooltip>
             <AnimatePresence>
               {newMenuOpen && (
                 <>
@@ -317,20 +381,22 @@ export default function KokpitPage() {
           </div>
           {/* Düzenle — dropdown */}
           <div className="relative">
-            <motion.button
-              type="button"
-              onClick={() => { if (!selectedProje) return; setEditMenuOpen(!editMenuOpen); setNewMenuOpen(false); }}
-              className={`h-10 px-4 rounded-xl border-2 flex items-center gap-2 text-sm font-semibold transition-all ${
-                selectedProje
-                  ? "border-tyro-border text-tyro-text-primary hover:bg-tyro-navy/5 cursor-pointer"
-                  : "border-tyro-border/40 text-tyro-text-muted/40 cursor-default"
-              }`}
-              whileTap={selectedProje ? { scale: 0.96 } : {}}
-            >
-              <Pencil size={14} />
-              Düzenle
-              <ChevronDown size={12} className={`transition-transform ${editMenuOpen ? "rotate-180" : ""}`} />
-            </motion.button>
+            <Tooltip content={selectedProje ? "Seçili projeyi düzenle" : "Önce bir proje seçin"} placement="bottom" delay={500} closeDelay={0}>
+              <motion.button
+                type="button"
+                onClick={() => { if (!selectedProje) return; setEditMenuOpen(!editMenuOpen); setNewMenuOpen(false); }}
+                className={`h-9 px-3.5 rounded-lg border flex items-center gap-1.5 text-[13px] font-semibold transition-all ${
+                  selectedProje
+                    ? "border-tyro-border text-tyro-text-primary hover:bg-tyro-navy/5 cursor-pointer"
+                    : "border-tyro-border/40 text-tyro-text-muted/40 cursor-default"
+                }`}
+                whileTap={selectedProje ? { scale: 0.96 } : {}}
+              >
+                <Pencil size={14} />
+                Düzenle
+                <ChevronDown size={12} className={`transition-transform ${editMenuOpen ? "rotate-180" : ""}`} />
+              </motion.button>
+            </Tooltip>
             <AnimatePresence>
               {editMenuOpen && selectedProje && (
                 <>
@@ -353,7 +419,7 @@ export default function KokpitPage() {
                     <div className="h-px bg-tyro-border/20 mx-3" />
                     <button
                       type="button"
-                      onClick={() => { setEditMenuOpen(false); openHedefPanel(selectedProje); }}
+                      onClick={() => { setEditMenuOpen(false); openHedefPanel(selectedProje, "editing"); }}
                       className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-tyro-text-primary hover:bg-tyro-navy/5 transition-colors cursor-pointer"
                     >
                       <Pencil size={16} className="text-amber-500" />
@@ -378,31 +444,33 @@ export default function KokpitPage() {
             </AnimatePresence>
           </div>
           {/* Sil */}
-          <motion.button
-            type="button"
-            onClick={() => {
-              if (!selectedProje) return;
-              const reason = getProjeDeleteReason(selectedProje.id);
-              if (reason) {
-                toast.error("Proje Silinemez", {
-                  record: `"${selectedProje.name}"`,
-                  field: reason,
-                });
-                return;
-              }
-              setConfirmOpen(true);
-            }}
-            className={`h-10 px-4 rounded-xl border-2 flex items-center gap-2 text-sm font-semibold transition-all ${
-              selectedProje
-                ? "border-red-200 text-red-500 hover:bg-red-50 cursor-pointer"
-                : "border-tyro-border/40 text-tyro-text-muted/40 cursor-default"
-            }`}
-            whileHover={selectedProje ? { scale: 1.04 } : {}}
-            whileTap={selectedProje ? { scale: 0.96 } : {}}
-          >
-            <Trash2 size={14} />
-            Sil
-          </motion.button>
+          <Tooltip content={selectedProje ? "Seçili projeyi sil" : "Önce bir proje seçin"} placement="bottom" delay={500} closeDelay={0}>
+            <motion.button
+              type="button"
+              onClick={() => {
+                if (!selectedProje) return;
+                const reason = getProjeDeleteReason(selectedProje.id);
+                if (reason) {
+                  toast.error("Proje Silinemez", {
+                    record: `"${selectedProje.name}"`,
+                    field: reason,
+                  });
+                  return;
+                }
+                setConfirmOpen(true);
+              }}
+              className={`h-9 px-3.5 rounded-lg border flex items-center gap-1.5 text-[13px] font-semibold transition-all ${
+                selectedProje
+                  ? "border-red-200 text-red-500 hover:bg-red-50 cursor-pointer"
+                  : "border-tyro-border/40 text-tyro-text-muted/40 cursor-default"
+              }`}
+              whileHover={selectedProje ? { scale: 1.04 } : {}}
+              whileTap={selectedProje ? { scale: 0.96 } : {}}
+            >
+              <Trash2 size={14} />
+              Sil
+            </motion.button>
+          </Tooltip>
         </div>
       </div>
 
@@ -412,10 +480,9 @@ export default function KokpitPage() {
           projeler={projeler}
           onOpenWizard={() => setWizardOpen(true)}
           externalSearch={toolbarSearch}
-          externalStatusFilter={statusFilter}
-          externalSourceFilter={sourceFilter}
           externalSortBy={sortBy}
           externalSortAsc={sortAsc}
+          aksiyonFilters={advFilters ? { statuses: advFilters.aksiyonStatuses, owners: advFilters.aksiyonOwners, progressMin: advFilters.aksiyonProgressMin, progressMax: advFilters.aksiyonProgressMax } : null}
           onSelectionChange={setSelectedProjeId}
         />
       )}
@@ -426,16 +493,19 @@ export default function KokpitPage() {
           onHedefClick={openHedefPanel}
           onAksiyonClick={openAksiyonPanel}
           externalSearch={toolbarSearch}
-          externalStatusFilter={statusFilter}
-          externalSourceFilter={sourceFilter}
+          externalSortBy={sortBy}
+          externalSortAsc={sortAsc}
+          selectedProjeId={selectedProjeId}
+          onSelectionChange={setSelectedProjeId}
         />
       )}
       {/* Kanban view removed */}
       {/* Detail panel */}
-      <SlidingPanel isOpen={panelOpen} onClose={closePanel} title={panelTitle} hideHeader={!!panelHedef}>
+      <SlidingPanel isOpen={panelOpen} onClose={closePanel} title={panelTitle} hideHeader={!!panelHedef || !!panelAksiyon}>
         {panelHedef && (
           <ProjeDetail
             proje={panelHedef}
+            initialMode={panelInitialMode}
             onEdit={() => {}}
             onModeChange={() => {}}
             onSelectHedef={(p) => setPanelHedef(p)}
@@ -443,7 +513,7 @@ export default function KokpitPage() {
           />
         )}
         {panelAksiyon && (
-          <AksiyonDetail aksiyon={panelAksiyon} />
+          <AksiyonDetail aksiyon={panelAksiyon} onClose={closePanel} />
         )}
       </SlidingPanel>
 
@@ -542,6 +612,18 @@ export default function KokpitPage() {
         confirmLabel="Sil"
         variant="danger"
       />
+
+      {/* Advanced filter panel */}
+      <Suspense fallback={null}>
+        <KokpitAdvancedFilter
+          isOpen={advFilterOpen}
+          onClose={() => setAdvFilterOpen(false)}
+          projeler={allProjeler}
+          aksiyonlar={aksiyonlar}
+          filters={advFilters}
+          onApply={(f) => { setAdvFilters(f); setAdvFilterOpen(false); }}
+        />
+      </Suspense>
     </div>
   );
 }
@@ -556,16 +638,20 @@ function TabloView({
   onHedefClick,
   onAksiyonClick,
   externalSearch = "",
-  externalStatusFilter = "all",
-  externalSourceFilter = "all",
+  externalSortBy = "id",
+  externalSortAsc = false,
+  selectedProjeId,
+  onSelectionChange,
 }: {
   projeler: Proje[];
   aksiyonlar: Aksiyon[];
   onHedefClick: (h: Proje) => void;
   onAksiyonClick: (a: Aksiyon) => void;
   externalSearch?: string;
-  externalStatusFilter?: string;
-  externalSourceFilter?: string;
+  externalSortBy?: string;
+  externalSortAsc?: boolean;
+  selectedProjeId?: string | null;
+  onSelectionChange?: (id: string | null) => void;
 }) {
   const { t } = useTranslation();
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
@@ -590,15 +676,22 @@ function TabloView({
         return childActions.some((a) => [a.name, a.description, a.owner].filter(Boolean).join(" ").toLocaleLowerCase("tr").includes(q));
       });
     }
-    if (externalStatusFilter !== "all") {
-      const statuses = externalStatusFilter.includes(",") ? externalStatusFilter.split(",").map((s) => s.trim()) : [externalStatusFilter];
-      result = result.filter((h) => statuses.includes(h.status));
-    }
-    if (externalSourceFilter !== "all") {
-      result = result.filter((h) => h.source === externalSourceFilter);
-    }
-    return result;
-  }, [projeler, aksiyonlar, externalSearch, externalStatusFilter, externalSourceFilter]);
+    // Sort
+    const sorted = [...result].sort((a, b) => {
+      let cmp = 0;
+      switch (externalSortBy) {
+        case "id": cmp = a.id.localeCompare(b.id); break;
+        case "name": cmp = a.name.localeCompare(b.name, "tr"); break;
+        case "endDate": cmp = new Date(a.endDate).getTime() - new Date(b.endDate).getTime(); break;
+        case "reviewDate": cmp = new Date(a.reviewDate ?? "9999").getTime() - new Date(b.reviewDate ?? "9999").getTime(); break;
+        case "status": cmp = a.status.localeCompare(b.status); break;
+        case "progress": cmp = a.progress - b.progress; break;
+        default: cmp = a.id.localeCompare(b.id);
+      }
+      return externalSortAsc ? cmp : -cmp;
+    });
+    return sorted;
+  }, [projeler, aksiyonlar, externalSearch, externalSortBy, externalSortAsc]);
 
   return (
     <div>
@@ -607,7 +700,8 @@ function TabloView({
       {/* Desktop table */}
       <div className="hidden sm:block glass-card overflow-hidden">
         {/* Header */}
-        <div className="grid grid-cols-[minmax(250px,2fr)_100px_120px_130px_100px_100px_100px_100px] gap-2 px-4 py-3 border-b border-tyro-border/40 text-[11px] font-bold uppercase tracking-wider text-tyro-text-muted">
+        <div className="grid grid-cols-[40px_minmax(220px,2fr)_90px_110px_120px_90px_90px_90px_90px_90px] gap-2 px-4 py-3 border-b border-tyro-border/40 text-[11px] font-bold uppercase tracking-wider text-tyro-text-muted">
+          <span></span>
           <span>{t("forms.objective.name")}</span>
           <span>{t("common.source")}</span>
           <span>{t("common.status")}</span>
@@ -616,6 +710,7 @@ function TabloView({
           <span>{t("common.department")}</span>
           <span>{t("common.startDate")}</span>
           <span>{t("common.endDate")}</span>
+          <span>Kontrol</span>
         </div>
 
         {filtered.length === 0 ? (
@@ -630,9 +725,22 @@ function TabloView({
               <div key={proje.id}>
                 {/* Proje row */}
                 <div
-                  className="grid grid-cols-[minmax(250px,2fr)_100px_120px_130px_100px_100px_100px_100px] gap-2 px-4 py-3 hover:bg-tyro-bg/40 transition-colors items-center cursor-pointer"
-                  onClick={() => toggleExpand(proje.id)}
+                  className={clsx(
+                    "grid grid-cols-[40px_minmax(220px,2fr)_90px_110px_120px_90px_90px_90px_90px_90px] gap-2 px-4 py-3 hover:bg-tyro-bg/40 transition-colors items-center cursor-pointer",
+                    selectedProjeId === proje.id && "bg-tyro-navy/5 border-l-2 border-l-tyro-navy"
+                  )}
+                  onClick={() => { onSelectionChange?.(proje.id); toggleExpand(proje.id); }}
                 >
+                  <div className="flex items-center justify-center">
+                    <input
+                      type="radio"
+                      name="projeSelect"
+                      checked={selectedProjeId === proje.id}
+                      onChange={() => onSelectionChange?.(selectedProjeId === proje.id ? null : proje.id)}
+                      onClick={(e) => e.stopPropagation()}
+                      className="w-4 h-4 accent-tyro-navy cursor-pointer"
+                    />
+                  </div>
                   <div className="flex items-center gap-2 min-w-0">
                     {childAksiyonlar.length > 0 ? (
                       <ChevronRight
@@ -672,6 +780,7 @@ function TabloView({
                   <span className="text-xs text-tyro-text-muted truncate">{proje.department}</span>
                   <span className="text-xs text-tyro-text-muted tabular-nums">{formatDate(proje.startDate)}</span>
                   <span className="text-xs text-tyro-text-muted tabular-nums">{formatDate(proje.endDate)}</span>
+                  <span className="text-xs text-tyro-text-muted tabular-nums">{proje.reviewDate ? formatDate(proje.reviewDate) : "—"}</span>
                 </div>
 
                 {/* Aksiyon sub-rows */}
@@ -687,8 +796,9 @@ function TabloView({
                       {[...childAksiyonlar].sort((a, b) => a.id.localeCompare(b.id)).map((aksiyon) => (
                         <div
                           key={aksiyon.id}
-                          className="grid grid-cols-[minmax(250px,2fr)_100px_120px_130px_100px_100px_100px_100px] gap-2 px-4 py-2.5 bg-tyro-bg/30 hover:bg-tyro-bg/50 transition-colors items-center"
+                          className="grid grid-cols-[40px_minmax(220px,2fr)_90px_110px_120px_90px_90px_90px_90px_90px] gap-2 px-4 py-2.5 bg-tyro-bg/30 hover:bg-tyro-bg/50 transition-colors items-center"
                         >
+                          <span />
                           <div className="flex items-center gap-2 min-w-0 pl-9">
                             <ListChecks size={12} className="text-tyro-text-muted shrink-0" />
                             <button

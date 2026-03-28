@@ -36,7 +36,8 @@ export default function ConfirmDialog({
       placement="center"
       backdrop="blur"
       classNames={{
-        backdrop: "bg-black/40 backdrop-blur-sm",
+        wrapper: "z-[80]",
+        backdrop: "bg-black/40 backdrop-blur-sm z-[80]",
         base: "border border-tyro-border shadow-xl",
         header: "border-b-0 pb-0",
         footer: "border-t-0 pt-0",

@@ -82,6 +82,25 @@ export interface Aksiyon {
   completedAt?: string;
 }
 
+// ===== Advanced Filter Types =====
+export interface AdvancedFilters {
+  statuses?: string[];
+  sources?: string[];
+  departments?: string[];
+  owners?: string[];
+  tags?: string[];
+  dateFrom?: string;
+  dateTo?: string;
+  reviewDateFrom?: string;
+  reviewDateTo?: string;
+  progressMin?: number;
+  progressMax?: number;
+  aksiyonStatuses?: string[];
+  aksiyonOwners?: string[];
+  aksiyonProgressMin?: number;
+  aksiyonProgressMax?: number;
+}
+
 // ===== Backward compatibility aliases =====
 /** @deprecated Use Aksiyon instead */
 export type Gorev = Aksiyon;
