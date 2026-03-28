@@ -60,6 +60,9 @@ export default function KullanicilarPage() {
   const { t } = useTranslation();
   const projeler = useDataStore((s) => s.projeler);
   const aksiyonlar = useDataStore((s) => s.aksiyonlar);
+  const addUser = useDataStore((s) => s.addUser);
+  const updateUserDb = useDataStore((s) => s.updateUser);
+  const deleteUserDb = useDataStore((s) => s.deleteUser);
   const sidebarTheme = useSidebarTheme();
 
   const [search, setSearch] = useState("");
@@ -72,6 +75,11 @@ export default function KullanicilarPage() {
   const [selectedUser, setSelectedUser] = useState<UserRow | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [showNewForm, setShowNewForm] = useState(false);
+  const [newName, setNewName] = useState("");
+  const [newEmail, setNewEmail] = useState("");
+  const [newDept, setNewDept] = useState("");
+  const [newRole, setNewRole] = useState<YetkiRol>("Kullanıcı");
+  const [newLocale, setNewLocale] = useState<"tr" | "en">("tr");
   const [selectedKeys, setSelectedKeys] = useState<Set<string>>(new Set());
   const [editName, setEditName] = useState("");
   const [editEmail, setEditEmail] = useState("");
@@ -239,7 +247,14 @@ export default function KullanicilarPage() {
               </button>
             </Tooltip>
             <Tooltip content="Sil" color="danger" size="sm">
-              <button className="text-lg text-danger cursor-pointer active:opacity-50" onClick={(e) => { e.stopPropagation(); }}>
+              <button className="text-lg text-danger cursor-pointer active:opacity-50" onClick={(e) => {
+                e.stopPropagation();
+                setConfirmMessage(`"${user.name}" kullanıcısını silmek istediğinize emin misiniz?`);
+                setConfirmAction(() => () => {
+                  deleteUserDb(user.id);
+                });
+                setConfirmOpen(true);
+              }}>
                 <Trash2 size={16} />
               </button>
             </Tooltip>
@@ -457,33 +472,39 @@ export default function KullanicilarPage() {
         <div className="space-y-4">
           <div>
             <label className="block text-[12px] font-semibold text-tyro-text-secondary mb-1.5">Ad Soyad<span className="text-tyro-danger ml-0.5">*</span></label>
-            <Input variant="bordered" size="sm" placeholder="Kullanıcı adını girin" />
+            <Input value={newName} onValueChange={setNewName} variant="bordered" size="sm" placeholder="Kullanıcı adını girin" classNames={{ inputWrapper: "border-tyro-border", input: "font-semibold text-tyro-text-primary" }} />
           </div>
           <div>
             <label className="block text-[12px] font-semibold text-tyro-text-secondary mb-1.5">E-posta<span className="text-tyro-danger ml-0.5">*</span></label>
-            <Input variant="bordered" size="sm" placeholder="ornek@tiryaki.com.tr" startContent={<Mail size={14} className="text-tyro-text-muted" />} />
+            <Input value={newEmail} onValueChange={setNewEmail} variant="bordered" size="sm" placeholder="ornek@tiryaki.com.tr" startContent={<Mail size={14} className="text-tyro-text-muted" />} classNames={{ inputWrapper: "border-tyro-border", input: "font-semibold text-tyro-text-primary" }} />
           </div>
           <div>
             <label className="block text-[12px] font-semibold text-tyro-text-secondary mb-1.5">Departman</label>
-            <Input variant="bordered" size="sm" placeholder="Departman" startContent={<Building2 size={14} className="text-tyro-text-muted" />} />
+            <Input value={newDept} onValueChange={setNewDept} variant="bordered" size="sm" placeholder="Departman" startContent={<Building2 size={14} className="text-tyro-text-muted" />} classNames={{ inputWrapper: "border-tyro-border", input: "font-semibold text-tyro-text-primary" }} />
           </div>
           <div>
             <label className="block text-[12px] font-semibold text-tyro-text-secondary mb-1.5">Yetki Rolü</label>
-            <Select variant="bordered" size="sm" defaultSelectedKeys={["Kullanıcı"]} placeholder="Rol seçiniz">
+            <Select selectedKeys={[newRole]} onSelectionChange={(keys) => setNewRole(Array.from(keys)[0] as YetkiRol)} variant="bordered" size="sm" placeholder="Rol seçiniz" classNames={{ trigger: "border-tyro-border", value: "font-semibold text-tyro-text-primary" }}>
               <SelectItem key="Admin">Admin</SelectItem>
               <SelectItem key="Proje Lideri">Proje Lideri</SelectItem>
               <SelectItem key="Kullanıcı">Kullanıcı</SelectItem>
             </Select>
           </div>
           <div>
-            <label className="block text-[12px] font-semibold text-tyro-text-secondary mb-1.5">Durum</label>
-            <Select variant="bordered" size="sm" defaultSelectedKeys={["true"]} placeholder="Durum seçiniz">
-              <SelectItem key="true">Etkin</SelectItem>
-              <SelectItem key="false">Devre Dışı</SelectItem>
+            <label className="block text-[12px] font-semibold text-tyro-text-secondary mb-1.5">Dil</label>
+            <Select selectedKeys={[newLocale]} onSelectionChange={(keys) => setNewLocale(Array.from(keys)[0] as "tr" | "en")} variant="bordered" size="sm" classNames={{ trigger: "border-tyro-border", value: "font-semibold text-tyro-text-primary" }}>
+              <SelectItem key="tr">Türkçe</SelectItem>
+              <SelectItem key="en">English</SelectItem>
             </Select>
           </div>
           <div className="flex gap-3 pt-3">
-            <Button color="primary" size="sm" startContent={<Check size={14} />} className="rounded-button font-semibold" onPress={() => setShowNewForm(false)}>
+            <Button color="primary" size="sm" startContent={<Check size={14} />} className="rounded-button font-semibold"
+              isDisabled={!newName.trim() || !newEmail.trim()}
+              onPress={() => {
+                addUser({ displayName: newName.trim(), email: newEmail.trim(), department: newDept.trim(), role: newRole, locale: newLocale });
+                setNewName(""); setNewEmail(""); setNewDept(""); setNewRole("Kullanıcı"); setNewLocale("tr");
+                setShowNewForm(false);
+              }}>
               Kaydet
             </Button>
             <Button variant="flat" size="sm" className="rounded-button" onPress={() => setShowNewForm(false)}>
@@ -590,7 +611,15 @@ export default function KullanicilarPage() {
                   </Select>
                 </div>
                 <div className="flex items-center gap-3 pt-3">
-                  <Button color="primary" size="sm" startContent={<Check size={14} />} className="rounded-button font-semibold" onPress={() => setIsEditing(false)}>
+                  <Button color="primary" size="sm" startContent={<Check size={14} />} className="rounded-button font-semibold"
+                    isDisabled={!editName.trim() || !editEmail.trim()}
+                    onPress={() => {
+                      if (selectedUser) {
+                        updateUserDb(selectedUser.id, { displayName: editName.trim(), email: editEmail.trim(), department: editDept.trim(), role: editRole });
+                      }
+                      setIsEditing(false);
+                      setSelectedUser(null);
+                    }}>
                     Kaydet
                   </Button>
                   <Button variant="flat" size="sm" className="rounded-button" onPress={() => setIsEditing(false)}>
