@@ -84,8 +84,12 @@ export function usePermissions() {
     return !aksiyonlar.some((a) => a.projeId === projeId);
   };
   const getProjeDeleteReason = (projeId: string): string | null => {
-    const childCount = aksiyonlar.filter((a) => a.projeId === projeId).length;
-    if (childCount > 0) return `Bu hedefin altında ${childCount} aksiyon var. Önce aksiyonları silin.`;
+    const children = aksiyonlar.filter((a) => a.projeId === projeId);
+    if (children.length > 0) {
+      const names = children.slice(0, 3).map((a) => a.name).join(", ");
+      const more = children.length > 3 ? ` ve ${children.length - 3} aksiyon daha` : "";
+      return `Bu projenin altında ${children.length} aksiyon bulunuyor (${names}${more}). Projeyi silmek için önce tüm aksiyonları silmeniz gerekir.`;
+    }
     return null;
   };
 

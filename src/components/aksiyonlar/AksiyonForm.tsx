@@ -125,6 +125,25 @@ export default function AksiyonForm({ aksiyon, defaultProjeId, onSuccess, onClos
   const isStatusLocked = watchProgress === 0 || watchProgress >= 100;
 
   const onSubmit = (data: AksiyonFormData) => {
+    // Aksiyon tarih aralığı kontrolü — proje tarih aralığının dışına çıkamaz
+    const parentProje = proje ?? projeler.find((p) => p.id === data.projeId);
+    if (parentProje) {
+      if (data.startDate && parentProje.startDate && data.startDate < parentProje.startDate) {
+        toast.error("Tarih Aralığı Hatası", {
+          message: `Aksiyon başlangıç tarihi (${formatDate(data.startDate)}) projenin başlangıç tarihinden (${formatDate(parentProje.startDate)}) önce olamaz.`,
+          field: parentProje.name,
+        });
+        return;
+      }
+      if (data.endDate && parentProje.endDate && data.endDate > parentProje.endDate) {
+        toast.error("Tarih Aralığı Hatası", {
+          message: `Aksiyon bitiş tarihi (${formatDate(data.endDate)}) projenin bitiş tarihinden (${formatDate(parentProje.endDate)}) sonra olamaz.`,
+          field: parentProje.name,
+        });
+        return;
+      }
+    }
+
     setIsLoading(true);
     try {
       if (aksiyon) {

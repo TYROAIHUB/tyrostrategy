@@ -453,7 +453,7 @@ export default function KokpitPage() {
                 const reason = getProjeDeleteReason(selectedProje.id);
                 if (reason) {
                   toast.error("Proje Silinemez", {
-                    record: `"${selectedProje.name}"`,
+                    message: selectedProje.name,
                     field: reason,
                   });
                   return;

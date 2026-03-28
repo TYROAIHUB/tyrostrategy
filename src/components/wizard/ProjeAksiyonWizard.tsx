@@ -172,6 +172,18 @@ export default function ProjeAksiyonWizard({ onClose }: Props) {
   const onSubmit = useCallback(
     (data: WizardFormData) => {
       try {
+        // Aksiyon tarih aralığı kontrolü
+        const invalidAksiyon = (data.aksiyonlar ?? []).find((a) =>
+          (a.startDate && data.startDate && a.startDate < data.startDate) ||
+          (a.endDate && data.endDate && a.endDate > data.endDate)
+        );
+        if (invalidAksiyon) {
+          toast.error("Tarih Aralığı Hatası", {
+            message: `"${invalidAksiyon.name}" aksiyonunun tarihleri projenin tarih aralığının (${data.startDate} — ${data.endDate}) dışında.`,
+          });
+          return;
+        }
+
         addProje({
           name: data.name,
           description: data.description || undefined,
