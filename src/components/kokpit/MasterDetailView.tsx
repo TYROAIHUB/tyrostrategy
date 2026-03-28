@@ -1,6 +1,6 @@
 import { useState, useMemo, useCallback, useEffect, useRef, memo } from "react";
 import { useTranslation } from "react-i18next";
-import { Input, Button, Tooltip, Popover, PopoverTrigger, PopoverContent } from "@heroui/react";
+import { Input, Button, Tooltip, Popover, PopoverTrigger, PopoverContent, DatePicker } from "@heroui/react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Search, Filter, X, ChevronDown, ArrowLeft, ArrowUpDown, Plus, Pencil, Trash2, Wand2, MoreVertical,
@@ -18,6 +18,7 @@ import ProjeForm from "@/components/projeler/ProjeForm";
 import AksiyonDetail from "@/components/aksiyonlar/AksiyonDetail";
 import { progressColor } from "@/lib/colorUtils";
 import { formatDate } from "@/lib/dateUtils";
+import { toCalendarDate, fromCalendarDate } from "@/lib/utils";
 import { STATUS_DOT_COLOR, getStatusLabel } from "@/lib/constants";
 import { toast } from "@/stores/toastStore";
 import type { Proje, Aksiyon, EntityStatus, Source } from "@/types";
@@ -817,12 +818,16 @@ export default function MasterDetailView({ projeler, onOpenWizard, externalSearc
                   </PopoverTrigger>
                   <PopoverContent className="p-3 w-[220px]">
                     <p className="text-[11px] font-semibold text-tyro-text-secondary mb-2">Kontrol Tarihi</p>
-                    <input
-                      type="date"
-                      value={reviewDateDraft}
-                      onChange={(e) => setReviewDateDraft(e.target.value)}
-                      className="w-full text-[12px] px-2.5 py-1.5 rounded-lg border border-tyro-border bg-tyro-bg text-tyro-text-primary focus:outline-none focus:ring-2 focus:ring-teal-300/30 mb-2"
-                    />
+                    <div className="mb-2">
+                      <DatePicker
+                        value={toCalendarDate(reviewDateDraft)}
+                        onChange={(date) => setReviewDateDraft(fromCalendarDate(date))}
+                        variant="bordered"
+                        size="sm"
+                        granularity="day"
+                        classNames={{ inputWrapper: "border-tyro-border", input: "font-semibold text-tyro-text-primary" }}
+                      />
+                    </div>
                     <Button
                       size="sm"
                       className="w-full rounded-lg text-[11px] font-semibold bg-teal-500 text-white"

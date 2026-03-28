@@ -37,10 +37,11 @@ import ProjeAksiyonWizard from "@/components/wizard/ProjeAksiyonWizard";
 import WizardHeader from "@/components/wizard/WizardHeader";
 import MasterDetailView from "@/components/kokpit/MasterDetailView";
 import AksiyonForm from "@/components/aksiyonlar/AksiyonForm";
-import { Button, Dropdown, DropdownTrigger, DropdownMenu, DropdownItem, Tooltip } from "@heroui/react";
+import { Button, Dropdown, DropdownTrigger, DropdownMenu, DropdownItem, Tooltip, DatePicker } from "@heroui/react";
 import { Check } from "lucide-react";
 import { getStatusLabel } from "@/lib/constants";
 import { formatDate } from "@/lib/dateUtils";
+import { toCalendarDate, fromCalendarDate } from "@/lib/utils";
 import type { Proje, Aksiyon, EntityStatus, Source, AdvancedFilters } from "@/types";
 import i18n from "@/lib/i18n";
 
@@ -563,12 +564,16 @@ export default function KokpitPage() {
             >
               <h3 className="text-[14px] font-bold text-tyro-text-primary mb-3">Kontrol Tarihini Güncelle</h3>
               <p className="text-[11px] text-tyro-text-muted mb-3">{selectedProje.name}</p>
-              <input
-                type="date"
-                value={reviewDateDraft}
-                onChange={(e) => setReviewDateDraft(e.target.value)}
-                className="w-full text-[12px] px-3 py-2 rounded-lg border border-tyro-border bg-tyro-bg text-tyro-text-primary focus:outline-none focus:ring-2 focus:ring-teal-300/30 mb-3"
-              />
+              <div className="mb-3">
+                <DatePicker
+                  value={toCalendarDate(reviewDateDraft)}
+                  onChange={(date) => setReviewDateDraft(fromCalendarDate(date))}
+                  variant="bordered"
+                  size="sm"
+                  granularity="day"
+                  classNames={{ inputWrapper: "border-tyro-border", input: "font-semibold text-tyro-text-primary" }}
+                />
+              </div>
               <div className="flex gap-2">
                 <button
                   type="button"
