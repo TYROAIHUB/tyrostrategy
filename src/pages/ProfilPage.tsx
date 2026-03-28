@@ -42,7 +42,7 @@ export default function ProfilPage() {
       {/* Hero Card */}
       <div className="rounded-2xl overflow-hidden bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-white/40 dark:border-white/10 shadow-[0_4px_24px_rgba(0,0,0,0.06)]">
         {/* Cover */}
-        <div className="relative h-32 overflow-hidden" style={{ background: sidebarTheme.bg }}>
+        <div className="relative h-36 overflow-hidden" style={{ background: sidebarTheme.bg }}>
           <div className="absolute inset-0 opacity-[0.06]" style={{
             backgroundImage: `radial-gradient(circle at 1px 1px, ${sidebarTheme.accentColor ?? "rgba(255,255,255,0.4)"} 1px, transparent 0)`,
             backgroundSize: "20px 20px",
@@ -54,19 +54,20 @@ export default function ProfilPage() {
           </div>
         </div>
 
-        {/* Avatar centered */}
-        <div className="flex justify-center -mt-10">
-          <div className="w-20 h-20 rounded-2xl flex items-center justify-center text-white text-xl font-bold border-4 border-white dark:border-tyro-surface shadow-lg"
-            style={{ backgroundColor: roleColor }}>
-            {initials}
+        {/* Avatar + Name — left aligned, avatar overlapping cover */}
+        <div className="relative px-6 pt-3">
+          <div className="flex items-end gap-4 -mt-16">
+            <div className="w-20 h-20 rounded-2xl flex items-center justify-center text-white text-xl font-bold border-4 border-white dark:border-tyro-surface shadow-lg shrink-0"
+              style={{ backgroundColor: roleColor }}>
+              {initials}
+            </div>
+            <div className="pb-1 min-w-0">
+              <h1 className="text-[20px] font-bold text-tyro-text-primary leading-tight">{currentUser.name}</h1>
+              <p className="text-[13px] text-tyro-text-muted flex items-center gap-1.5 mt-0.5">
+                <Mail size={12} /> {currentUser.email}
+              </p>
+            </div>
           </div>
-        </div>
-        {/* Name + Email */}
-        <div className="text-center px-6 mt-3">
-          <h1 className="text-[20px] font-bold text-tyro-text-primary">{currentUser.name}</h1>
-          <p className="text-[13px] text-tyro-text-muted flex items-center justify-center gap-1.5 mt-1">
-            <Mail size={12} /> {currentUser.email}
-          </p>
         </div>
 
         {/* Stats Row */}
