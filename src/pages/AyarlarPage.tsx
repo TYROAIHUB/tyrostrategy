@@ -11,13 +11,13 @@ import ColorPicker from "@/components/ui/ColorPicker";
 import ConfirmDialog from "@/components/shared/ConfirmDialog";
 import { toast } from "@/stores/toastStore";
 import { DEFAULT_TAG_COLOR } from "@/config/tagColors";
+import { isSupabaseMode } from "@/hooks/useSupabaseData";
 
 export default function AyarlarPage() {
   const { t } = useTranslation();
   const { locale, setLocale, companyName, setCompanyName, allowMultipleTags, setAllowMultipleTags } = useUIStore();
   const sidebarTheme = useSidebarTheme();
-  const [emailNotif, setEmailNotif] = useState(true);
-  const [browserNotif, setBrowserNotif] = useState(false);
+  // Bildirimler kaldırıldı — fonksiyonel değildi
 
   // Tag management state
   const tagDefinitions = useDataStore((s) => s.tagDefinitions);
@@ -136,37 +136,47 @@ export default function AyarlarPage() {
         </SettingsRow>
       </SettingsCard>
 
-      {/* ── Bildirimler ── */}
-      <SettingsCard title={t("settings.notifications")}>
-        <SettingsRow label={t("settings.emailNotifications")} description={t("settings.emailNotificationsDesc")}>
-          <Switch isSelected={emailNotif} onValueChange={setEmailNotif} size="sm" />
-        </SettingsRow>
-        <SettingsRow label={t("settings.browserNotifications")} description={t("settings.browserNotificationsDesc")}>
-          <Switch isSelected={browserNotif} onValueChange={setBrowserNotif} size="sm" />
-        </SettingsRow>
-      </SettingsCard>
-
       {/* ── Entegrasyon ── */}
-      <SettingsCard title={t("settings.integration")}>
-        <SettingsRow label={t("settings.azureAdStatus")} description="Kimlik doğrulama servisi">
-          <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold bg-amber-50 text-amber-600">
-            {t("settings.demoMode")}
+      <SettingsCard title="Entegrasyonlar">
+        <SettingsRow label="Supabase (PostgreSQL)" description="Veritabanı ve gerçek zamanlı veri servisi">
+          {isSupabaseMode ? (
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-600">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> Bağlı
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-tyro-bg text-tyro-text-muted">
+              <span className="w-1.5 h-1.5 rounded-full bg-tyro-text-muted" /> Mock Veri
+            </span>
+          )}
+        </SettingsRow>
+        <SettingsRow label="Azure AD (MSAL)" description="Kurumsal kimlik doğrulama servisi">
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-amber-50 text-amber-600">
+            <span className="w-1.5 h-1.5 rounded-full bg-amber-500" /> Demo Modu
           </span>
         </SettingsRow>
-        <SettingsRow label={t("settings.dataverseConnection")} description="Veri entegrasyon servisi">
-          <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold bg-tyro-bg text-tyro-text-muted">
-            {t("settings.notConfigured")}
+        <SettingsRow label="Veri Sağlayıcı" description="Aktif veri kaynağı modu">
+          <span className="text-[13px] font-mono font-semibold text-tyro-text-primary tabular-nums">
+            {isSupabaseMode ? "supabase" : "mock"}
           </span>
         </SettingsRow>
       </SettingsCard>
 
       {/* ── Hakkında ── */}
       <SettingsCard title={t("settings.about")}>
-        <SettingsRow label={t("settings.version")} description="Uygulama sürümü">
+        <SettingsRow label="Uygulama" description="Stratejik proje yönetim platformu">
+          <span className="text-[13px] font-semibold text-tyro-text-primary">TYRO Strategy</span>
+        </SettingsRow>
+        <SettingsRow label={t("settings.version")} description="Mevcut uygulama sürümü">
           <span className="text-[13px] font-mono font-semibold text-tyro-text-primary tabular-nums">1.0.0</span>
+        </SettingsRow>
+        <SettingsRow label="Platform" description="Kullanılan teknoloji yığını">
+          <span className="text-[12px] font-medium text-tyro-text-secondary">React · HeroUI · Supabase · Vite</span>
         </SettingsRow>
         <SettingsRow label="Geliştirici" description="Uygulama geliştirme ortağı">
           <span className="text-[13px] font-semibold text-tyro-text-primary">TTECH Business Solutions</span>
+        </SettingsRow>
+        <SettingsRow label="Kuruluş" description="Lisans sahibi kuruluş">
+          <span className="text-[13px] font-semibold text-tyro-text-primary">{companyName}</span>
         </SettingsRow>
       </SettingsCard>
     </div>
