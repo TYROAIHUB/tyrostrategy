@@ -96,126 +96,79 @@ export default function AyarlarPage() {
 
   // ===== TAB CONTENTS =====
 
+  const accentColor = sidebarTheme.accentColor ?? "#c8922a";
+
   const generalTab = (
-    <div className="flex flex-col gap-6 max-w-2xl">
-      {/* Genel */}
-      <div className="glass-card rounded-card p-6">
-        <h2 className="text-base font-bold text-tyro-text-primary mb-4">{t("settings.general")}</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-[12px] font-semibold text-tyro-text-secondary mb-1.5">{t("settings.appName")}</label>
-            <Input value="TYRO Strategy" isReadOnly variant="bordered" />
-          </div>
-          <div>
-            <label className="block text-[12px] font-semibold text-tyro-text-secondary mb-1.5">Şirket Adı</label>
-            <Input
-              value={companyName}
-              onValueChange={setCompanyName}
-              variant="bordered"
-              placeholder="Şirket adını giriniz"
-            />
-          </div>
-          <div>
-            <label className="block text-[12px] font-semibold text-tyro-text-secondary mb-1.5">{t("profile.language")}</label>
-            <Select
-              selectedKeys={[locale]}
-              onSelectionChange={(keys) => {
-                const val = Array.from(keys)[0] as "tr" | "en";
-                if (val) setLocale(val);
-              }}
-              variant="bordered"
-            >
-              <SelectItem key="tr">{t("profile.turkish")}</SelectItem>
-              <SelectItem key="en">{t("profile.english")}</SelectItem>
-            </Select>
-          </div>
-        </div>
+    <div className="flex flex-col gap-5 max-w-2xl">
 
-        {/* Numara Serisi Şablonu */}
-        <div className="mt-4 pt-4 border-t border-tyro-border/30">
-          <h3 className="text-[13px] font-bold text-tyro-text-primary mb-3">Numara Serisi Şablonu</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-[12px] font-semibold text-tyro-text-secondary mb-1.5">Proje ID Formatı</label>
-              <Input value="P{YY}-{NNNN}" isReadOnly variant="bordered" description="Örn: P26-0001" />
-            </div>
-            <div>
-              <label className="block text-[12px] font-semibold text-tyro-text-secondary mb-1.5">Aksiyon ID Formatı</label>
-              <Input value="A{YY}-{NNNN}" isReadOnly variant="bordered" description="Örn: A26-0001" />
-            </div>
-          </div>
-          <p className="text-[11px] text-tyro-text-muted mt-2">
-            P = Project (Proje), A = Action (Aksiyon), YY = Yıl, NNNN = Sıra numarası. Kayıtlar başlangıç tarihine göre sıralanır.
-          </p>
-        </div>
+      {/* ── Kuruluş Bilgileri ── */}
+      <SettingsCard title="Kuruluş Bilgileri">
+        <SettingsRow label={t("settings.appName")} description="Uygulamanın sistem adı (salt okunur)">
+          <span className="text-[13px] font-semibold text-tyro-text-primary">TYRO Strategy</span>
+        </SettingsRow>
+        <SettingsRow label="Şirket Adı" description="Uygulama genelinde görüntülenen şirket adı">
+          <Input
+            value={companyName}
+            onValueChange={setCompanyName}
+            variant="bordered"
+            size="sm"
+            className="w-[200px]"
+            classNames={{ inputWrapper: "border-tyro-border", input: "font-semibold text-tyro-text-primary" }}
+          />
+        </SettingsRow>
+      </SettingsCard>
 
-        {/* Kurallar */}
-        <div className="mt-4 pt-4 border-t border-tyro-border/30">
-          <h3 className="text-[13px] font-bold text-tyro-text-primary mb-3">Kurallar</h3>
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-tyro-text-primary">Projede birden fazla etiket seçebilme</p>
-              <p className="text-xs text-tyro-text-muted">Kapalıyken projelere yalnızca tek etiket atanabilir</p>
-            </div>
-            <Switch isSelected={allowMultipleTags} onValueChange={setAllowMultipleTags} size="sm" />
-          </div>
-        </div>
-      </div>
+      {/* ── Numara Serisi ── */}
+      <SettingsCard title="Numara Serisi Şablonu">
+        <SettingsRow label="Proje ID" description="Örn: P26-0001">
+          <span className="text-[13px] font-mono font-semibold text-tyro-text-secondary tabular-nums">P{"{"}<span style={{ color: accentColor }}>YY</span>{"}"}-{"{"}<span style={{ color: accentColor }}>NNNN</span>{"}"}</span>
+        </SettingsRow>
+        <SettingsRow label="Aksiyon ID" description="Örn: A26-0001">
+          <span className="text-[13px] font-mono font-semibold text-tyro-text-secondary tabular-nums">A{"{"}<span style={{ color: accentColor }}>YY</span>{"}"}-{"{"}<span style={{ color: accentColor }}>NNNN</span>{"}"}</span>
+        </SettingsRow>
+        <p className="text-[10px] text-tyro-text-muted px-5 pb-3">YY = Oluşturulma yılı, NNNN = Otomatik sıra numarası</p>
+      </SettingsCard>
 
-      {/* Bildirimler */}
-      <div className="glass-card rounded-card p-6">
-        <h2 className="text-base font-bold text-tyro-text-primary mb-4">{t("settings.notifications")}</h2>
-        <div className="flex flex-col gap-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-tyro-text-primary">{t("settings.emailNotifications")}</p>
-              <p className="text-xs text-tyro-text-muted">{t("settings.emailNotificationsDesc")}</p>
-            </div>
-            <Switch isSelected={emailNotif} onValueChange={setEmailNotif} size="sm" />
-          </div>
-          <div className="h-px bg-tyro-border" />
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-tyro-text-primary">{t("settings.browserNotifications")}</p>
-              <p className="text-xs text-tyro-text-muted">{t("settings.browserNotificationsDesc")}</p>
-            </div>
-            <Switch isSelected={browserNotif} onValueChange={setBrowserNotif} size="sm" />
-          </div>
-        </div>
-      </div>
+      {/* ── Kurallar ── */}
+      <SettingsCard title="Kurallar">
+        <SettingsRow label="Çoklu etiket" description="Kapalıyken projelere yalnızca tek etiket atanabilir">
+          <Switch isSelected={allowMultipleTags} onValueChange={setAllowMultipleTags} size="sm" />
+        </SettingsRow>
+      </SettingsCard>
 
-      {/* Entegrasyon */}
-      <div className="glass-card rounded-card p-6">
-        <h2 className="text-base font-bold text-tyro-text-primary mb-4">{t("settings.integration")}</h2>
-        <div className="flex flex-col gap-4">
-          <div className="flex items-center justify-between">
-            <p className="text-sm font-medium text-tyro-text-primary">{t("settings.azureAdStatus")}</p>
-            <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold bg-amber-50 text-amber-600">
-              {t("settings.demoMode")}
-            </span>
-          </div>
-          <div className="h-px bg-tyro-border" />
-          <div className="flex items-center justify-between">
-            <p className="text-sm font-medium text-tyro-text-primary">{t("settings.dataverseConnection")}</p>
-            <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold bg-tyro-bg text-tyro-text-muted">
-              {t("settings.notConfigured")}
-            </span>
-          </div>
-        </div>
-      </div>
+      {/* ── Bildirimler ── */}
+      <SettingsCard title={t("settings.notifications")}>
+        <SettingsRow label={t("settings.emailNotifications")} description={t("settings.emailNotificationsDesc")}>
+          <Switch isSelected={emailNotif} onValueChange={setEmailNotif} size="sm" />
+        </SettingsRow>
+        <SettingsRow label={t("settings.browserNotifications")} description={t("settings.browserNotificationsDesc")}>
+          <Switch isSelected={browserNotif} onValueChange={setBrowserNotif} size="sm" />
+        </SettingsRow>
+      </SettingsCard>
 
-      {/* Hakkında */}
-      <div className="glass-card rounded-card p-6">
-        <h2 className="text-base font-bold text-tyro-text-primary mb-4">{t("settings.about")}</h2>
-        <div className="flex flex-col gap-2">
-          <div className="flex items-center justify-between">
-            <p className="text-sm text-tyro-text-secondary">{t("settings.version")}</p>
-            <p className="text-sm font-medium text-tyro-text-primary">1.0.0</p>
-          </div>
-          <div className="h-px bg-tyro-border" />
-          <p className="text-xs text-tyro-text-muted text-center mt-2">TTECH Business Solutions</p>
-        </div>
-      </div>
+      {/* ── Entegrasyon ── */}
+      <SettingsCard title={t("settings.integration")}>
+        <SettingsRow label={t("settings.azureAdStatus")} description="Kimlik doğrulama servisi">
+          <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold bg-amber-50 text-amber-600">
+            {t("settings.demoMode")}
+          </span>
+        </SettingsRow>
+        <SettingsRow label={t("settings.dataverseConnection")} description="Veri entegrasyon servisi">
+          <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold bg-tyro-bg text-tyro-text-muted">
+            {t("settings.notConfigured")}
+          </span>
+        </SettingsRow>
+      </SettingsCard>
+
+      {/* ── Hakkında ── */}
+      <SettingsCard title={t("settings.about")}>
+        <SettingsRow label={t("settings.version")} description="Uygulama sürümü">
+          <span className="text-[13px] font-mono font-semibold text-tyro-text-primary tabular-nums">1.0.0</span>
+        </SettingsRow>
+        <SettingsRow label="Geliştirici" description="Uygulama geliştirme ortağı">
+          <span className="text-[13px] font-semibold text-tyro-text-primary">TTECH Business Solutions</span>
+        </SettingsRow>
+      </SettingsCard>
     </div>
   );
 
@@ -414,6 +367,31 @@ export default function AyarlarPage() {
         onConfirm={() => { confirmAction?.(); setConfirmOpen(false); }}
         message={confirmMessage}
       />
+    </div>
+  );
+}
+
+function SettingsCard({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div className="rounded-2xl bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-white/40 dark:border-white/10 shadow-[0_2px_16px_rgba(0,0,0,0.04)] overflow-hidden">
+      <div className="px-5 py-3 border-b border-tyro-border/15">
+        <h2 className="text-[13px] font-bold text-tyro-text-primary">{title}</h2>
+      </div>
+      <div className="divide-y divide-tyro-border/10">
+        {children}
+      </div>
+    </div>
+  );
+}
+
+function SettingsRow({ label, description, children }: { label: string; description?: string; children: React.ReactNode }) {
+  return (
+    <div className="flex items-center justify-between px-5 py-3.5 gap-4">
+      <div className="min-w-0">
+        <p className="text-[13px] font-semibold text-tyro-text-primary">{label}</p>
+        {description && <p className="text-[11px] text-tyro-text-muted mt-0.5">{description}</p>}
+      </div>
+      <div className="shrink-0">{children}</div>
     </div>
   );
 }
