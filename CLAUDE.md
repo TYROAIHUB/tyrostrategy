@@ -8,6 +8,7 @@ Enterprise strategic planning SaaS application built with React + TypeScript + H
 |-------|-----------|
 | Tech stack, folder structure, naming | [architecture.md](.claude/rules/architecture.md) |
 | UI rules, fonts, buttons, panels, forms | [ui-guidelines.md](.claude/rules/ui-guidelines.md) + [UI_RULES.md](UI_RULES.md) |
+| **Mobile UI, liquid glass, touch targets, responsive** | **[mobile-ui.md](.claude/rules/mobile-ui.md)** |
 | Translations, casing, locale workflow | [i18n.md](.claude/rules/i18n.md) |
 | TypeScript, React patterns, no-any, perf | [code-style.md](.claude/rules/code-style.md) |
 | Error handling, toasts, Supabase sync | [error-handling.md](.claude/rules/error-handling.md) |
