@@ -12,6 +12,7 @@ const ROLE_COLORS: Record<string, string> = {
   Admin: "#c8922a",
   "Proje Lideri": "#3b82f6",
   Kullanıcı: "#64748b",
+  Management: "#7c3aed",
 };
 
 export default function ProfilPage() {

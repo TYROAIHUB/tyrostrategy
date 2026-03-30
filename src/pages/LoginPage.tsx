@@ -24,12 +24,13 @@ const ROLE_COLORS: Record<string, { accent: string; accentDark: string }> = {
   Admin: { accent: "#c8922a", accentDark: "#96700f" },
   "Proje Lideri": { accent: "#3b82f6", accentDark: "#1d4ed8" },
   Kullanıcı: { accent: "#64748b", accentDark: "#475569" },
+  Management: { accent: "#7c3aed", accentDark: "#5b21b6" },
 };
 
 const FALLBACK_USERS: DemoUser[] = [
-  { name: "Cenk Şayli", department: "IT", role: "Admin", accent: "#c8922a", accentDark: "#96700f" },
-  { name: "Kemal Yıldız", department: "Uluslararası Operasyonlar", role: "Proje Lideri", accent: "#3b82f6", accentDark: "#1d4ed8" },
-  { name: "Burcu Gözen", department: "Finans", role: "Kullanıcı", accent: "#64748b", accentDark: "#475569", locale: "tr" },
+  { name: "Cenk Şayli", department: "BT", role: "Admin", accent: "#c8922a", accentDark: "#96700f" },
+  { name: "Büşra Kaplan", department: "COO Ofis", role: "Admin", accent: "#c8922a", accentDark: "#96700f" },
+  { name: "Enver Tanrıverdioğlu", department: "Türkiye", role: "Proje Lideri", accent: "#3b82f6", accentDark: "#1d4ed8" },
 ];
 
 export default function LoginPage() {
@@ -39,14 +40,18 @@ export default function LoginPage() {
   const { locale, setLocale } = useUIStore();
   const dbUsers = useDataStore((s) => s.users);
 
-  // Pick 1 per role from DB: Admin, Proje Lideri, Kullanıcı
+  // Show Cenk + Büşra (Admin) and one Proje Lideri from DB
   const demoUsers: DemoUser[] = useMemo(() => {
     if (dbUsers.length > 0) {
       const picks: DemoUser[] = [];
-      for (const role of ["Admin", "Proje Lideri", "Kullanıcı"] as const) {
-        const u = dbUsers.find((u) => u.role === role);
-        if (u) picks.push({ name: u.displayName, department: u.department, role: u.role, locale: u.locale, ...(ROLE_COLORS[u.role] ?? ROLE_COLORS.Kullanıcı) });
+      // Always show Cenk and Büşra first
+      for (const email of ["cenk.sayli@tiryaki.com.tr", "busra.kaplan@tiryaki.com.tr"]) {
+        const u = dbUsers.find((u) => u.email === email);
+        if (u) picks.push({ name: u.displayName, department: u.department, role: u.role, locale: u.locale, ...(ROLE_COLORS[u.role] ?? ROLE_COLORS.Admin) });
       }
+      // Add one Proje Lideri
+      const pl = dbUsers.find((u) => u.role === "Proje Lideri");
+      if (pl) picks.push({ name: pl.displayName, department: pl.department, role: pl.role, locale: pl.locale, ...(ROLE_COLORS[pl.role] ?? ROLE_COLORS.Kullanıcı) });
       if (picks.length > 0) return picks;
     }
     return FALLBACK_USERS;

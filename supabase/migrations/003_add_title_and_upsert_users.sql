@@ -1,6 +1,10 @@
--- Migration 003: Add title column and upsert all real users from Excel
+-- Migration 003: Add title column, update role constraint, and upsert all real users from Excel
 
 ALTER TABLE users ADD COLUMN IF NOT EXISTS title TEXT;
+
+-- Update role constraint to include Management
+ALTER TABLE users DROP CONSTRAINT IF EXISTS users_role_check;
+ALTER TABLE users ADD CONSTRAINT users_role_check CHECK (role IN ('Admin', 'Proje Lideri', 'Kullanıcı', 'Management'));
 
 -- Upsert all 43 real users (ON CONFLICT by email)
 INSERT INTO users (email, display_name, department, role, title, locale)
@@ -53,3 +57,22 @@ ON CONFLICT (email) DO UPDATE SET
   department   = EXCLUDED.department,
   role         = EXCLUDED.role,
   title        = EXCLUDED.title;
+
+-- Remove any old mock/test users not in the Excel list
+DELETE FROM users WHERE email NOT IN (
+  'nevzat.cakmak@tiryaki.com.tr','busra.kaplan@tiryaki.com.tr','cenk.sayli@tiryaki.com.tr',
+  'elif.balci@tiryaki.com.tr','enver.tanriverdioglu@tiryaki.com.tr','baris.senturk@tiryaki.com.tr',
+  'skabatas@sunrisefoods.ca','murat.solak@tiryaki.com.tr','dboztunc@sunrisefoods.com',
+  'kerime.ikizler@tiryaki.com.tr','recep.mergen@tiryaki.com.tr','emre.padar@tiryaki.com.tr',
+  'raif.karaci@tiryaki.com.tr','ozan.yesilyer@tiryaki.com.tr','tamer.latifoglu@tiryaki.com.tr',
+  'gulnur.kalyoncu@tiryaki.com.tr','serkan.can@tiryaki.com.tr','tarkan.yilmaz@tiryaki.com.tr',
+  'taylan.egilmez@tiryaki.com.tr','skancagi@sunrisefoods.com','ilhan.telci@tiryaki.com.tr',
+  'ugurcan.patlar@tiryaki.com.tr','yigit.karaci@tiryaki.com.tr','emin.oktay@danemgida.com.tr',
+  'utosun@sunrisefoods.com','kazim.dolasik@tiryaki.com.tr','nazli.cetin@tiryaki.com.tr',
+  'mete.sayin@tiryaki.com.tr','ahmet.kalkan@tiryaki.com.tr','emrah.erenler@tiryaki.com.tr',
+  'burcu.gozen@tiryaki.com.tr','arzu.orsel@tiryaki.com.tr','devrim.askin@tiryaki.com.tr',
+  'timur.karaman@tiryaki.com.tr','kdombek@sunrisefoods.com','eekinci@sunrisefoods.com',
+  'halil.ozturk@tiryaki.com.tr','fatih.tiryakioglu@tiryaki.com.tr','bahadir.acik@tiryaki.com.tr',
+  'tekin.menguc@tiryaki.com.tr','murat.bogahan@tiryaki.com.tr','suleyman.t@tiryaki.com.tr',
+  'turkay.tatar@tiryaki.com.tr'
+);
