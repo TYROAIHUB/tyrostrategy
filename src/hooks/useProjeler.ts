@@ -5,7 +5,7 @@ export function useProjeler() {
   const projeler = useDataStore((s) => s.projeler);
 
   return useQuery({
-    queryKey: ["projeler", projeler],
+    queryKey: ["projeler"],
     queryFn: () => projeler,
     initialData: projeler,
   });

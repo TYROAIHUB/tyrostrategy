@@ -41,6 +41,10 @@ function Loading() {
   );
 }
 
+function PageSuspense({ children }: { children: ReactNode }) {
+  return <Suspense fallback={<Loading />}>{children}</Suspense>;
+}
+
 export default function App() {
   return (
     <ErrorBoundary>
@@ -57,20 +61,20 @@ export default function App() {
               </AuthGuard>
             }
           >
-            <Route path="/workspace" element={<WorkspacePage />} />
-            <Route path="/dashboard" element={<ProtectedRoute pageKey="kpi"><DashboardPage /></ProtectedRoute>} />
-            <Route path="/projeler" element={<ProtectedRoute pageKey="projeler"><ProjelerPage /></ProtectedRoute>} />
-            <Route path="/aksiyonlar" element={<ProtectedRoute pageKey="aksiyonlar"><AksiyonlarPage /></ProtectedRoute>} />
-            <Route path="/stratejik-kokpit" element={<ProtectedRoute pageKey="stratejikKokpit"><KokpitPage /></ProtectedRoute>} />
-            <Route path="/gantt" element={<ProtectedRoute pageKey="gantt"><GanttPage /></ProtectedRoute>} />
+            <Route path="/workspace" element={<PageSuspense><WorkspacePage /></PageSuspense>} />
+            <Route path="/dashboard" element={<ProtectedRoute pageKey="kpi"><PageSuspense><DashboardPage /></PageSuspense></ProtectedRoute>} />
+            <Route path="/projeler" element={<ProtectedRoute pageKey="projeler"><PageSuspense><ProjelerPage /></PageSuspense></ProtectedRoute>} />
+            <Route path="/aksiyonlar" element={<ProtectedRoute pageKey="aksiyonlar"><PageSuspense><AksiyonlarPage /></PageSuspense></ProtectedRoute>} />
+            <Route path="/stratejik-kokpit" element={<ProtectedRoute pageKey="stratejikKokpit"><PageSuspense><KokpitPage /></PageSuspense></ProtectedRoute>} />
+            <Route path="/gantt" element={<ProtectedRoute pageKey="gantt"><PageSuspense><GanttPage /></PageSuspense></ProtectedRoute>} />
             {/* WBS/Tree page removed */}
-            <Route path="/strategy-map" element={<ProtectedRoute pageKey="tMap"><StrategyMapPage /></ProtectedRoute>} />
-            <Route path="/t-alignment" element={<ProtectedRoute pageKey="tAlignment"><TAlignmentPage /></ProtectedRoute>} />
-            <Route path="/kullanicilar" element={<ProtectedRoute pageKey="kullanicilar"><KullanicilarPage /></ProtectedRoute>} />
-            <Route path="/veri-yonetimi" element={<ProtectedRoute pageKey="ayarlar"><VeriYonetimiPage /></ProtectedRoute>} />
-            <Route path="/ayarlar" element={<ProtectedRoute pageKey="ayarlar"><AyarlarPage /></ProtectedRoute>} />
-            <Route path="/guvenlik" element={<ProtectedRoute pageKey="guvenlik"><GuvenlikPage /></ProtectedRoute>} />
-            <Route path="/profil" element={<ProfilPage />} />
+            <Route path="/strategy-map" element={<ProtectedRoute pageKey="tMap"><PageSuspense><StrategyMapPage /></PageSuspense></ProtectedRoute>} />
+            <Route path="/t-alignment" element={<ProtectedRoute pageKey="tAlignment"><PageSuspense><TAlignmentPage /></PageSuspense></ProtectedRoute>} />
+            <Route path="/kullanicilar" element={<ProtectedRoute pageKey="kullanicilar"><PageSuspense><KullanicilarPage /></PageSuspense></ProtectedRoute>} />
+            <Route path="/veri-yonetimi" element={<ProtectedRoute pageKey="ayarlar"><PageSuspense><VeriYonetimiPage /></PageSuspense></ProtectedRoute>} />
+            <Route path="/ayarlar" element={<ProtectedRoute pageKey="ayarlar"><PageSuspense><AyarlarPage /></PageSuspense></ProtectedRoute>} />
+            <Route path="/guvenlik" element={<ProtectedRoute pageKey="guvenlik"><PageSuspense><GuvenlikPage /></PageSuspense></ProtectedRoute>} />
+            <Route path="/profil" element={<PageSuspense><ProfilPage /></PageSuspense>} />
             <Route path="*" element={<NotFoundPage />} />
           </Route>
         </Routes>
