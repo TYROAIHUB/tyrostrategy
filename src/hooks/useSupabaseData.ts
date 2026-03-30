@@ -5,10 +5,10 @@
  */
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabaseAdapter } from "@/lib/data/supabaseAdapter";
+import type { AppReportTemplate, ReportTemplateInput } from "@/lib/data/supabaseAdapter";
 import { useDataStore } from "@/stores/dataStore";
 import type { Proje, Aksiyon, TagDefinition } from "@/types";
-
-export const isSupabaseMode = import.meta.env.VITE_DATA_PROVIDER === "supabase";
+import { isSupabaseMode } from "@/lib/supabaseMode";
 
 // ===== Projeler =====
 
@@ -159,3 +159,47 @@ export function useCreateTagDefinition() {
     },
   });
 }
+
+// ===== Report Templates =====
+
+export function useReportTemplates(ownerEmail: string) {
+  return useQuery<AppReportTemplate[]>({
+    queryKey: ["reportTemplates", ownerEmail],
+    queryFn: () => supabaseAdapter.fetchReportTemplates(ownerEmail),
+    enabled: isSupabaseMode && !!ownerEmail,
+    staleTime: 60_000,
+  });
+}
+
+export function useCreateReportTemplate() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: ReportTemplateInput) => supabaseAdapter.createReportTemplate(input),
+    onSuccess: (_data, vars) => {
+      qc.invalidateQueries({ queryKey: ["reportTemplates", vars.ownerEmail] });
+    },
+  });
+}
+
+export function useUpdateReportTemplate(ownerEmail: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, input }: { id: string; input: Omit<ReportTemplateInput, "ownerEmail"> }) =>
+      supabaseAdapter.updateReportTemplate(id, input),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["reportTemplates", ownerEmail] });
+    },
+  });
+}
+
+export function useDeleteReportTemplate(ownerEmail: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => supabaseAdapter.deleteReportTemplate(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["reportTemplates", ownerEmail] });
+    },
+  });
+}
+
+export type { AppReportTemplate, ReportTemplateInput };

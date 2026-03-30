@@ -12,8 +12,7 @@ import { supabaseAdapter } from "@/lib/data/supabaseAdapter";
 import { toast } from "@/stores/toastStore";
 import i18n from "@/lib/i18n";
 import { departments } from "@/config/departments";
-
-const isSupabaseMode = import.meta.env.VITE_DATA_PROVIDER === "supabase";
+import { isSupabaseMode } from "@/lib/supabaseMode";
 
 /** Fire-and-forget Supabase sync — doesn't block UI, shows toast on failure */
 function syncToSupabase(fn: () => Promise<unknown>) {

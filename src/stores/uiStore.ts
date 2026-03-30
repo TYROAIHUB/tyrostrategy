@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import i18n from "@/lib/i18n";
 import type { SidebarThemeId } from "@/config/sidebarThemes";
-import { isSupabaseMode } from "@/hooks/useSupabaseData";
+import { isSupabaseMode } from "@/lib/supabaseMode";
 import { toast } from "@/stores/toastStore";
 
 // Lazy import to avoid circular dependency

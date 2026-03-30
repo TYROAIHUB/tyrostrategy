@@ -15,6 +15,14 @@ import { useDataStore } from "@/stores/dataStore";
 import { useUIStore } from "@/stores/uiStore";
 import { sidebarThemes } from "@/config/sidebarThemes";
 import { TyroLogo } from "@/components/ui/TyroLogo";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { isSupabaseMode } from "@/lib/supabaseMode";
+import {
+  useReportTemplates,
+  useCreateReportTemplate,
+  useUpdateReportTemplate,
+  useDeleteReportTemplate,
+} from "@/hooks/useSupabaseData";
 import type { Proje, Aksiyon, EntityStatus, Source } from "@/types";
 
 // ===== Status helpers =====
@@ -119,17 +127,32 @@ export default function RaporSihirbazi() {
     updatedAt: string;
   }
 
+  // Current user email — needed for owner_email in Supabase
+  const currentUser = useCurrentUser();
+
+  // Supabase hooks (no-ops in mock mode)
+  const { data: dbTemplates } = useReportTemplates(currentUser.email);
+  const createMutation = useCreateReportTemplate();
+  const updateMutation = useUpdateReportTemplate(currentUser.email);
+  const deleteMutation = useDeleteReportTemplate(currentUser.email);
+
+  // localStorage fallback (mock mode)
   const TEMPLATES_KEY = "tyro-report-templates";
-  const loadTemplates = (): ReportTemplate[] => {
+  const loadLocalTemplates = (): ReportTemplate[] => {
     try { return JSON.parse(localStorage.getItem(TEMPLATES_KEY) || "[]"); } catch { return []; }
   };
-  const saveTemplates = (t: ReportTemplate[]) => localStorage.setItem(TEMPLATES_KEY, JSON.stringify(t));
+  const saveLocalTemplates = (t: ReportTemplate[]) => localStorage.setItem(TEMPLATES_KEY, JSON.stringify(t));
+  const [localTemplates, setLocalTemplates] = useState<ReportTemplate[]>(loadLocalTemplates);
+
+  // Unified template list — Supabase in production, localStorage in mock
+  const templates: ReportTemplate[] = isSupabaseMode
+    ? (dbTemplates ?? []).map((t) => ({ ...t, sourceFilter: t.sourceFilter as Source | "all", statusFilters: t.statusFilters, sections: t.sections }))
+    : localTemplates;
 
   // State
   const [reportGenerated, setReportGenerated] = useState(false);
   const [filterOpen, setFilterOpen] = useState(false);
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
-  const [templates, setTemplates] = useState<ReportTemplate[]>(loadTemplates);
   const [activeTemplateId, setActiveTemplateId] = useState<string | null>(null);
   const [templateName, setTemplateName] = useState("");
   const [showSaveTemplate, setShowSaveTemplate] = useState(false);
@@ -161,46 +184,74 @@ export default function RaporSihirbazi() {
     setActiveTemplateId(tmpl.id);
   };
 
+  // Current filter snapshot — shared between save and update
+  const currentConfig = () => ({
+    sourceFilter: sourceFilter as string,
+    statusFilters: Array.from(statusFilters),
+    deptFilter,
+    sections,
+    datePreset,
+    dateFrom,
+    dateTo,
+  });
+
   // Save current filters as new template
   const saveNewTemplate = () => {
     if (!templateName.trim()) return;
-    const tmpl: ReportTemplate = {
-      id: `tmpl-${Date.now()}`,
-      name: templateName.trim(),
-      sourceFilter,
-      statusFilters: Array.from(statusFilters),
-      deptFilter,
-      sections,
-      datePreset,
-      dateFrom,
-      dateTo,
-      updatedAt: new Date().toISOString(),
-    };
-    const updated = [...templates, tmpl];
-    setTemplates(updated);
-    saveTemplates(updated);
-    setActiveTemplateId(tmpl.id);
-    setShowSaveTemplate(false);
-    setTemplateName("");
+    if (isSupabaseMode) {
+      createMutation.mutate(
+        { name: templateName.trim(), ownerEmail: currentUser.email, ...currentConfig() },
+        {
+          onSuccess: (created) => {
+            setActiveTemplateId(created.id);
+            setShowSaveTemplate(false);
+            setTemplateName("");
+          },
+        }
+      );
+    } else {
+      const tmpl: ReportTemplate = {
+        id: `tmpl-${Date.now()}`,
+        name: templateName.trim(),
+        ...currentConfig(),
+        sourceFilter: sourceFilter,
+        statusFilters: Array.from(statusFilters),
+        updatedAt: new Date().toISOString(),
+      };
+      const updated = [...localTemplates, tmpl];
+      setLocalTemplates(updated);
+      saveLocalTemplates(updated);
+      setActiveTemplateId(tmpl.id);
+      setShowSaveTemplate(false);
+      setTemplateName("");
+    }
   };
 
   // Update existing template with current filters
   const updateActiveTemplate = () => {
     if (!activeTemplateId) return;
-    const updated = templates.map((t) =>
-      t.id === activeTemplateId
-        ? { ...t, sourceFilter, statusFilters: Array.from(statusFilters), deptFilter, sections, datePreset, dateFrom, dateTo, updatedAt: new Date().toISOString() }
-        : t
-    );
-    setTemplates(updated);
-    saveTemplates(updated);
+    if (isSupabaseMode) {
+      updateMutation.mutate({ id: activeTemplateId, input: { name: templates.find((t) => t.id === activeTemplateId)?.name ?? "", ...currentConfig() } });
+    } else {
+      const updated = localTemplates.map((t) =>
+        t.id === activeTemplateId
+          ? { ...t, ...currentConfig(), sourceFilter, statusFilters: Array.from(statusFilters), updatedAt: new Date().toISOString() }
+          : t
+      );
+      setLocalTemplates(updated);
+      saveLocalTemplates(updated);
+    }
   };
 
   // Delete template
   const deleteTemplate = (id: string) => {
-    const updated = templates.filter((t) => t.id !== id);
-    setTemplates(updated);
-    saveTemplates(updated);
+    if (isSupabaseMode) {
+      deleteMutation.mutate(id);
+    } else {
+      const updated = localTemplates.filter((t) => t.id !== id);
+      setLocalTemplates(updated);
+      saveLocalTemplates(updated);
+    }
     if (activeTemplateId === id) setActiveTemplateId(null);
   };
   const reportRef = useRef<HTMLDivElement>(null);

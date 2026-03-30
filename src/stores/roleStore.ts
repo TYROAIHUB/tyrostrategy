@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import type { UserRole, RolePermissions } from "@/types";
-import { isSupabaseMode } from "@/hooks/useSupabaseData";
+import { isSupabaseMode } from "@/lib/supabaseMode";
 import { toast } from "@/stores/toastStore";
 import i18n from "@/lib/i18n";
 

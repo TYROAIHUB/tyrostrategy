@@ -11,7 +11,7 @@ import ColorPicker from "@/components/ui/ColorPicker";
 import ConfirmDialog from "@/components/shared/ConfirmDialog";
 import { toast } from "@/stores/toastStore";
 import { DEFAULT_TAG_COLOR } from "@/config/tagColors";
-import { isSupabaseMode } from "@/hooks/useSupabaseData";
+import { isSupabaseMode } from "@/lib/supabaseMode";
 
 export default function AyarlarPage() {
   const { t } = useTranslation();

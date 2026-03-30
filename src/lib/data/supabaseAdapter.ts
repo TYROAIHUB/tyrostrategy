@@ -164,6 +164,50 @@ function generateId(prefix: "P" | "A", existingIds: string[]): string {
 
 // ===== Adapter =====
 
+// ===== Report Template types & mapper =====
+
+interface DbReportTemplate {
+  id: string;
+  name: string;
+  owner_email: string;
+  config: Record<string, unknown>;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface AppReportTemplate {
+  id: string;
+  name: string;
+  ownerEmail: string;
+  sourceFilter: string;
+  statusFilters: string[];
+  deptFilter: string;
+  sections: Record<string, boolean>;
+  datePreset: string;
+  dateFrom: string;
+  dateTo: string;
+  updatedAt: string;
+}
+
+export type ReportTemplateInput = Omit<AppReportTemplate, "id" | "updatedAt">;
+
+function dbToTemplate(row: DbReportTemplate): AppReportTemplate {
+  const c = (row.config ?? {}) as Record<string, unknown>;
+  return {
+    id: row.id,
+    name: row.name,
+    ownerEmail: row.owner_email,
+    sourceFilter: (c.sourceFilter as string) ?? "all",
+    statusFilters: (c.statusFilters as string[]) ?? [],
+    deptFilter: (c.deptFilter as string) ?? "all",
+    sections: (c.sections as Record<string, boolean>) ?? {},
+    datePreset: (c.datePreset as string) ?? "all",
+    dateFrom: (c.dateFrom as string) ?? "",
+    dateTo: (c.dateTo as string) ?? "",
+    updatedAt: row.updated_at,
+  };
+}
+
 export const supabaseAdapter: DataService = {
   // ── Projeler ──
 
@@ -395,6 +439,46 @@ export const supabaseAdapter: DataService = {
     if (!supabase) return;
     const { error } = await supabase.from("app_settings").upsert({ key, value }, { onConflict: "key" });
     if (error) console.error("[Supabase] upsertAppSetting:", error);
+  },
+
+  // ── Report Templates ──
+
+  async fetchReportTemplates(ownerEmail: string): Promise<AppReportTemplate[]> {
+    if (!supabase) return [];
+    const { data, error } = await supabase
+      .from("report_templates")
+      .select("*")
+      .eq("owner_email", ownerEmail)
+      .order("created_at", { ascending: false });
+    if (error) { console.error("[Supabase] fetchReportTemplates:", error); return []; }
+    return (data || []).map(dbToTemplate);
+  },
+
+  async createReportTemplate(input: ReportTemplateInput): Promise<AppReportTemplate> {
+    const { name, ownerEmail, ...config } = input;
+    const { data, error } = await supabase!
+      .from("report_templates")
+      .insert({ name, owner_email: ownerEmail, config })
+      .select()
+      .single();
+    if (error) throw error;
+    return dbToTemplate(data as DbReportTemplate);
+  },
+
+  async updateReportTemplate(id: string, input: Omit<ReportTemplateInput, "ownerEmail">): Promise<void> {
+    if (!supabase) return;
+    const { name, ...config } = input;
+    const { error } = await supabase
+      .from("report_templates")
+      .update({ name, config })
+      .eq("id", id);
+    if (error) console.error("[Supabase] updateReportTemplate:", error);
+  },
+
+  async deleteReportTemplate(id: string): Promise<void> {
+    if (!supabase) return;
+    const { error } = await supabase.from("report_templates").delete().eq("id", id);
+    if (error) console.error("[Supabase] deleteReportTemplate:", error);
   },
 
   // ── Role Permissions ──

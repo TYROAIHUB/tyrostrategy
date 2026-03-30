@@ -11,10 +11,6 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
-  // Strip console.log/warn/info from production builds; keep console.error for runtime errors
-  esbuild: {
-    pure: mode === "production" ? ["console.log", "console.warn", "console.info", "console.debug"] : [],
-  },
   build: {
     rollupOptions: {
       output: {
