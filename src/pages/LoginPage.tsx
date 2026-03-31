@@ -1,17 +1,11 @@
 import { Button } from "@heroui/react";
-import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { getRoleLabel } from "@/lib/constants";
 import { motion, AnimatePresence } from "framer-motion";
-import { Shield, BarChart3, Target, LogIn, ChevronRight, Globe, LayoutDashboard } from "lucide-react";
+import { Shield, BarChart3, Target, LayoutDashboard, Globe } from "lucide-react";
 import { TyroLogo } from "@/components/ui/TyroLogo";
-import { RoleAvatar } from "@/components/ui/RoleAvatar";
 import { useUIStore } from "@/stores/uiStore";
-import { useDataStore } from "@/stores/dataStore";
 import { useMsalLogin } from "@/hooks/useMsalLogin";
-import { useState, useEffect, useMemo } from "react";
-
-const isMockAuth = import.meta.env.VITE_MOCK_AUTH === "true" || !import.meta.env.VITE_AZURE_CLIENT_ID;
+import { useState, useEffect } from "react";
 
 function MicrosoftIcon() {
   return (
@@ -23,53 +17,12 @@ function MicrosoftIcon() {
     </svg>
   );
 }
-import type { UserRole } from "@/types";
-
-interface DemoUser {
-  name: string;
-  department: string;
-  role: UserRole;
-  accent: string;
-  accentDark: string;
-  locale?: "tr" | "en";
-}
-
-const ROLE_COLORS: Record<string, { accent: string; accentDark: string }> = {
-  Admin: { accent: "#c8922a", accentDark: "#96700f" },
-  "Proje Lideri": { accent: "#3b82f6", accentDark: "#1d4ed8" },
-  Kullanıcı: { accent: "#64748b", accentDark: "#475569" },
-  Management: { accent: "#7c3aed", accentDark: "#5b21b6" },
-};
-
-const FALLBACK_USERS: DemoUser[] = [
-  { name: "Cenk Şayli", department: "BT", role: "Admin", accent: "#c8922a", accentDark: "#96700f" },
-  { name: "Büşra Kaplan", department: "COO Ofis", role: "Admin", accent: "#c8922a", accentDark: "#96700f" },
-  { name: "Enver Tanrıverdioğlu", department: "Türkiye", role: "Proje Lideri", accent: "#3b82f6", accentDark: "#1d4ed8" },
-];
 
 export default function LoginPage() {
   const { t } = useTranslation();
-  const navigate = useNavigate();
-  const setMockLoggedIn = useUIStore((s) => s.setMockLoggedIn);
   const { locale, setLocale } = useUIStore();
-  const dbUsers = useDataStore((s) => s.users);
-
-  // Show Cenk + Büşra (Admin) and one Proje Lideri from DB
-  const demoUsers: DemoUser[] = useMemo(() => {
-    if (dbUsers.length > 0) {
-      const picks: DemoUser[] = [];
-      // Always show Cenk and Büşra first
-      for (const email of ["cenk.sayli@tiryaki.com.tr", "busra.kaplan@tiryaki.com.tr"]) {
-        const u = dbUsers.find((u) => u.email === email);
-        if (u) picks.push({ name: u.displayName, department: u.department, role: u.role, locale: u.locale, ...(ROLE_COLORS[u.role] ?? ROLE_COLORS.Admin) });
-      }
-      // Add one Proje Lideri
-      const pl = dbUsers.find((u) => u.role === "Proje Lideri");
-      if (pl) picks.push({ name: pl.displayName, department: pl.department, role: pl.role, locale: pl.locale, ...(ROLE_COLORS[pl.role] ?? ROLE_COLORS.Kullanıcı) });
-      if (picks.length > 0) return picks;
-    }
-    return FALLBACK_USERS;
-  }, [dbUsers]);
+  const { login: msalLogin, loading: msalLoading, error: msalError } = useMsalLogin();
+  const [featureIndex, setFeatureIndex] = useState(0);
 
   const features = [
     { icon: Target, title: t("login.strategicPlanning"), desc: t("login.strategicPlanningDesc") },
@@ -77,30 +30,11 @@ export default function LoginPage() {
     { icon: LayoutDashboard, title: t("login.teamManagement"), desc: t("login.teamManagementDesc") },
     { icon: Shield, title: t("login.corporateSecurity"), desc: t("login.corporateSecurityDesc") },
   ];
-  const { login: msalLogin, loading: msalLoading, error: msalError } = useMsalLogin();
-  const [loading, setLoading] = useState(false);
-  const [featureIndex, setFeatureIndex] = useState(0);
-  const [selectedUser, setSelectedUser] = useState<string>(demoUsers[0]?.name ?? "Cenk Şayli");
 
   useEffect(() => {
     const timer = setInterval(() => setFeatureIndex((i) => (i + 1) % features.length), 3000);
     return () => clearInterval(timer);
   }, []);
-
-  const handleLogin = () => {
-    setLoading(true);
-    setTimeout(() => {
-      const user = demoUsers.find((u) => u.name === selectedUser);
-      useUIStore.getState().setMockUserName(selectedUser);
-      useUIStore.getState().setMockUserRole(user?.role ?? "Kullanıcı");
-      // Set user's preferred language
-      if (user?.locale) {
-        useUIStore.getState().setLocale(user.locale);
-      }
-      setMockLoggedIn(true);
-      navigate("/workspace");
-    }, 600);
-  };
 
   return (
     <motion.div
@@ -121,16 +55,15 @@ export default function LoginPage() {
       <div className="absolute bottom-[10%] right-[10%] w-[350px] h-[350px] rounded-full blur-[100px] bg-[rgba(59,130,246,0.05)]" />
       <div className="absolute top-[50%] left-[50%] -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full blur-[120px] bg-[rgba(200,146,42,0.04)]" />
 
-      {/* ===== CONTENT — two-column on desktop, single on mobile ===== */}
+      {/* ===== CONTENT ===== */}
       <div className="relative z-10 min-h-screen flex">
-        {/* LEFT: Branding — desktop only, full height with spacing */}
+        {/* LEFT: Branding — desktop only */}
         <motion.div
           className="hidden lg:flex lg:w-[48%] xl:w-[45%] flex-col justify-between p-12"
           initial={{ opacity: 0, x: -30 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.2, duration: 0.7 }}
         >
-          {/* Top: Logo */}
           <div className="flex items-center gap-3">
             <TyroLogo size={44} variant="login" />
             <span className="text-[26px] font-extrabold tracking-tight text-white">
@@ -138,7 +71,6 @@ export default function LoginPage() {
             </span>
           </div>
 
-          {/* Middle: Hero */}
           <div>
             <h1 className="text-[42px] font-extrabold text-white leading-[1.15] tracking-tight mb-4">
               {t("login.strategicManagement")}
@@ -150,7 +82,6 @@ export default function LoginPage() {
             </p>
           </div>
 
-          {/* Bottom: Features */}
           <div>
             <div className="flex flex-col gap-3.5 mb-5">
               {features.map((f, i) => (
@@ -193,8 +124,6 @@ export default function LoginPage() {
 
         {/* RIGHT: Login card area */}
         <div className="flex-1 flex items-center justify-center px-5 py-8 sm:p-12">
-
-          {/* RIGHT: Login Card */}
           <motion.div
             className="w-full max-w-[420px] lg:max-w-[400px]"
             initial={{ opacity: 0, y: 20, scale: 0.96 }}
@@ -230,97 +159,19 @@ export default function LoginPage() {
                   {t("login.welcome")}
                 </h2>
                 <p className="text-tyro-text-muted text-[13px] sm:text-[15px] mb-6">
-                  {isMockAuth ? t("login.selectUser") : t("login.ssoSubtitle")}
+                  {t("login.ssoSubtitle")}
                 </p>
-
-                {/* ── Demo user cards (always visible as fallback) ── */}
-                <>
-                    <div className="flex flex-col gap-2.5 mb-6">
-                      {demoUsers.map((user, i) => {
-                        const isSelected = selectedUser === user.name;
-                        return (
-                          <motion.button
-                            key={user.name}
-                            type="button"
-                            onClick={() => setSelectedUser(user.name)}
-                            className="flex items-center gap-3 p-3 rounded-xl text-left cursor-pointer transition-all duration-200"
-                            style={{
-                              backgroundColor: isSelected ? `${user.accent}0a` : "#f8fafc",
-                              border: `1.5px solid ${isSelected ? user.accent : "#e2e8f0"}`,
-                              boxShadow: isSelected ? `0 2px 8px ${user.accent}18` : "none",
-                            }}
-                            initial={{ opacity: 0, x: -10 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: 0.35 + i * 0.08, duration: 0.35 }}
-                            whileHover={{ scale: 1.01 }}
-                            whileTap={{ scale: 0.98 }}
-                          >
-                            <RoleAvatar name={user.name} role={user.role} size="sm" />
-                            <div className="flex-1 min-w-0">
-                              <h4 className="text-[13px] font-semibold text-tyro-text-primary truncate">{user.name}</h4>
-                              <p className="text-[11px] text-tyro-text-muted truncate">{user.department}</p>
-                            </div>
-                            <div className="flex items-center gap-1.5 shrink-0">
-                              <span
-                                className="text-[11px] font-bold px-2 py-0.5 rounded-full"
-                                style={{
-                                  backgroundColor: `${user.accent}15`,
-                                  color: user.accentDark,
-                                }}
-                              >
-                                {getRoleLabel(user.role, t)}
-                              </span>
-                              {isSelected && (
-                                <motion.div
-                                  initial={{ scale: 0, opacity: 0 }}
-                                  animate={{ scale: 1, opacity: 1 }}
-                                  className="w-5 h-5 rounded-full flex items-center justify-center"
-                                  style={{ backgroundColor: user.accent }}
-                                >
-                                  <ChevronRight size={12} className="text-white" />
-                                </motion.div>
-                              )}
-                            </div>
-                          </motion.button>
-                        );
-                      })}
-                    </div>
-
-                    {/* Demo login button */}
-                    <Button
-                      size="lg"
-                      className="w-full h-[48px] sm:h-[52px] text-[14px] sm:text-[15px] font-semibold rounded-xl border-0 text-white"
-                      isLoading={loading}
-                      onPress={handleLogin}
-                      startContent={!loading ? <LogIn size={18} /> : undefined}
-                      style={{
-                        background: "linear-gradient(135deg, #1e3a5f, #2a5a8f)",
-                        boxShadow: "0 4px 16px rgba(30,58,95,0.3)",
-                      }}
-                    >
-                      {t("login.login")}
-                    </Button>
-
-                    {/* Divider */}
-                    <div className="flex items-center gap-3 my-4">
-                      <div className="flex-1 h-px bg-slate-200" />
-                      <span className="text-[11px] text-tyro-text-muted font-medium">veya</span>
-                      <div className="flex-1 h-px bg-slate-200" />
-                    </div>
-                  </>
 
                 {/* ── Microsoft login button ── */}
                 <Button
                   size="lg"
-                  className="w-full h-[48px] sm:h-[52px] text-[14px] sm:text-[15px] font-semibold rounded-xl border-0"
+                  className="w-full h-[48px] sm:h-[52px] text-[14px] sm:text-[15px] font-semibold rounded-xl border-0 text-white"
                   isLoading={msalLoading}
                   onPress={msalLogin}
                   startContent={!msalLoading ? <MicrosoftIcon /> : undefined}
                   style={{
-                    background: isMockAuth ? "#f8fafc" : "linear-gradient(135deg, #0078d4, #005a9e)",
-                    color: isMockAuth ? "#1e3a5f" : "#fff",
-                    border: isMockAuth ? "1.5px solid #e2e8f0" : "none",
-                    boxShadow: isMockAuth ? "none" : "0 4px 16px rgba(0,120,212,0.3)",
+                    background: "linear-gradient(135deg, #0078d4, #005a9e)",
+                    boxShadow: "0 4px 16px rgba(0,120,212,0.3)",
                   }}
                 >
                   {t("login.microsoftLogin")}
@@ -342,7 +193,7 @@ export default function LoginPage() {
                 <div className="flex items-start gap-2.5 mt-4 p-3 rounded-xl bg-slate-50">
                   <Shield size={14} className="text-tyro-text-muted mt-0.5 shrink-0" />
                   <p className="text-[11px] text-tyro-text-muted leading-relaxed">
-                    {isMockAuth ? t("login.demoMode") : t("login.ssoInfo")}
+                    {t("login.ssoInfo")}
                   </p>
                 </div>
 

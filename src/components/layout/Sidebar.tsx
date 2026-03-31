@@ -34,6 +34,7 @@ import { usePermissions } from "@/hooks/usePermissions";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { RoleAvatar } from "@/components/ui/RoleAvatar";
 import { clsx } from "clsx";
+import { useMsal } from "@azure/msal-react";
 
 /** Animated mesh gradient blobs for mesh-style themes */
 function MeshBlobs({ colors }: { colors: string[] }) {
@@ -128,9 +129,12 @@ function SidebarContent({ collapsed, onNavigate, pinned, onTogglePin }: { collap
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [profileOpen]);
 
+  const { instance: msalInstance } = useMsal();
   const handleLogout = () => {
     setProfileOpen(false);
     setMockLoggedIn(false);
+    // Clear MSAL session so user doesn't get stuck on next visit
+    msalInstance.logoutPopup({ onRedirectNavigate: () => false }).catch(() => {});
     onNavigate?.();
     navigate("/login");
   };

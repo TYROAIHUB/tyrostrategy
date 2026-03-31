@@ -6,20 +6,17 @@ import { Navigate } from "react-router-dom";
 import { useUIStore } from "@/stores/uiStore";
 import { useDataStore } from "@/stores/dataStore";
 
-const isMockAuth = import.meta.env.VITE_MOCK_AUTH === "true" || !import.meta.env.VITE_AZURE_CLIENT_ID;
-
 export function AuthGuard({ children }: { children: ReactNode }) {
   const isAuthenticated = useIsAuthenticated();
   const { accounts, inProgress } = useMsal();
   const mockLoggedIn = useUIStore((s) => s.mockLoggedIn);
   const users = useDataStore((s) => s.users);
 
-  // Real MSAL mode: auto-resolve user after page refresh.
-  // MSAL account persists in localStorage but mockLoggedIn resets to false.
-  // We re-establish the session by matching the MSAL email to the DB user.
+  // Auto-resolve user after page refresh.
+  // MSAL account persists in localStorage but app state resets.
   useEffect(() => {
-    if (isMockAuth || !isAuthenticated || mockLoggedIn || accounts.length === 0) return;
-    if (inProgress !== InteractionStatus.None) return; // Wait for MSAL to finish initializing
+    if (!isAuthenticated || mockLoggedIn || accounts.length === 0) return;
+    if (inProgress !== InteractionStatus.None) return;
     if (users.length === 0) return; // Wait for DB users to load
     const email = accounts[0].username.toLowerCase().trim();
     const user = users.find((u) => u.email.toLowerCase() === email);
@@ -31,12 +28,7 @@ export function AuthGuard({ children }: { children: ReactNode }) {
     }
   }, [isAuthenticated, mockLoggedIn, accounts, users, inProgress]);
 
-  // Mock mode
-  if (isMockAuth) {
-    return mockLoggedIn ? <>{children}</> : <Navigate to="/login" replace />;
-  }
-
-  // Wait for MSAL to finish initializing before making auth decisions
+  // Wait for MSAL to finish initializing
   if (inProgress !== InteractionStatus.None) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-tyro-navy-dark via-tyro-navy to-tyro-navy-light">
@@ -45,15 +37,17 @@ export function AuthGuard({ children }: { children: ReactNode }) {
     );
   }
 
-  // Real MSAL mode: allow MSAL auth OR demo bypass (mockLoggedIn)
+  // Not authenticated → login page
   if (!isAuthenticated && !mockLoggedIn) return <Navigate to="/login" replace />;
+
+  // Authenticated but user not yet resolved from DB
   if (isAuthenticated && !mockLoggedIn) {
-    // Resolving user from MSAL session (brief loading after page refresh)
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-tyro-navy-dark via-tyro-navy to-tyro-navy-light">
         <div className="text-white/50 text-sm animate-pulse">Giriş yapılıyor…</div>
       </div>
     );
   }
+
   return <>{children}</>;
 }
