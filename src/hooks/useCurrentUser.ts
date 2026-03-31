@@ -6,6 +6,7 @@ interface CurrentUser {
   name: string;
   email: string;
   department: string;
+  title: string;
   initials: string;
   role: UserRole;
 }
@@ -29,6 +30,15 @@ function findUserEmail(userName: string): string {
   return "";
 }
 
+function findUserTitle(userName: string): string {
+  const normalized = userName.toLowerCase().trim();
+  for (const dept of departments) {
+    const user = dept.users.find((u) => u.name.toLowerCase().trim() === normalized);
+    if (user) return user.title;
+  }
+  return "";
+}
+
 function getInitials(name: string): string {
   return name
     .split(" ")
@@ -45,11 +55,11 @@ export function useCurrentUser(): CurrentUser {
   const name = mockUserName;
   const email = findUserEmail(name);
   const department = findUserDepartment(name);
+  const title = findUserTitle(name);
   const initials = getInitials(name);
 
-  // Mock modda login'de seçilen rolü kullan
   const validRoles: UserRole[] = ["Admin", "Proje Lideri", "Kullanıcı", "Management"];
   const role: UserRole = validRoles.includes(mockUserRole) ? mockUserRole : "Kullanıcı";
 
-  return { name, email, department, initials, role };
+  return { name, email, department, title, initials, role };
 }

@@ -492,7 +492,7 @@ function SidebarContent({ collapsed, onNavigate, pinned, onTogglePin }: { collap
             )}
           >
             <h4 className="text-[13px] font-semibold truncate" style={{ color: "var(--sb-text-primary)" }}>{currentUser.name}</h4>
-            <p className="text-[11px] font-medium truncate" style={{ color: "var(--sb-text-muted)" }}>{currentUser.department}</p>
+            <p className="text-[11px] font-medium truncate" style={{ color: "var(--sb-text-muted)" }}>{currentUser.title || currentUser.department}</p>
           </div>
 
           {/* Chevron indicator */}
