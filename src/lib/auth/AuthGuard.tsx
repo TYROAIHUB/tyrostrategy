@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { useEffect } from "react";
 import { useIsAuthenticated, useMsal } from "@azure/msal-react";
+import { InteractionStatus } from "@azure/msal-browser";
 import { Navigate } from "react-router-dom";
 import { useUIStore } from "@/stores/uiStore";
 import { useDataStore } from "@/stores/dataStore";
@@ -9,7 +10,7 @@ const isMockAuth = import.meta.env.VITE_MOCK_AUTH === "true" || !import.meta.env
 
 export function AuthGuard({ children }: { children: ReactNode }) {
   const isAuthenticated = useIsAuthenticated();
-  const { accounts } = useMsal();
+  const { accounts, inProgress } = useMsal();
   const mockLoggedIn = useUIStore((s) => s.mockLoggedIn);
   const users = useDataStore((s) => s.users);
 
@@ -18,6 +19,7 @@ export function AuthGuard({ children }: { children: ReactNode }) {
   // We re-establish the session by matching the MSAL email to the DB user.
   useEffect(() => {
     if (isMockAuth || !isAuthenticated || mockLoggedIn || accounts.length === 0) return;
+    if (inProgress !== InteractionStatus.None) return; // Wait for MSAL to finish initializing
     if (users.length === 0) return; // Wait for DB users to load
     const email = accounts[0].username.toLowerCase().trim();
     const user = users.find((u) => u.email.toLowerCase() === email);
@@ -27,11 +29,20 @@ export function AuthGuard({ children }: { children: ReactNode }) {
       if (user.locale) useUIStore.getState().setLocale(user.locale as "tr" | "en");
       useUIStore.getState().setMockLoggedIn(true);
     }
-  }, [isAuthenticated, mockLoggedIn, accounts, users]);
+  }, [isAuthenticated, mockLoggedIn, accounts, users, inProgress]);
 
   // Mock mode
   if (isMockAuth) {
     return mockLoggedIn ? <>{children}</> : <Navigate to="/login" replace />;
+  }
+
+  // Wait for MSAL to finish initializing before making auth decisions
+  if (inProgress !== InteractionStatus.None) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-tyro-navy-dark via-tyro-navy to-tyro-navy-light">
+        <div className="text-white/50 text-sm animate-pulse">Giriş yapılıyor…</div>
+      </div>
+    );
   }
 
   // Real MSAL mode: allow MSAL auth OR demo bypass (mockLoggedIn)
