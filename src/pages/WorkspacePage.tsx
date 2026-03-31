@@ -85,7 +85,7 @@ function SummaryPills({ items }: { items: { text: string; color?: string }[] }) 
 export default function WorkspacePage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { name, department, initials } = useCurrentUser();
+  const { name, department, title, initials } = useCurrentUser();
   const openCommandPalette = useUIStore((s) => s.openCommandPalette);
   const ws = useMyWorkspace();
   const sidebarTheme = useSidebarTheme();
@@ -183,7 +183,7 @@ export default function WorkspacePage() {
                     {t(getGreetingKey())}, {name.split(" ")[0]}
                   </h1>
                   <span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-tyro-gold/10 text-tyro-gold">
-                    {department}
+                    {title ? `${title} | ${department}` : department}
                   </span>
                 </div>
               </div>
