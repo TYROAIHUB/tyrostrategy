@@ -57,6 +57,9 @@ interface DataState {
   getAksiyonlarByHedefId: (projeId: string) => Aksiyon[];
   getTagColor: (tagName: string) => string;
   getTagDefinitionByName: (tagName: string) => TagDefinition | undefined;
+
+  // Data consistency
+  fixDataConsistency: () => void;
 }
 
 let counter = Date.now();
@@ -311,6 +314,61 @@ export const useDataStore = create<DataState>()(
         get().tagDefinitions.find(
           (t) => t.name.toLocaleLowerCase("tr") === tagName.toLocaleLowerCase("tr")
         ),
+
+      // One-time data consistency fix
+      fixDataConsistency: () => {
+        const state = get();
+        const now = Date.now();
+        const affectedProjeIds = new Set<string>();
+
+        // Step 1: Fix aksiyonlar
+        const fixedAksiyonlar = state.aksiyonlar.map((a) => {
+          const original = a;
+          let updated = { ...a };
+
+          if (a.status === "Achieved" && a.progress < 100) {
+            updated.progress = 100;
+            if (!updated.completedAt) updated.completedAt = new Date().toISOString();
+          } else if (a.status === "Not Started" && a.progress > 0) {
+            updated.progress = 0;
+          } else if (
+            (a.status === "On Track" || a.status === "At Risk" || a.status === "Behind") &&
+            a.progress === 0
+          ) {
+            // Calculate expected progress from timeline
+            const startMs = a.startDate ? new Date(a.startDate).getTime() : 0;
+            const endMs = a.endDate ? new Date(a.endDate).getTime() : 0;
+            const totalDuration = endMs - startMs;
+            let expected = 50; // fallback
+            if (totalDuration > 0) {
+              expected = Math.min(95, Math.max(0, ((now - startMs) / totalDuration) * 100));
+            }
+            if (a.status === "On Track") updated.progress = Math.max(15, Math.round(expected));
+            else if (a.status === "At Risk") updated.progress = Math.max(10, Math.round(expected * 0.7));
+            else if (a.status === "Behind") updated.progress = Math.max(10, Math.round(expected * 0.5));
+          }
+
+          if (updated.progress !== original.progress || updated.completedAt !== original.completedAt) {
+            affectedProjeIds.add(a.projeId);
+            // Sync each changed aksiyon to Supabase
+            syncToSupabase(() => supabaseAdapter.updateAksiyon(a.id, { progress: updated.progress, status: updated.status, completedAt: updated.completedAt }));
+          }
+          return updated;
+        });
+
+        // Step 2: Recalculate affected projeler
+        let fixedProjeler = [...state.projeler];
+        for (const projeId of affectedProjeIds) {
+          fixedProjeler = recalcProjeProgress(fixedProjeler, fixedAksiyonlar, projeId);
+          const updatedProje = fixedProjeler.find((p) => p.id === projeId);
+          if (updatedProje) {
+            syncToSupabase(() => supabaseAdapter.updateProje(updatedProje.id, { progress: updatedProje.progress, status: updatedProje.status, completedAt: updatedProje.completedAt }));
+          }
+        }
+
+        set({ aksiyonlar: fixedAksiyonlar, projeler: fixedProjeler });
+        console.log(`[fixDataConsistency] Fixed ${affectedProjeIds.size} projeler, checked ${fixedAksiyonlar.length} aksiyonlar`);
+      },
     }),
     {
       name: "tyro-data-store-v7",

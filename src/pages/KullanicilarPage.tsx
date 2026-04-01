@@ -1,4 +1,5 @@
 import { useMemo, useState, useCallback, type Key } from "react";
+import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
   Table, TableHeader, TableColumn, TableBody, TableRow, TableCell,
@@ -70,11 +71,12 @@ export default function KullanicilarPage() {
   const updateUserDb = useDataStore((s) => s.updateUser);
   const deleteUserDb = useDataStore((s) => s.deleteUser);
   const sidebarTheme = useSidebarTheme();
+  const navigate = useNavigate();
 
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [visibleColumns, setVisibleColumns] = useState(INITIAL_VISIBLE);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [rowsPerPage, setRowsPerPage] = useState(25);
   const [page, setPage] = useState(1);
   const [sortDescriptor, setSortDescriptor] = useState<{ column: string; direction: "ascending" | "descending" }>({ column: "name", direction: "ascending" });
 
@@ -111,13 +113,20 @@ export default function KullanicilarPage() {
       if (!h.owner) continue;
       const s = statsMap.get(h.owner) || { projeCount: 0, aksiyonCount: 0, achievedCount: 0 };
       s.projeCount += 1;
+      if (h.status === "Achieved") s.achievedCount += 1;
       statsMap.set(h.owner, s);
+      // Also credit participants
+      for (const participant of h.participants ?? []) {
+        if (!participant || participant === h.owner) continue;
+        const ps = statsMap.get(participant) || { projeCount: 0, aksiyonCount: 0, achievedCount: 0 };
+        if (h.status === "Achieved") ps.achievedCount += 1;
+        statsMap.set(participant, ps);
+      }
     }
     for (const a of aksiyonlar) {
       if (!a.owner) continue;
       const s = statsMap.get(a.owner) || { projeCount: 0, aksiyonCount: 0, achievedCount: 0 };
       s.aksiyonCount += 1;
-      if (a.status === "Achieved") s.achievedCount += 1;
       statsMap.set(a.owner, s);
     }
 
@@ -374,9 +383,9 @@ export default function KullanicilarPage() {
             value={rowsPerPage}
             onChange={(e) => { setRowsPerPage(Number(e.target.value)); setPage(1); }}
           >
-            <option value="5">5</option>
-            <option value="10">10</option>
             <option value="15">15</option>
+            <option value="20">20</option>
+            <option value="25">25</option>
           </select>
         </label>
       </div>
@@ -598,22 +607,25 @@ export default function KullanicilarPage() {
             </div>
 
             {/* Stats */}
-            <div className="grid grid-cols-3 gap-3">
-              <div className="bg-tyro-bg rounded-lg p-3 text-center">
-                <Briefcase size={14} className="mx-auto mb-1" style={{ color: sidebarTheme.accentColor }} />
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => { setSelectedUser(null); navigate(`/stratejik-kokpit?member=${encodeURIComponent(selectedUser.name)}`); }}
+                className="bg-tyro-bg rounded-lg p-3 text-center cursor-pointer hover:bg-tyro-border/30 transition-colors group"
+              >
+                <Briefcase size={14} className="mx-auto mb-1 transition-transform group-hover:scale-110" style={{ color: sidebarTheme.accentColor }} />
                 <div className="text-lg font-bold" style={{ color: sidebarTheme.accentColor }}>{selectedUser.projeCount}</div>
                 <div className="text-[11px] text-tyro-text-muted">{t("users.project")}</div>
-              </div>
-              <div className="bg-tyro-bg rounded-lg p-3 text-center">
-                <ListChecks size={14} className="mx-auto mb-1 text-tyro-text-secondary" />
-                <div className="text-lg font-bold text-tyro-text-primary">{selectedUser.aksiyonCount}</div>
-                <div className="text-[11px] text-tyro-text-muted">{t("users.action")}</div>
-              </div>
-              <div className="bg-tyro-bg rounded-lg p-3 text-center">
-                <Shield size={14} className="mx-auto mb-1 text-emerald-500" />
+              </button>
+              <button
+                type="button"
+                onClick={() => { setSelectedUser(null); navigate(`/stratejik-kokpit?member=${encodeURIComponent(selectedUser.name)}&status=Achieved`); }}
+                className="bg-tyro-bg rounded-lg p-3 text-center cursor-pointer hover:bg-tyro-border/30 transition-colors group"
+              >
+                <Shield size={14} className="mx-auto mb-1 text-emerald-500 transition-transform group-hover:scale-110" />
                 <div className="text-lg font-bold text-emerald-500">{selectedUser.achievedCount}</div>
                 <div className="text-[11px] text-tyro-text-muted">{t("users.completed")}</div>
-              </div>
+              </button>
             </div>
 
             <div className="h-px bg-gradient-to-r from-transparent via-tyro-border to-transparent" />
@@ -689,7 +701,7 @@ export default function KullanicilarPage() {
               </div>
             ) : (
               <div className="space-y-3">
-                <DetailRow icon={<Mail size={14} />} label={t("users.email")} value={selectedUser.email} />
+                <DetailRow icon={<Mail size={14} />} label={t("users.email")} value={selectedUser.email} href={`mailto:${selectedUser.email}`} />
                 {selectedUser.title && <DetailRow icon={<Briefcase size={14} />} label={t("users.jobTitle")} value={selectedUser.title} />}
                 <DetailRow icon={<Building2 size={14} />} label={t("users.department")} value={selectedUser.department} />
                 <DetailRow
@@ -713,7 +725,7 @@ export default function KullanicilarPage() {
   );
 }
 
-function DetailRow({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
+function DetailRow({ icon, label, value, href }: { icon: React.ReactNode; label: string; value: string; href?: string }) {
   return (
     <div className="flex items-center gap-3 py-2">
       <div className="w-8 h-8 rounded-lg bg-tyro-bg flex items-center justify-center text-tyro-text-muted shrink-0">
@@ -721,7 +733,11 @@ function DetailRow({ icon, label, value }: { icon: React.ReactNode; label: strin
       </div>
       <div className="flex-1 min-w-0">
         <p className="text-[11px] text-tyro-text-muted">{label}</p>
-        <p className="text-[13px] font-medium text-tyro-text-primary">{value}</p>
+        {href ? (
+          <a href={href} className="text-[13px] font-medium text-tyro-text-primary hover:underline hover:text-tyro-navy transition-colors">{value}</a>
+        ) : (
+          <p className="text-[13px] font-medium text-tyro-text-primary">{value}</p>
+        )}
       </div>
     </div>
   );

@@ -17,8 +17,8 @@ export function getRoleLabel(role: UserRole, t: TFunction): string {
 export const STATUS_LABEL: Record<EntityStatus, string> = {
   "On Track": "Yolunda",
   "Achieved": "Tamamlandı",
-  "Behind": "Gecikmeli",
-  "At Risk": "Risk Altında",
+  "Behind": "Geride",
+  "At Risk": "Riskte",
   "Not Started": "Başlanmadı",
   "Cancelled": "İptal",
   "On Hold": "Askıda",
@@ -76,8 +76,8 @@ export const STATUS_DOT_COLOR: Record<EntityStatus, string> = {
 /** Form select'leri için status seçenekleri (static fallback) */
 export const STATUS_OPTIONS: { key: EntityStatus; label: string }[] = [
   { key: "On Track", label: "Yolunda" },
-  { key: "At Risk", label: "Risk Altında" },
-  { key: "Behind", label: "Gecikmeli" },
+  { key: "At Risk", label: "Riskte" },
+  { key: "Behind", label: "Geride" },
   { key: "Achieved", label: "Tamamlandı" },
   { key: "Not Started", label: "Başlanmadı" },
   { key: "On Hold", label: "Askıda" },

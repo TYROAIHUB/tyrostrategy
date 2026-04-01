@@ -72,7 +72,7 @@ export const kanbanColumns: KanbanColumn[] = [
   },
   {
     id: "risk-altinda",
-    title: "Risk Altında",
+    title: "Riskte",
     color: "var(--tyro-warning)",
     cards: [
       {

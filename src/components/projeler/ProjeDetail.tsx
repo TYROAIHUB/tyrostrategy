@@ -117,7 +117,9 @@ export default function ProjeDetail({
   const stColor = statusColor(currentHedef.status);
 
   return (
-    <div className="flex flex-col gap-3 overflow-hidden">
+    <div className="flex flex-col h-full overflow-hidden">
+      {/* ===== Static (non-scrolling) section ===== */}
+      <div className="shrink-0 flex flex-col gap-3">
       {/* ===== Themed Header Banner ===== */}
       <div
         className="relative rounded-xl overflow-hidden px-4 py-3"
@@ -298,7 +300,6 @@ export default function ProjeDetail({
       {/* Proje İlişkileri — Collapsible */}
       {(parentHedef || relatedHedefler.length > 0) && (
         <>
-          <div className="h-px bg-gradient-to-r from-transparent via-tyro-border to-transparent my-3" />
           <div className="rounded-xl bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-tyro-border/30 dark:border-white/10 shadow-[0_4px_20px_rgba(0,0,0,0.08)] overflow-hidden">
             <button
               type="button"
@@ -383,24 +384,27 @@ export default function ProjeDetail({
       )}
 
       {/* Gradient Divider */}
-      <div className="h-px bg-gradient-to-r from-transparent via-tyro-border to-transparent my-3" />
+      <div className="h-px bg-gradient-to-r from-transparent via-tyro-border to-transparent my-1.5" />
 
-      {/* Aksiyonlar Section */}
-      <div>
-        <div className="mb-3 flex items-center justify-between gap-2 min-w-0">
-          <h4 className="text-[13px] font-bold text-tyro-text-primary truncate min-w-0">
-            {t("nav.actions")} ({aksiyonlar.length})
-          </h4>
-          <Button
-            size="sm"
-            startContent={<Plus size={14} />}
-            onPress={() => setMode("addAksiyon")}
-            className="rounded-button font-semibold text-[12px] h-7 min-w-0 px-3 border-0"
-            style={btnStyle}
-          >
-            {t("detail.addAction")}
-          </Button>
-        </div>
+      {/* Aksiyonlar header — stays fixed */}
+      <div className="mb-2 flex items-center justify-between gap-2 min-w-0">
+        <h4 className="text-[13px] font-bold text-tyro-text-primary truncate min-w-0">
+          {t("nav.actions")} ({aksiyonlar.length})
+        </h4>
+        <Button
+          size="sm"
+          startContent={<Plus size={14} />}
+          onPress={() => setMode("addAksiyon")}
+          className="rounded-button font-semibold text-[12px] h-7 min-w-0 px-3 border-0"
+          style={btnStyle}
+        >
+          {t("detail.addAction")}
+        </Button>
+      </div>
+      </div>{/* end static section */}
+
+      {/* Aksiyonlar list — scrollable */}
+      <div className="flex-1 min-h-0 overflow-y-auto pb-4">
 
         {aksiyonlar.length === 0 ? (
           <p className="text-[13px] text-tyro-text-muted">

@@ -32,8 +32,8 @@ describe("i18n setup", () => {
     it("status keys exist in Turkish", () => {
       expect(i18n.t("status.onTrack", { lng: "tr" })).toBe("Yolunda");
       expect(i18n.t("status.achieved", { lng: "tr" })).toBe("Tamamlandı");
-      expect(i18n.t("status.behind", { lng: "tr" })).toBe("Gecikmeli");
-      expect(i18n.t("status.atRisk", { lng: "tr" })).toBe("Risk Altında");
+      expect(i18n.t("status.behind", { lng: "tr" })).toBe("Geride");
+      expect(i18n.t("status.atRisk", { lng: "tr" })).toBe("Riskte");
       expect(i18n.t("status.notStarted", { lng: "tr" })).toBe("Başlanmadı");
     });
 
@@ -78,12 +78,12 @@ describe("i18n setup", () => {
     });
 
     it("'Behind' status translates correctly in both languages", () => {
-      expect(i18n.t("status.behind", { lng: "tr" })).toBe("Gecikmeli");
+      expect(i18n.t("status.behind", { lng: "tr" })).toBe("Geride");
       expect(i18n.t("status.behind", { lng: "en" })).toBe("Behind");
     });
 
     it("'At Risk' status translates correctly in both languages", () => {
-      expect(i18n.t("status.atRisk", { lng: "tr" })).toBe("Risk Altında");
+      expect(i18n.t("status.atRisk", { lng: "tr" })).toBe("Riskte");
       expect(i18n.t("status.atRisk", { lng: "en" })).toBe("At Risk");
     });
 

@@ -86,7 +86,7 @@ export const projectStatusData = [
     ],
   },
   {
-    status: "Risk Altında",
+    status: "Riskte",
     count: 9,
     color: "var(--tyro-warning)",
     projects: [

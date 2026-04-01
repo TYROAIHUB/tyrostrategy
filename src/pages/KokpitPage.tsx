@@ -101,17 +101,25 @@ export default function KokpitPage() {
   const brandColor = sidebarTheme.brandStrategy ?? accentColor;
   const [searchParams] = useSearchParams();
   const reviewOverdue = searchParams.get("reviewOverdue") === "true";
-  const allProjeler = useDataStore((s) => s.projeler);
-  const aksiyonlar = useDataStore((s) => s.aksiyonlar);
+  const rawProjeler = useDataStore((s) => s.projeler);
+  const rawAksiyonlar = useDataStore((s) => s.aksiyonlar);
+  const { filterProjeler, filterAksiyonlar, canDeleteProje, getProjeDeleteReason } = usePermissions();
+  const allProjeler = useMemo(() => filterProjeler(rawProjeler), [rawProjeler, filterProjeler]);
+  const aksiyonlar = useMemo(() => filterAksiyonlar(rawAksiyonlar), [rawAksiyonlar, filterAksiyonlar]);
   const [advFilterOpen, setAdvFilterOpen] = useState(false);
   const urlStatus = searchParams.get("status");
+  const urlMember = searchParams.get("member");
   const [advFilters, setAdvFilters] = useState<AdvancedFilters | null>(
     urlStatus ? { statuses: urlStatus.includes(",") ? urlStatus.split(",").map((s) => s.trim()) : [urlStatus] } : null
   );
 
-  // Apply reviewOverdue + advanced filters
+  // Apply reviewOverdue + member + advanced filters
   const projeler = useMemo(() => {
     let list = allProjeler;
+    // Filter by member (owner OR participant)
+    if (urlMember) {
+      list = list.filter((h) => h.owner === urlMember || h.participants.includes(urlMember));
+    }
     if (reviewOverdue) {
       const now = new Date();
       const oneMonthAgo = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
@@ -135,11 +143,10 @@ export default function KokpitPage() {
       if (advFilters.progressMax !== undefined && advFilters.progressMax < 100) list = list.filter((h) => h.progress <= advFilters.progressMax!);
     }
     return list;
-  }, [allProjeler, reviewOverdue, advFilters]);
+  }, [allProjeler, reviewOverdue, advFilters, urlMember]);
   const updateAksiyon = useDataStore((s) => s.updateAksiyon);
 
   const deleteProje = useDataStore((s) => s.deleteProje);
-  const { canDeleteProje, getProjeDeleteReason } = usePermissions();
   const [activeTab, setActiveTab] = useState<TabId>("master");
   const [wizardOpen, setWizardOpen] = useState(false);
   const [toolbarSearch, setToolbarSearch] = useState(searchParams.get("search") ?? "");

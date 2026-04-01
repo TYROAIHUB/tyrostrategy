@@ -17,7 +17,7 @@ const STATUS_COLORS: Record<string, string> = {
   "On Hold": "#8b5cf6",
 };
 
-const STATUS_ORDER: EntityStatus[] = ["On Track", "At Risk", "Behind", "Achieved", "Not Started", "On Hold", "Cancelled"];
+const STATUS_ORDER: EntityStatus[] = ["On Track", "Behind", "At Risk", "Not Started", "On Hold", "Cancelled", "Achieved"];
 
 export default function BentoKPI() {
   const { t } = useTranslation();

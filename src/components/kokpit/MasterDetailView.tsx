@@ -120,7 +120,19 @@ const MasterListCard = memo(function MasterListCard({
                 style={{ transition: "stroke-dashoffset 0.6s cubic-bezier(0.4,0,0.2,1)" }}
               />
             </svg>
-            {proje.progress >= 100 ? (
+            {proje.status === "On Hold" ? (
+              <span className="absolute inset-0 flex items-center justify-center">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={statusColor} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="8" y1="6" x2="8" y2="18" /><line x1="16" y1="6" x2="16" y2="18" />
+                </svg>
+              </span>
+            ) : proje.status === "Cancelled" ? (
+              <span className="absolute inset-0 flex items-center justify-center">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={statusColor} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </span>
+            ) : proje.status === "Achieved" || proje.progress >= 100 ? (
               <span className="absolute inset-0 flex items-center justify-center">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={statusColor} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
                   <polyline points="20 6 9 17 4 12" />
@@ -331,13 +343,15 @@ function DetailPanel({
                 <h2 className="text-[20px] font-bold text-tyro-text-primary leading-snug">
                   {proje.name}
                 </h2>
-                <div className="flex items-center gap-1.5 mt-1">
-                  <span className="text-[12px] text-tyro-text-muted tabular-nums">{proje.id}</span>
-                  {proje.description && (
-                    <>
-                      <span className="text-tyro-text-muted">·</span>
-                      <p className="text-[12px] text-tyro-text-muted leading-relaxed truncate">{proje.description}</p>
-                    </>
+                <div className="flex items-center gap-3 mt-1 ml-1">
+                  {proje.owner && (
+                    <span className="text-[12px] text-tyro-text-muted">
+                      <span className="font-medium text-tyro-text-secondary">{proje.owner}</span>
+                    </span>
+                  )}
+                  {proje.owner && proje.source && <span className="w-px h-3.5 bg-tyro-border/60 rounded-full" />}
+                  {proje.source && (
+                    <span className="text-[12px] text-tyro-text-muted">{proje.source}</span>
                   )}
                 </div>
                 <div className="flex items-center flex-wrap gap-2 mt-1.5">
@@ -376,7 +390,7 @@ function DetailPanel({
           <InfoCell icon={<Calendar size={12} />} label={t("common.startDate")} value={formatDate(proje.startDate)} />
           <InfoCell icon={<Calendar size={12} />} label={t("common.endDate")} value={formatDate(proje.endDate)} />
           <InfoCell icon={<Clock size={12} />} label={t("kokpit.control")} value={proje.reviewDate ? formatDate(proje.reviewDate) : "—"} className="border-t sm:border-t-0 border-tyro-border/40" />
-          <InfoCell icon={<Calendar size={12} />} label={t("common.createdAt")} value={proje.createdAt ? formatDate(proje.createdAt) : "—"} className="border-t sm:border-t-0 border-tyro-border/40" />
+          <InfoCell icon={<Users size={12} />} label={t("common.owner")} value={proje.owner} className="border-t sm:border-t-0 border-tyro-border/40" />
         </div>
         {/* Expandable rows */}
         <AnimatePresence>
@@ -388,14 +402,26 @@ function DetailPanel({
               transition={{ duration: 0.2, ease: "easeInOut" }}
               className="overflow-hidden"
             >
-              {/* Row 2: kaynak, departman, sahip, katılımcılar */}
+              {/* Row 2: kaynak, departman, oluşturulma, katılımcılar */}
               <div className="border-t border-tyro-border/15 grid grid-cols-2 sm:grid-cols-4 divide-x divide-tyro-border/40">
                 <InfoCell icon={<Globe size={12} />} label={t("common.source")} value={proje.source} />
                 <InfoCell icon={<Building2 size={12} />} label={t("common.department")} value={deptLabel(proje.department, t)} />
-                <InfoCell icon={<Users size={12} />} label={t("common.owner")} value={proje.owner} className="border-t sm:border-t-0 border-tyro-border/40" />
+                <InfoCell icon={<Calendar size={12} />} label={t("common.createdAt")} value={proje.createdAt ? formatDate(proje.createdAt) : "—"} className="border-t sm:border-t-0 border-tyro-border/40" />
                 <InfoCell label={t("common.participants")} value={proje.participants?.join(", ") || "—"} className="border-t sm:border-t-0 border-tyro-border/40" />
               </div>
-              {/* Row 3: Ana proje (sadece varsa) — tek satır birleşik */}
+              {/* Row 3: Proje ID + Açıklama */}
+              {(proje.id || proje.description) && (
+                <div className="border-t border-tyro-border/15 px-3 py-2.5 flex items-center gap-1.5">
+                  <span className="text-[11px] text-tyro-text-muted tabular-nums shrink-0">{proje.id}</span>
+                  {proje.description && (
+                    <>
+                      <span className="text-tyro-text-muted">·</span>
+                      <p className="text-[11px] text-tyro-text-muted truncate">{proje.description}</p>
+                    </>
+                  )}
+                </div>
+              )}
+              {/* Row 4: Ana Proje (sadece varsa) */}
               {parentHedef && (
                 <div className="border-t border-tyro-border/15 px-3 py-2.5">
                   <span className="text-[10px] font-medium uppercase tracking-wider text-tyro-text-muted block mb-1">{t("kokpit.parentProject")}</span>

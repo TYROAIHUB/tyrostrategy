@@ -101,7 +101,7 @@ export default function SlidingPanel({
             )}
 
             {/* Content */}
-            <div className={`flex-1 ${hideHeader ? "overflow-hidden px-5 pt-3 pb-0" : "overflow-y-auto px-5 py-3"}`}>{children}</div>
+            <div className={`flex-1 min-h-0 ${hideHeader ? "overflow-hidden px-5 pt-3 pb-0" : "overflow-y-auto px-5 py-3"}`}>{children}</div>
 
             {/* Optional sticky footer */}
             {footer && (

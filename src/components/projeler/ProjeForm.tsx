@@ -181,7 +181,7 @@ export default function ProjeForm({ proje, onSuccess, onClose }: ProjeFormProps)
               {watch("name") || proje.name}
             </h3>
             <div className="flex items-center flex-wrap gap-2 mt-2">
-              <StatusBadge status={watch("status") ?? proje.status} />
+              <StatusBadge status={watch("status") || proje?.status || "On Track"} />
               <span className="ml-auto text-[13px] font-extrabold tabular-nums" style={{ color: txtColor }}>
                 %{proje.progress}
               </span>

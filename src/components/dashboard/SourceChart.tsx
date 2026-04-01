@@ -14,8 +14,8 @@ import GlassCard from "@/components/ui/GlassCard";
 
 const STATUS_COLORS: Record<string, string> = {
   "Yolunda": "#10b981",
-  "Risk Altında": "#f59e0b",
-  "Gecikmeli": "#ef4444",
+  "Riskte": "#f59e0b",
+  "Geride": "#ef4444",
   "Tamamlandı": "#06b6d4",
   "Başlanmadı": "#94a3b8",
   "Askıda": "#8b5cf6",
@@ -71,7 +71,7 @@ export default function SourceChart() {
     }
     const sources = ["Türkiye", "Kurumsal", "Intl"];
     const statusMap: [string, string][] = [
-      ["On Track", "Yolunda"], ["At Risk", "Risk Altında"], ["Behind", "Gecikmeli"],
+      ["On Track", "Yolunda"], ["At Risk", "Riskte"], ["Behind", "Geride"],
       ["Achieved", "Tamamlandı"], ["Not Started", "Başlanmadı"], ["On Hold", "Askıda"], ["Cancelled", "İptal"],
     ];
     return sources.map((source) => {
@@ -84,7 +84,7 @@ export default function SourceChart() {
   return (
     <GlassCard className="p-5 flex-1 flex flex-col">
       <h3 className="text-[13px] font-bold text-tyro-text-primary mb-1">
-        İş Grubu Bazlı Proje Dağılımı
+        İş Grubu Dağılımı
       </h3>
       <p className="text-[11px] text-tyro-text-secondary mb-3">
         Türkiye, Kurumsal ve International iş grupları
@@ -112,8 +112,8 @@ export default function SourceChart() {
               iconSize={7}
             />
             <Bar dataKey="Yolunda" fill="#10b981" radius={[4, 4, 0, 0]} animationDuration={1200} />
-            <Bar dataKey="Risk Altında" fill="#f59e0b" radius={[4, 4, 0, 0]} animationDuration={1200} animationBegin={100} />
-            <Bar dataKey="Gecikmeli" fill="#ef4444" radius={[4, 4, 0, 0]} animationDuration={1200} animationBegin={200} />
+            <Bar dataKey="Riskte" fill="#f59e0b" radius={[4, 4, 0, 0]} animationDuration={1200} animationBegin={100} />
+            <Bar dataKey="Geride" fill="#ef4444" radius={[4, 4, 0, 0]} animationDuration={1200} animationBegin={200} />
             <Bar dataKey="Tamamlandı" fill="#06b6d4" radius={[4, 4, 0, 0]} animationDuration={1200} animationBegin={300} />
             <Bar dataKey="Başlanmadı" fill="#94a3b8" radius={[4, 4, 0, 0]} animationDuration={1200} animationBegin={400} />
             <Bar dataKey="Askıda" fill="#8b5cf6" radius={[4, 4, 0, 0]} animationDuration={1200} animationBegin={500} />

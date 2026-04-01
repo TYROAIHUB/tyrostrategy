@@ -1,10 +1,12 @@
 import { useState, useMemo, lazy, Suspense } from "react";
+import { Tooltip } from "@heroui/react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useSidebarTheme } from "@/hooks/useSidebarTheme";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, SlidersHorizontal, ArrowRight, BarChart3, FileText } from "lucide-react";
 import { useDataStore } from "@/stores/dataStore";
+import { usePermissions } from "@/hooks/usePermissions";
 import { useUIStore } from "@/stores/uiStore";
 import KPICard from "@/components/dashboard/KPICard";
 import GlassCard from "@/components/ui/GlassCard";
@@ -66,8 +68,11 @@ export default function DashboardPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [filterOpen, setFilterOpen] = useState(false);
   const activeTab = searchParams.get("tab") || "dashboard";
-  const projeler = useDataStore((s) => s.projeler);
-  const aksiyonlar = useDataStore((s) => s.aksiyonlar);
+  const allProjeler = useDataStore((s) => s.projeler);
+  const allAksiyonlar = useDataStore((s) => s.aksiyonlar);
+  const { filterProjeler, filterAksiyonlar } = usePermissions();
+  const projeler = useMemo(() => filterProjeler(allProjeler), [allProjeler, filterProjeler]);
+  const aksiyonlar = useMemo(() => filterAksiyonlar(allAksiyonlar), [allAksiyonlar, filterAksiyonlar]);
   const openCommandPalette = useUIStore((s) => s.openCommandPalette);
 
   // ===== KPI Hesaplamaları (tamamen veriye dayalı) =====
@@ -139,6 +144,7 @@ export default function DashboardPage() {
     {
       label: t("dashboard.avgProgress"),
       value: avgProgress,
+      suffix: "%",
       icon: "BarChart3",
       color: "var(--tyro-info)",
       progress: avgProgress,
@@ -491,18 +497,35 @@ function DepartmentDistribution({ projeler }: { projeler: { department: string; 
               <span className="text-[12px] font-semibold text-tyro-text-primary">{dept}</span>
               <span className="text-[11px] text-tyro-text-muted">{t("dashboard.projectCountLabel", { count: total })}</span>
             </div>
-            <div className="flex h-2.5 rounded-full overflow-hidden bg-tyro-bg">
-              {Object.entries(statuses).map(([status, count]) => (
-                <div
-                  key={status}
-                  className="h-full transition-all"
-                  style={{
-                    width: `${(count / total) * 100}%`,
-                    backgroundColor: STATUS_COLORS[status] || "#94a3b8",
-                  }}
-                  title={`${STATUS_LABELS[status] || status}: ${count}`}
-                />
-              ))}
+            <div className="flex h-5 rounded-lg overflow-hidden bg-tyro-bg gap-0.5">
+              {Object.entries(statuses).map(([status, count]) => {
+                const pct = (count / total) * 100;
+                return (
+                  <Tooltip
+                    key={status}
+                    content={
+                      <div className="flex items-center gap-1.5 px-1 py-0.5">
+                        <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: STATUS_COLORS[status] || "#94a3b8" }} />
+                        <span className="font-semibold">{STATUS_LABELS[status] || status}</span>
+                        <span className="text-white/70">· {count} proje</span>
+                      </div>
+                    }
+                    placement="top"
+                    size="sm"
+                  >
+                    <div
+                      className="h-full flex items-center justify-center transition-all cursor-default hover:brightness-110"
+                      style={{
+                        width: `${pct}%`,
+                        backgroundColor: STATUS_COLORS[status] || "#94a3b8",
+                        minWidth: pct > 0 ? 20 : 0,
+                      }}
+                    >
+                      <span className="text-[10px] font-bold text-white/90 drop-shadow-sm px-0.5">{count}</span>
+                    </div>
+                  </Tooltip>
+                );
+              })}
             </div>
           </div>
         ))}
@@ -549,18 +572,35 @@ function LeaderDistribution({ projeler }: { projeler: { owner: string; status: s
               <span className="text-[12px] font-semibold text-tyro-text-primary truncate max-w-[200px]">{owner}</span>
               <span className="text-[11px] text-tyro-text-muted shrink-0">{t("dashboard.projectCountLabel", { count: total })}</span>
             </div>
-            <div className="flex h-2.5 rounded-full overflow-hidden bg-tyro-bg">
-              {Object.entries(statuses).map(([status, count]) => (
-                <div
-                  key={status}
-                  className="h-full transition-all"
-                  style={{
-                    width: `${(count / total) * 100}%`,
-                    backgroundColor: STATUS_COLORS[status] || "#94a3b8",
-                  }}
-                  title={`${STATUS_LABELS[status] || status}: ${count}`}
-                />
-              ))}
+            <div className="flex h-5 rounded-lg overflow-hidden bg-tyro-bg gap-0.5">
+              {Object.entries(statuses).map(([status, count]) => {
+                const pct = (count / total) * 100;
+                return (
+                  <Tooltip
+                    key={status}
+                    content={
+                      <div className="flex items-center gap-1.5 px-1 py-0.5">
+                        <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: STATUS_COLORS[status] || "#94a3b8" }} />
+                        <span className="font-semibold">{STATUS_LABELS[status] || status}</span>
+                        <span className="text-white/70">· {count} proje</span>
+                      </div>
+                    }
+                    placement="top"
+                    size="sm"
+                  >
+                    <div
+                      className="h-full flex items-center justify-center transition-all cursor-default hover:brightness-110"
+                      style={{
+                        width: `${pct}%`,
+                        backgroundColor: STATUS_COLORS[status] || "#94a3b8",
+                        minWidth: pct > 0 ? 20 : 0,
+                      }}
+                    >
+                      <span className="text-[10px] font-bold text-white/90 drop-shadow-sm px-0.5">{count}</span>
+                    </div>
+                  </Tooltip>
+                );
+              })}
             </div>
           </div>
         ))}

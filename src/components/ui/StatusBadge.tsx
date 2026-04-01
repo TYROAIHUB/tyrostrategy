@@ -79,7 +79,7 @@ interface StatusBadgeProps {
 
 export default function StatusBadge({ status, showTooltip = true }: StatusBadgeProps) {
   const { t, i18n } = useTranslation();
-  const cfg = statusConfig[status];
+  const cfg = statusConfig[status] ?? statusConfig["On Track"];
   const lang = i18n.language === "en" ? "en" : "tr";
   const tooltip = statusTooltips[status]?.[lang] ?? "";
 

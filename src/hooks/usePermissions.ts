@@ -21,21 +21,14 @@ export function usePermissions() {
     if (!perms.viewOnlyOwn) {
       // Admin — hepsini gorebilir
       for (const h of projeler) ids.add(h.id);
-    } else if (user.role === "Proje Lideri") {
-      // Proje lideri → owner veya participant oldugu projeler
+    } else {
+      // viewOnlyOwn aktif → owner veya participant oldugu projeler
       for (const h of projeler) {
         if (
           h.owner?.toLowerCase().trim() === normalizedName ||
           h.participants?.some((p) => p.toLowerCase().trim() === normalizedName)
         ) {
           ids.add(h.id);
-        }
-      }
-    } else {
-      // Kullanici → aksiyonlarinin hedefleri
-      for (const a of aksiyonlar) {
-        if (a.owner?.toLowerCase().trim() === normalizedName) {
-          ids.add(a.projeId);
         }
       }
     }
@@ -79,7 +72,11 @@ export function usePermissions() {
 
   // Proje
   const canCreateProje = perms.proje.create;
-  const canEditProje = (_hedefId: string) => perms.proje.edit;
+  const canEditProje = (hedefId: string) => {
+    if (!perms.proje.edit) return false;
+    if (!perms.editOnlyOwn) return true;
+    return myHedefIds.has(hedefId);
+  };
   const canDeleteProje = (projeId: string) => {
     if (!perms.proje.delete) return false;
     // Cascade: alt aksiyon varsa silinemez

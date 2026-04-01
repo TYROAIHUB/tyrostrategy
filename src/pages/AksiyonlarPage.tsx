@@ -98,8 +98,17 @@ export default function AksiyonlarPage() {
     return map;
   }, [projeler]);
 
+  const urlMember = searchParams.get("member");
+
   const filtered = useMemo(() => {
     let result = filterAksiyonlar(aksiyonlar ?? []);
+    // Filter by member: only aksiyonlar of projeler where user is owner or participant
+    if (urlMember) {
+      const memberProjeIds = new Set(
+        projeler.filter((p) => p.owner === urlMember || p.participants.includes(urlMember)).map((p) => p.id)
+      );
+      result = result.filter((a) => memberProjeIds.has(a.projeId));
+    }
     if (statusFilter !== "all") {
       result = result.filter((a) => a.status === statusFilter);
     }
@@ -111,7 +120,7 @@ export default function AksiyonlarPage() {
       });
     }
     return result;
-  }, [aksiyonlar, search, statusFilter, hedefNameMap, filterAksiyonlar]);
+  }, [aksiyonlar, search, statusFilter, hedefNameMap, filterAksiyonlar, urlMember, projeler]);
 
   // Sort
   const sorted = useMemo(() => {
