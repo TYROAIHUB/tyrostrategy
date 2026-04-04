@@ -39,6 +39,8 @@ const LIGHT = {
   auroraOpacity: "opacity-100",
   blur: "24px",
   bgSize: "300%, 200%",
+  /* Mask: aurora only visible bottom-right, fades to transparent top-left */
+  mask: "radial-gradient(ellipse 90% 90% at 80% 80%, black 0%, transparent 65%)",
 };
 
 export function AuroraBackground({
@@ -71,6 +73,10 @@ export function AuroraBackground({
           backgroundImage: p.aurora,
           backgroundSize: p.bgSize,
           filter: `blur(${p.blur})`,
+          ...("mask" in p && {
+            maskImage: p.mask,
+            WebkitMaskImage: p.mask,
+          }),
         }}
       />
 
