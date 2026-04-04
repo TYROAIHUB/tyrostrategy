@@ -292,21 +292,35 @@ export const supabaseAdapter: DataService = {
     const { data: updated, error } = await supabase.from("projeler").update(dbData).eq("id", id).select().single();
     if (error) throw error;
 
-    // Update tags if provided
+    // Update tags if provided — delete then re-insert with rollback on failure
     if (data.tags) {
+      const { data: oldTags } = await supabase.from("proje_tags").select("*").eq("proje_id", id);
       await supabase.from("proje_tags").delete().eq("proje_id", id);
-      const { data: tagDefs } = await supabase.from("tag_definitions").select("id, name");
-      const tagIdMap = new Map((tagDefs ?? []).map((t: DbTag) => [t.name, t.id]));
-      const tagInserts = data.tags.filter((t) => tagIdMap.has(t)).map((t) => ({ proje_id: id, tag_id: tagIdMap.get(t)! }));
-      if (tagInserts.length) await supabase.from("proje_tags").insert(tagInserts);
+      try {
+        const { data: tagDefs } = await supabase.from("tag_definitions").select("id, name");
+        const tagIdMap = new Map((tagDefs ?? []).map((t: DbTag) => [t.name, t.id]));
+        const tagInserts = data.tags.filter((t) => tagIdMap.has(t)).map((t) => ({ proje_id: id, tag_id: tagIdMap.get(t)! }));
+        if (tagInserts.length) await supabase.from("proje_tags").insert(tagInserts);
+      } catch (tagErr) {
+        // Rollback: restore old tags if insert failed
+        if (oldTags?.length) await supabase.from("proje_tags").insert(oldTags).catch(() => {});
+        console.error("[Supabase] Tag update failed, rolled back:", tagErr);
+      }
     }
 
-    // Update participants if provided
+    // Update participants if provided — delete then re-insert with rollback on failure
     if (data.participants !== undefined) {
+      const { data: oldParts } = await supabase.from("proje_participants").select("*").eq("proje_id", id);
       await supabase.from("proje_participants").delete().eq("proje_id", id);
-      if (data.participants.length) {
-        const partInserts = data.participants.map((name) => ({ proje_id: id, user_email: name }));
-        await supabase.from("proje_participants").insert(partInserts);
+      try {
+        if (data.participants.length) {
+          const partInserts = data.participants.map((name) => ({ proje_id: id, user_email: name }));
+          await supabase.from("proje_participants").insert(partInserts);
+        }
+      } catch (partErr) {
+        // Rollback: restore old participants if insert failed
+        if (oldParts?.length) await supabase.from("proje_participants").insert(oldParts).catch(() => {});
+        console.error("[Supabase] Participant update failed, rolled back:", partErr);
       }
     }
 

@@ -33,7 +33,7 @@ export function usePermissions() {
       }
     }
     return ids;
-  }, [perms.viewOnlyOwn, user.role, normalizedName, projeler, aksiyonlar]);
+  }, [perms.viewOnlyOwn, user.role, normalizedName, projeler]);
 
   // Kullanicinin aksiyonlari (owner veya kendi hedeflerindeki)
   const myAksiyonIds = useMemo(() => {

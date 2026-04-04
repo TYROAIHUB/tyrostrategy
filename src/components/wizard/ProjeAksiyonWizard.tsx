@@ -18,8 +18,6 @@ import StepOwnershipDates from "./steps/StepOwnershipDates";
 import StepAksiyonlar from "./steps/StepAksiyonlar";
 import StepReview from "./steps/StepReview";
 
-const CURRENT_USER = "Cenk Şayli";
-
 const createWizardSchema = (t: TFunction) =>
   z.object({
     name: z.string().min(3, t("validation.minChars")),

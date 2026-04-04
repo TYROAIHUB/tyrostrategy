@@ -8,7 +8,6 @@ import {
   Target,
   ListChecks,
   GanttChart,
-  Network,
   Users,
   Settings,
 } from "lucide-react";
@@ -32,7 +31,6 @@ function getPages(t: (key: string) => string): { name: string; path: string; ico
     { name: t("nav.objectives"), path: "/projeler", icon: Target },
     { name: t("nav.actions"), path: "/aksiyonlar", icon: ListChecks },
     { name: t("nav.gantt"), path: "/gantt", icon: GanttChart },
-    { name: t("nav.wbs"), path: "/tree", icon: Network },
     { name: t("nav.users"), path: "/kullanicilar", icon: Users },
     { name: t("nav.settings"), path: "/ayarlar", icon: Settings },
   ];

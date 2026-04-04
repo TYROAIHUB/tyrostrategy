@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 
 export interface KanbanColumn {
   key: string;
@@ -6,7 +7,7 @@ export interface KanbanColumn {
   color: string;
 }
 
-interface KanbanViewProps<T> {
+interface KanbanViewProps<T extends { id: string }> {
   columns: KanbanColumn[];
   items: T[];
   getStatus: (item: T) => string;
@@ -23,12 +24,13 @@ export const statusColumns: KanbanColumn[] = [
   { key: "Cancelled", label: "İptal", color: "bg-gray-400" },
 ];
 
-export default function KanbanView<T>({
+export default function KanbanView<T extends { id: string }>({
   columns,
   items,
   getStatus,
   renderCard,
 }: KanbanViewProps<T>) {
+  const { t } = useTranslation();
   const grouped = new Map<string, T[]>();
   for (const col of columns) {
     grouped.set(col.key, []);
@@ -59,11 +61,11 @@ export default function KanbanView<T>({
             <div className="flex flex-col gap-2">
               {colItems.length === 0 && (
                 <div className="rounded-card border border-dashed border-tyro-border p-4 text-center text-xs text-tyro-text-muted">
-                  Kayıt yok
+                  {t("common.noRecords")}
                 </div>
               )}
-              {colItems.map((item, idx) => (
-                <div key={idx}>{renderCard(item)}</div>
+              {colItems.map((item) => (
+                <div key={item.id}>{renderCard(item)}</div>
               ))}
             </div>
           </div>

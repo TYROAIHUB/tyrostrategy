@@ -14,12 +14,17 @@ import i18n from "@/lib/i18n";
 import { departments } from "@/config/departments";
 import { isSupabaseMode } from "@/lib/supabaseMode";
 
-/** Fire-and-forget Supabase sync — doesn't block UI, shows toast on failure */
+/** Fire-and-forget Supabase sync — doesn't block UI, retries once on failure */
 function syncToSupabase(fn: () => Promise<unknown>) {
   if (!isSupabaseMode) return;
-  fn().catch((err) => {
-    console.error("[Supabase Sync]", err);
-    toast.error(i18n.t("toast.syncFailed"));
+  fn().catch(() => {
+    // Retry once after 2s
+    setTimeout(() => {
+      fn().catch((err) => {
+        console.error("[Supabase Sync]", err);
+        toast.error(i18n.t("toast.syncFailed"));
+      });
+    }, 2000);
   });
 }
 
@@ -285,7 +290,8 @@ export const useDataStore = create<DataState>()(
         }));
         syncToSupabase(() => supabaseAdapter.deleteTagDefinition(id));
       },
-      renameTag: (oldName, newName) =>
+      renameTag: (oldName, newName) => {
+        const tagDef = get().tagDefinitions.find((t) => t.name === oldName);
         set((s) => ({
           // Update tag definition name
           tagDefinitions: s.tagDefinitions.map((t) =>
@@ -297,7 +303,11 @@ export const useDataStore = create<DataState>()(
               ? { ...h, tags: h.tags.map((t) => (t === oldName ? newName : t)) }
               : h
           ),
-        })),
+        }));
+        if (tagDef) {
+          syncToSupabase(() => supabaseAdapter.updateTagDefinition(tagDef.id, { name: newName }));
+        }
+      },
 
       // Selectors
       getProjeById: (id) => get().projeler.find((h) => h.id === id),
