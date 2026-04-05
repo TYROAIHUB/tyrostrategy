@@ -71,6 +71,13 @@ function LocaleAwareHeroUI({ children }: { children: ReactNode }) {
   return <HeroUIProvider locale={locale === "tr" ? "tr-TR" : "en-US"}>{children}</HeroUIProvider>;
 }
 
+// Register service worker for PWA
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("/sw.js").catch(() => {});
+  });
+}
+
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <MsalProvider instance={msalInstance}>
