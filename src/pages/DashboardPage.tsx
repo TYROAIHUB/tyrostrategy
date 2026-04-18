@@ -432,9 +432,9 @@ function ActiveBentoCard({ kpi, completedProjeler }: ActiveBentoCardProps) {
                 <button
                   type="button"
                   className="mt-3 w-full flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-tyro-navy/[0.07] text-xs font-semibold text-tyro-navy hover:bg-tyro-navy/[0.14] transition-colors cursor-pointer"
-                  onClick={(e) => { e.stopPropagation(); navigate("/projeler"); }}
+                  onClick={(e) => { e.stopPropagation(); navigate("/kokpit"); }}
                 >
-                  {t("dashboard.viewAllGoals")}
+                  {t("dashboard.viewAllProjects")}
                   <ArrowRight size={12} />
                 </button>
               </div>

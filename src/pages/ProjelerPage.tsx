@@ -67,7 +67,7 @@ export default function ProjelerPage() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [tagFilter, setTagFilter] = useState<string>("all");
   const [visibleColumns, setVisibleColumns] = useState(INITIAL_VISIBLE);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const rowsPerPage = 25;
   const [page, setPage] = useState(1);
   const [sortDescriptor, setSortDescriptor] = useState<{ column: string; direction: "ascending" | "descending" }>({ column: "name", direction: "ascending" });
   const [selectedKeys, setSelectedKeys] = useState<Set<string>>(new Set());
@@ -277,20 +277,8 @@ export default function ProjelerPage() {
           </>
         )}
       </div>
-      <label className="flex items-center gap-1 text-tyro-text-muted text-xs">
-        {t("grid.perPage")}:
-        <select
-          className="bg-transparent outline-none focus-visible:ring-2 focus-visible:ring-tyro-navy/30 rounded text-tyro-text-muted text-xs cursor-pointer"
-          value={rowsPerPage}
-          onChange={(e) => { setRowsPerPage(Number(e.target.value)); setPage(1); }}
-        >
-          <option value="5">5</option>
-          <option value="10">10</option>
-          <option value="15">15</option>
-        </select>
-      </label>
     </div>
-  ), [filtered.length, rowsPerPage, selectedKeys, deleteProje, canDeleteProje, t]);
+  ), [filtered.length, selectedKeys, deleteProje, canDeleteProje, t]);
 
   // Bottom content
   const bottomContent = useMemo(() => (

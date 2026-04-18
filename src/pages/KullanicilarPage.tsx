@@ -76,7 +76,7 @@ export default function KullanicilarPage() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [visibleColumns, setVisibleColumns] = useState(INITIAL_VISIBLE);
-  const [rowsPerPage, setRowsPerPage] = useState(25);
+  const rowsPerPage = 25;
   const [page, setPage] = useState(1);
   const [sortDescriptor, setSortDescriptor] = useState<{ column: string; direction: "ascending" | "descending" }>({ column: "name", direction: "ascending" });
 
@@ -376,21 +376,9 @@ export default function KullanicilarPage() {
             </>
           )}
         </div>
-        <label className="flex items-center gap-1 text-tyro-text-muted text-xs">
-          {t("users.perPage")}
-          <select
-            className="bg-transparent outline-none focus-visible:ring-2 focus-visible:ring-tyro-navy/30 rounded text-tyro-text-muted text-xs cursor-pointer"
-            value={rowsPerPage}
-            onChange={(e) => { setRowsPerPage(Number(e.target.value)); setPage(1); }}
-          >
-            <option value="15">15</option>
-            <option value="20">20</option>
-            <option value="25">25</option>
-          </select>
-        </label>
       </div>
     </div>
-  ), [search, statusFilter, visibleColumns, filtered.length, rowsPerPage, selectedKeys, sidebarTheme]);
+  ), [search, statusFilter, visibleColumns, filtered.length, selectedKeys, sidebarTheme]);
 
   // Bottom content
   const bottomContent = useMemo(() => (
