@@ -1,3 +1,5 @@
+import { useId } from "react";
+
 interface TyroLogoProps {
   size?: number;
   variant?: "login" | "sidebar";
@@ -78,7 +80,11 @@ const ALL_GOLD_THEMES = new Set([
 ]);
 
 export function TyroLogo({ size = 36, variant = "sidebar", isDark = false, accentColor, themeId, themeColors }: TyroLogoProps) {
-  const gradId = variant === "login" ? "tyro-lg" : "tyro-sg";
+  // Unique per-instance id so multiple logos (desktop + mobile) don't
+  // conflict on the same page — avoids mobile losing its gold gradient
+  // when the desktop SVG is hidden via display:none on some browsers.
+  const uniqueId = useId();
+  const gradId = `tyro-grad-${uniqueId.replace(/:/g, "")}`;
   const isLogin = variant === "login";
 
   let c = ORIGINAL;
