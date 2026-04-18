@@ -6,11 +6,11 @@
 const { createClient } = require('@supabase/supabase-js');
 const ExcelJS = require('exceljs');
 
-const SUPABASE_URL = process.env.SUPABASE_URL || 'https://dyipslnseakgobczdlln.supabase.co';
+const SUPABASE_URL = process.env.SUPABASE_URL;
 const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-if (!SERVICE_ROLE_KEY) {
-  console.error('❌ SUPABASE_SERVICE_ROLE_KEY env var required. Run:\n  SUPABASE_SERVICE_ROLE_KEY=sb_secret_xxx node scripts/seed-supabase.cjs');
+if (!SUPABASE_URL || !SERVICE_ROLE_KEY) {
+  console.error('❌ Required env vars missing. Run:\n  SUPABASE_URL=https://xxx.supabase.co SUPABASE_SERVICE_ROLE_KEY=sb_secret_xxx node scripts/seed-supabase.cjs');
   process.exit(1);
 }
 
