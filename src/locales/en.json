@@ -319,6 +319,39 @@
     "login": "Sign In",
     "strategicManagement": "Strategic Management",
     "platform": "Platform",
+    "northStar": "North Star",
+    "hqWelcome": "Welcome to Your Strategy HQ",
+    "portalCta": "ENTER TYROVERSE",
+    "verseSubtitle": "ENTERING STRATEGY HQ",
+    "checkmateWord": "CHECKMATE",
+    "authVerifying": "Verifying identity...",
+    "authCheckWindow": "Check your Microsoft window",
+    "revealedFeature": {
+      "planning": {
+        "title": "Strategic Planning",
+        "desc": "Hierarchical goal cascade from vision to action."
+      },
+      "kpi": {
+        "title": "KPI Dashboard",
+        "desc": "Real-time metrics, BSC and OKR tracking."
+      },
+      "strategyMap": {
+        "title": "Strategy Maps",
+        "desc": "T-Map, T-Align and Strategy Map connected views."
+      },
+      "gantt": {
+        "title": "Time & Gantt",
+        "desc": "Project timelines and review-date tracking."
+      },
+      "reports": {
+        "title": "Report Wizard",
+        "desc": "One-click PDF/Excel export with custom templates."
+      },
+      "security": {
+        "title": "Corporate Security",
+        "desc": "Microsoft Entra ID SSO and role-based access (RBAC)."
+      }
+    },
     "heroDescription": "Track your corporate projects, manage your actions, and make strategic decisions together with your team.",
     "strategicPlanning": "Strategic Planning",
     "strategicPlanningDesc": "Project and action management",

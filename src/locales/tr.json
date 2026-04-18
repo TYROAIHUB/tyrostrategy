@@ -319,6 +319,39 @@
     "login": "Giriş Yap",
     "strategicManagement": "Stratejik Yönetim",
     "platform": "Platformu",
+    "northStar": "North Star",
+    "hqWelcome": "Strateji Karargahınıza Hoş Geldiniz",
+    "portalCta": "TYROVERSE'E GEÇİŞ YAP",
+    "verseSubtitle": "STRATEJİ KARARGAHINA GEÇİŞ",
+    "checkmateWord": "ŞAH MAT",
+    "authVerifying": "Kimlik doğrulanıyor...",
+    "authCheckWindow": "Microsoft pencerenizi kontrol edin",
+    "revealedFeature": {
+      "planning": {
+        "title": "Stratejik Planlama",
+        "desc": "Vizyondan aksiyona hiyerarşik hedef kaskad."
+      },
+      "kpi": {
+        "title": "KPI Dashboard",
+        "desc": "Gerçek zamanlı metrikler, BSC ve OKR takibi."
+      },
+      "strategyMap": {
+        "title": "Strateji Haritaları",
+        "desc": "T-Map, T-Align ve Strateji Haritası ile bağlantılı görünüm."
+      },
+      "gantt": {
+        "title": "Zaman & Gantt",
+        "desc": "Proje zaman çizelgeleri ve kontrol tarihi takibi."
+      },
+      "reports": {
+        "title": "Rapor Sihirbazı",
+        "desc": "Tek tıkla PDF/Excel ihracatı ve özel şablonlar."
+      },
+      "security": {
+        "title": "Kurumsal Güvenlik",
+        "desc": "Microsoft Entra ID SSO ve rol tabanlı erişim (RBAC)."
+      }
+    },
     "heroDescription": "Kurumsal projelerinizi takip edin, aksiyonlarınızı yönetin, ekibinizle birlikte stratejik kararlar alın.",
     "strategicPlanning": "Stratejik Planlama",
     "strategicPlanningDesc": "Proje ve aksiyon yönetimi",
