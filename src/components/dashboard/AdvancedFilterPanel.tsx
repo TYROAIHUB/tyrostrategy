@@ -24,7 +24,7 @@ export default function AdvancedFilterPanel({ isOpen, onClose }: AdvancedFilterP
   const statusOptions = [
     { key: "On Track", label: t("status.onTrack"), color: "bg-tyro-success" },
     { key: "Achieved", label: t("status.achieved"), color: "bg-tyro-navy" },
-    { key: "Behind", label: t("status.behind"), color: "bg-tyro-danger" },
+    { key: "High Risk", label: t("status.behind"), color: "bg-tyro-danger" },
     { key: "At Risk", label: t("status.atRisk"), color: "bg-tyro-warning" },
     { key: "Not Started", label: t("status.notStarted"), color: "bg-tyro-text-muted" },
   ];

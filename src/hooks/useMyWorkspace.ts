@@ -60,13 +60,13 @@ export function useMyWorkspace(): WorkspaceData {
     // Proje counts
     const totalProjeler = myProjeler.length;
     const achievedProjeler = myProjeler.filter((h) => h.status === "Achieved").length;
-    const behindProjeler = myProjeler.filter((h) => h.status === "Behind").length;
+    const behindProjeler = myProjeler.filter((h) => h.status === "High Risk").length;
     const atRiskProjeler = myProjeler.filter((h) => h.status === "At Risk").length;
 
     // Aksiyon counts
     const totalAksiyonlar = myAksiyonlar.length;
     const achievedAksiyonlar = myAksiyonlar.filter((a) => a.status === "Achieved").length;
-    const behindAksiyonlar = myAksiyonlar.filter((a) => a.status === "Behind").length;
+    const behindAksiyonlar = myAksiyonlar.filter((a) => a.status === "High Risk").length;
     const atRiskAksiyonlar = myAksiyonlar.filter((a) => a.status === "At Risk").length;
 
     // Progress — proje bazlı

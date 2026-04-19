@@ -339,7 +339,7 @@ export default function AksiyonlarPage() {
               <DropdownItem key="all">{t("common.all")}</DropdownItem>
               <DropdownItem key="On Track">{t("status.onTrack")}</DropdownItem>
               <DropdownItem key="Achieved">{t("status.achieved")}</DropdownItem>
-              <DropdownItem key="Behind">{t("status.behind")}</DropdownItem>
+              <DropdownItem key="High Risk">{t("status.behind")}</DropdownItem>
               <DropdownItem key="At Risk">{t("status.atRisk")}</DropdownItem>
               <DropdownItem key="Not Started">{t("status.notStarted")}</DropdownItem>
             </DropdownMenu>

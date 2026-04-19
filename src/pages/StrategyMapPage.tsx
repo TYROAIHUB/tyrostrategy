@@ -176,7 +176,7 @@ function ObjectiveNode({ proje, onClick, expanded, onToggleExpand, aksiyonCount 
   const { t } = useTranslation();
   const colors = THEME_COLORS[proje.source] ?? THEME_COLORS["Kurumsal"];
   const pColor = progressColor(proje.progress);
-  const statusColor = { "On Track": "#10b981", "Achieved": "#3b82f6", "Behind": "#ef4444", "At Risk": "#f59e0b", "Not Started": "#94a3b8" }[proje.status] ?? "#94a3b8";
+  const statusColor = { "On Track": "#10b981", "Achieved": "#3b82f6", "High Risk": "#ef4444", "At Risk": "#f59e0b", "Not Started": "#94a3b8" }[proje.status] ?? "#94a3b8";
 
   return (
     <motion.div variants={fadeUp} className="flex flex-col items-center w-[220px]">

@@ -20,7 +20,7 @@ describe("getStatusLabel", () => {
   });
 
   it("returns translated label for 'Behind'", () => {
-    expect(getStatusLabel("Behind", t)).toBe("status.behind");
+    expect(getStatusLabel("High Risk", t)).toBe("status.behind");
   });
 
   it("returns translated label for 'At Risk'", () => {
@@ -35,7 +35,7 @@ describe("getStatusLabel", () => {
     const statuses: EntityStatus[] = [
       "On Track",
       "Achieved",
-      "Behind",
+      "High Risk",
       "At Risk",
       "Not Started",
     ];
@@ -72,7 +72,7 @@ describe("getStatusOptions", () => {
     const keys = options.map((o) => o.key);
     expect(keys).toContain("On Track");
     expect(keys).toContain("At Risk");
-    expect(keys).toContain("Behind");
+    expect(keys).toContain("High Risk");
     expect(keys).toContain("Achieved");
     expect(keys).toContain("Not Started");
   });

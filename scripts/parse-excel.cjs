@@ -95,7 +95,7 @@ wb.xlsx.readFile(FILE).then(() => {
 
   // Generate TypeScript
   let ts = `// Auto-generated from Cascade Excel data - Şubat 2026\n// DO NOT EDIT MANUALLY\n\n`;
-  ts += `export interface CascadeTask {\n  id: string;\n  name: string;\n  level: "Hedef" | "Proje" | "Alt Görev";\n  source: "Türkiye" | "Kurumsal" | "International";\n  planName: string;\n  progress: number;\n  status: "On Track" | "Achieved" | "Behind" | "At Risk" | "Not Started";\n  startDate: string;\n  endDate: string;\n  leader: string;\n}\n\n`;
+  ts += `export interface CascadeTask {\n  id: string;\n  name: string;\n  level: "Hedef" | "Proje" | "Alt Görev";\n  source: "Türkiye" | "Kurumsal" | "International";\n  planName: string;\n  progress: number;\n  status: "On Track" | "Achieved" | "High Risk" | "At Risk" | "Not Started";\n  startDate: string;\n  endDate: string;\n  leader: string;\n}\n\n`;
   ts += `export interface CascadeHedef {\n  id: string;\n  name: string;\n  source: string;\n  status: string;\n  leader: string;\n  startDate: string;\n  endDate: string;\n  projects: CascadeProje[];\n}\n\n`;
   ts += `export interface CascadeProje {\n  id: string;\n  name: string;\n  status: string;\n  leader: string;\n  tasks: CascadeTask[];\n}\n\n`;
 

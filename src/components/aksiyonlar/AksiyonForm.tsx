@@ -24,7 +24,7 @@ const createAksiyonSchema = (t: TFunction) =>
     owner: z.string().min(1, t("validation.ownerRequired")),
     projeId: z.string().min(1, t("validation.objectiveRequired")),
     progress: z.number().min(0).max(100),
-    status: z.enum(["On Track", "At Risk", "Behind", "Achieved", "Not Started", "Cancelled", "On Hold"]),
+    status: z.enum(["On Track", "At Risk", "High Risk", "Achieved", "Not Started", "Cancelled", "On Hold"]),
     sortOrder: z.number().min(1).optional(),
     startDate: z.string().min(1, t("validation.startDateRequired")),
     endDate: z.string().min(1, t("validation.endDateRequired")),
@@ -99,7 +99,7 @@ export default function AksiyonForm({ aksiyon, defaultProjeId, onSuccess, onClos
   const watchStatus = watch("status");
 
   const STATUS_HEX: Record<string, string> = {
-    "On Track": "#10b981", "At Risk": "#f59e0b", "Behind": "#ef4444",
+    "On Track": "#10b981", "At Risk": "#f59e0b", "High Risk": "#ef4444",
     "Achieved": "#3b82f6", "Not Started": "#94a3b8", "Cancelled": "#6b7280", "On Hold": "#8b5cf6",
   };
 
@@ -118,7 +118,7 @@ export default function AksiyonForm({ aksiyon, defaultProjeId, onSuccess, onClos
     const diff = expectedProgress - progress;
     const behindT = Number(localStorage.getItem("tyro-behind-threshold")) || 20;
     const atRiskT = Number(localStorage.getItem("tyro-atrisk-threshold")) || 10;
-    if (diff > behindT) return "Behind";
+    if (diff > behindT) return "High Risk";
     if (diff > atRiskT) return "At Risk";
     return "On Track";                  // Planda → Yolunda
   };

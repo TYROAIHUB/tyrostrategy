@@ -9,7 +9,7 @@ vi.mock("react-i18next", () => ({
 }));
 
 describe("StatusBadge", () => {
-  const statuses: EntityStatus[] = ["On Track", "Achieved", "Behind", "At Risk", "Not Started"];
+  const statuses: EntityStatus[] = ["On Track", "Achieved", "High Risk", "At Risk", "Not Started"];
 
   it.each(statuses)("renders a label for status '%s'", (status) => {
     render(<StatusBadge status={status} />);
@@ -37,7 +37,7 @@ describe("StatusBadge", () => {
   });
 
   it("applies red classes for Behind status", () => {
-    const { container } = render(<StatusBadge status="Behind" />);
+    const { container } = render(<StatusBadge status="High Risk" />);
     const outerSpan = container.querySelector("span.bg-red-50");
     expect(outerSpan).toBeInTheDocument();
     expect(outerSpan).toHaveClass("text-red-600");

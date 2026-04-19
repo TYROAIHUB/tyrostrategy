@@ -31,7 +31,7 @@ export default function KokpitAdvancedFilter({ isOpen, onClose, projeler, aksiyo
   const STATUS_OPTIONS: { key: EntityStatus; label: string; hex: string }[] = [
     { key: "On Track", label: t("status.onTrack"), hex: "#10b981" },
     { key: "At Risk", label: t("status.atRisk"), hex: "#f59e0b" },
-    { key: "Behind", label: t("status.behind"), hex: "#ef4444" },
+    { key: "High Risk", label: t("status.behind"), hex: "#ef4444" },
     { key: "Achieved", label: t("status.achieved"), hex: "#3b82f6" },
     { key: "Not Started", label: t("status.notStarted"), hex: "#94a3b8" },
     { key: "On Hold", label: t("status.onHold"), hex: "#8b5cf6" },

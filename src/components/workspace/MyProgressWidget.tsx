@@ -9,14 +9,14 @@ import { getStatusLabel } from "@/lib/constants";
 const STATUS_COLORS: Record<string, string> = {
   "On Track": "#10b981",
   "At Risk": "#f59e0b",
-  "Behind": "#ef4444",
+  "High Risk": "#ef4444",
   "Achieved": "#3b82f6",
   "Not Started": "#94a3b8",
   "Cancelled": "#6b7280",
   "On Hold": "#8b5cf6",
 };
 
-const STATUS_ORDER: EntityStatus[] = ["On Track", "At Risk", "Behind", "Achieved", "Not Started", "On Hold", "Cancelled"];
+const STATUS_ORDER: EntityStatus[] = ["On Track", "At Risk", "High Risk", "Achieved", "Not Started", "On Hold", "Cancelled"];
 
 interface DonutSegment {
   status: string;

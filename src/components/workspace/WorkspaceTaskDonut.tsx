@@ -10,7 +10,7 @@ import type { EntityStatus } from "@/types";
 const STATUS_COLORS: Record<string, string> = {
   "On Track": "#10b981",
   "Achieved": "#1e3a5f",
-  "Behind": "#ef4444",
+  "High Risk": "#ef4444",
   "At Risk": "#f59e0b",
   "Not Started": "#94a3b8",
 };

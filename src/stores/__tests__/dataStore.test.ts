@@ -64,7 +64,7 @@ describe("Proje CRUD", () => {
     useDataStore.getState().addProje({
       name: "To Delete",
       source: "International",
-      status: "Behind",
+      status: "High Risk",
       owner: "Owner",
       participants: ["Owner"],
       department: "IT",

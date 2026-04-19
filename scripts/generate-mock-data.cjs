@@ -82,7 +82,7 @@ export interface CascadeTask {
   source: "T\u00fcrkiye" | "Kurumsal" | "International";
   planName: string;
   progress: number;
-  status: "On Track" | "Achieved" | "Behind" | "At Risk" | "Not Started";
+  status: "On Track" | "Achieved" | "High Risk" | "At Risk" | "Not Started";
   startDate: string;
   endDate: string;
   leader: string;
@@ -189,7 +189,7 @@ function generateDashboard() {
         onTrackSamples.push({ name: p.name, progress: prog });
       }
       if (
-        (p.status === "At Risk" || p.status === "Behind") &&
+        (p.status === "At Risk" || p.status === "High Risk") &&
         atRiskSamples.length < 4
       ) {
         atRiskSamples.push({ name: p.name, progress: prog });
@@ -219,19 +219,19 @@ function generateDashboard() {
           });
         }
         if (
-          (t.status === "At Risk" || t.status === "Behind") &&
+          (t.status === "At Risk" || t.status === "High Risk") &&
           activityItems.length < 4
         ) {
           activityItems.push({
             id: `a${++actIdx}`,
             title:
-              t.status === "Behind"
+              t.status === "High Risk"
                 ? `${t.name} gecikiyor`
                 : `${t.name} risk alt\u0131nda`,
             description: `${p.name} projesinde dikkat gerektiriyor`,
             time: "Bu hafta",
             color:
-              t.status === "Behind"
+              t.status === "High Risk"
                 ? "var(--tyro-danger)"
                 : "var(--tyro-warning)",
           });
@@ -416,7 +416,7 @@ function generateProjects() {
     switch (s) {
       case "On Track":
         return "active";
-      case "Behind":
+      case "High Risk":
       case "At Risk":
         return "delayed";
       case "Achieved":
@@ -600,7 +600,7 @@ function generateKanban() {
 
   function mapPriority(status) {
     switch (status) {
-      case "Behind":
+      case "High Risk":
         return "critical";
       case "At Risk":
         return "high";
@@ -629,7 +629,7 @@ function generateKanban() {
       };
       if (p.status === "Not Started") notStarted.push(item);
       else if (p.status === "On Track") onTrack.push(item);
-      else if (p.status === "At Risk" || p.status === "Behind")
+      else if (p.status === "At Risk" || p.status === "High Risk")
         atRisk.push(item);
       else if (p.status === "Achieved") achieved.push(item);
     });

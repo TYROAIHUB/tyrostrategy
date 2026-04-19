@@ -17,7 +17,7 @@ export function getRoleLabel(role: UserRole, t: TFunction): string {
 export const STATUS_LABEL: Record<EntityStatus, string> = {
   "On Track": "Yolunda",
   "Achieved": "Tamamlandı",
-  "Behind": "Yüksek Riskte",
+  "High Risk": "Yüksek Riskte",
   "At Risk": "Riskte",
   "Not Started": "Başlanmadı",
   "Cancelled": "İptal",
@@ -28,7 +28,7 @@ export const STATUS_LABEL: Record<EntityStatus, string> = {
 const STATUS_I18N_KEY: Record<EntityStatus, string> = {
   "On Track": "status.onTrack",
   "Achieved": "status.achieved",
-  "Behind": "status.behind",
+  "High Risk": "status.behind",
   "At Risk": "status.atRisk",
   "Not Started": "status.notStarted",
   "Cancelled": "status.cancelled",
@@ -45,7 +45,7 @@ export function getStatusOptions(t: TFunction): { key: EntityStatus; label: stri
   return [
     { key: "On Track", label: t("status.onTrack") },
     { key: "At Risk", label: t("status.atRisk") },
-    { key: "Behind", label: t("status.behind") },
+    { key: "High Risk", label: t("status.behind") },
     { key: "Achieved", label: t("status.achieved") },
     { key: "Not Started", label: t("status.notStarted") },
     { key: "On Hold", label: t("status.onHold") },
@@ -66,7 +66,7 @@ export function getSourceOptions(_t: TFunction): { key: Source; label: string }[
 export const STATUS_DOT_COLOR: Record<EntityStatus, string> = {
   "On Track": "bg-emerald-500",
   "Achieved": "bg-blue-500",
-  "Behind": "bg-red-500",
+  "High Risk": "bg-red-500",
   "At Risk": "bg-amber-500",
   "Not Started": "bg-slate-400",
   "Cancelled": "bg-gray-400",
@@ -77,7 +77,7 @@ export const STATUS_DOT_COLOR: Record<EntityStatus, string> = {
 export const STATUS_OPTIONS: { key: EntityStatus; label: string }[] = [
   { key: "On Track", label: "Yolunda" },
   { key: "At Risk", label: "Riskte" },
-  { key: "Behind", label: "Yüksek Riskte" },
+  { key: "High Risk", label: "Yüksek Riskte" },
   { key: "Achieved", label: "Tamamlandı" },
   { key: "Not Started", label: "Başlanmadı" },
   { key: "On Hold", label: "Askıda" },

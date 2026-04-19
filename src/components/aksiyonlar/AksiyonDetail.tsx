@@ -10,7 +10,7 @@ import { formatDate } from "@/lib/dateUtils";
 import type { Aksiyon } from "@/types";
 
 const STATUS_HEX: Record<string, string> = {
-  "On Track": "#10b981", "At Risk": "#f59e0b", "Behind": "#ef4444",
+  "On Track": "#10b981", "At Risk": "#f59e0b", "High Risk": "#ef4444",
   "Achieved": "#3b82f6", "Not Started": "#94a3b8", "Cancelled": "#6b7280", "On Hold": "#8b5cf6",
 };
 

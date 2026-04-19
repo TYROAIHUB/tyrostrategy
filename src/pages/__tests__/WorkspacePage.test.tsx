@@ -92,7 +92,7 @@ vi.mock("@/hooks/useMyWorkspace", () => ({
     department: "IT",
     myProjeler: [
       { id: "p1", name: "Proje 1", status: "On Track", progress: 60, source: "Kurumsal", owner: "Cenk Şayli", participants: ["Cenk Şayli"], startDate: "2024-01-01", endDate: "2024-12-31" },
-      { id: "p2", name: "Proje 2", status: "Behind", progress: 20, source: "Türkiye", owner: "Cenk Şayli", participants: ["Cenk Şayli"], startDate: "2024-01-01", endDate: "2024-12-31" },
+      { id: "p2", name: "Proje 2", status: "High Risk", progress: 20, source: "Türkiye", owner: "Cenk Şayli", participants: ["Cenk Şayli"], startDate: "2024-01-01", endDate: "2024-12-31" },
     ],
     myAksiyonlar: [{ id: "a1" }, { id: "a2" }, { id: "a3" }],
     totalProjeler: 2,
@@ -105,8 +105,8 @@ vi.mock("@/hooks/useMyWorkspace", () => ({
     atRiskAksiyonlar: 0,
     overallProgress: 40,
     aksiyonProgress: 33,
-    statusBreakdown: { "On Track": 1, "Achieved": 1, "Behind": 1 },
-    projeStatusBreakdown: { "On Track": 1, "Behind": 1 },
+    statusBreakdown: { "On Track": 1, "Achieved": 1, "High Risk": 1 },
+    projeStatusBreakdown: { "On Track": 1, "High Risk": 1 },
     upcomingDeadlines: [],
   }),
 }));

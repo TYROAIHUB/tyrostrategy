@@ -9,7 +9,7 @@ import { getDepartmentByUser } from "@/config/departments";
 import { TAG_COLOR_PALETTE } from "@/config/tagColors";
 
 function mapStatus(s: string): EntityStatus {
-  const valid: EntityStatus[] = ["On Track", "Achieved", "Behind", "At Risk", "Not Started"];
+  const valid: EntityStatus[] = ["On Track", "Achieved", "High Risk", "At Risk", "Not Started"];
   return (valid.includes(s as EntityStatus) ? s : "Not Started") as EntityStatus;
 }
 
@@ -142,7 +142,7 @@ function generateAksiyonDescription(name: string): string {
 
 function assignTags(name: string, _source: Source, progress: number, status: string): string[] {
   // Behind/At Risk projelerin bazılarına Uygulama ata (öncelikli kontrol)
-  if ((status === "Behind" || status === "At Risk") && name.length % 3 === 0) return ["Uygulama"];
+  if ((status === "High Risk" || status === "At Risk") && name.length % 3 === 0) return ["Uygulama"];
   if (status === "Not Started" || progress === 0) return ["Ön Çalışma"];
   if (status === "Achieved" || progress >= 80) return ["Uygulama"];
   return ["Geliştirme"];

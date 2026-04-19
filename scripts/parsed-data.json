@@ -12,7 +12,7 @@
         {
           "id": "prj-2",
           "name": "Antep fıstığının Çin pazarına girmesi",
-          "status": "Behind",
+          "status": "High Risk",
           "leader": "Ozan Yeşilyer",
           "startDate": "2022-11-01",
           "endDate": "2025-01-01",
@@ -426,7 +426,7 @@
         {
           "id": "prj-51",
           "name": "Yem katkı ihracat arttırılması, Yem katkı ve premix ve yiy-dışı pazar genişlet.",
-          "status": "Behind",
+          "status": "High Risk",
           "leader": "Taylan Eğilmez",
           "startDate": "2024-07-01",
           "endDate": "2026-06-30",
@@ -1700,7 +1700,7 @@
               "id": "tsk-199",
               "name": "3-Proje ekibinin belirlenmesi, dep. yöneticileri ve finans ekibiyle görüşülmesi",
               "progress": 0,
-              "status": "Behind",
+              "status": "High Risk",
               "startDate": "2025-07-01",
               "endDate": "2026-03-31"
             },
@@ -1716,7 +1716,7 @@
               "id": "tsk-201",
               "name": "5-KPI'ların Power BI platformuna taşınması",
               "progress": 0,
-              "status": "Behind",
+              "status": "High Risk",
               "startDate": "2025-09-01",
               "endDate": "2026-03-31"
             },
@@ -1793,7 +1793,7 @@
               "id": "tsk-210",
               "name": "6-El terminallerinin satın alım sürecinin tamamlanması",
               "progress": 0,
-              "status": "Behind",
+              "status": "High Risk",
               "startDate": "2025-08-31",
               "endDate": "2026-03-31"
             },
@@ -1870,7 +1870,7 @@
               "id": "tsk-219",
               "name": "4-Uygulanmasına karar verilen modellerin uygulamaya geçirilmesi",
               "progress": 0,
-              "status": "Behind",
+              "status": "High Risk",
               "startDate": "2025-05-15",
               "endDate": "2026-08-31"
             },
@@ -3392,7 +3392,7 @@
         {
           "id": "prj-2",
           "name": "Antep fıstığının Çin pazarına girmesi",
-          "status": "Behind",
+          "status": "High Risk",
           "leader": "Ozan Yeşilyer",
           "startDate": "2022-11-01",
           "endDate": "2025-01-01",
@@ -3806,7 +3806,7 @@
         {
           "id": "prj-51",
           "name": "Yem katkı ihracat arttırılması, Yem katkı ve premix ve yiy-dışı pazar genişlet.",
-          "status": "Behind",
+          "status": "High Risk",
           "leader": "Taylan Eğilmez",
           "startDate": "2024-07-01",
           "endDate": "2026-06-30",
@@ -5078,7 +5078,7 @@
               "id": "tsk-199",
               "name": "3-Proje ekibinin belirlenmesi, dep. yöneticileri ve finans ekibiyle görüşülmesi",
               "progress": 0,
-              "status": "Behind",
+              "status": "High Risk",
               "startDate": "2025-07-01",
               "endDate": "2026-03-31"
             },
@@ -5094,7 +5094,7 @@
               "id": "tsk-201",
               "name": "5-KPI'ların Power BI platformuna taşınması",
               "progress": 0,
-              "status": "Behind",
+              "status": "High Risk",
               "startDate": "2025-09-01",
               "endDate": "2026-03-31"
             },
@@ -5171,7 +5171,7 @@
               "id": "tsk-210",
               "name": "6-El terminallerinin satın alım sürecinin tamamlanması",
               "progress": 0,
-              "status": "Behind",
+              "status": "High Risk",
               "startDate": "2025-08-31",
               "endDate": "2026-03-31"
             },
@@ -5248,7 +5248,7 @@
               "id": "tsk-219",
               "name": "4-Uygulanmasına karar verilen modellerin uygulamaya geçirilmesi",
               "progress": 0,
-              "status": "Behind",
+              "status": "High Risk",
               "startDate": "2025-05-15",
               "endDate": "2026-08-31"
             },

@@ -13,7 +13,7 @@ import type { Aksiyon } from "@/types";
 const STATUS_COLORS: Record<string, string> = {
   "On Track":    "#10b981",
   "At Risk":     "#f59e0b",
-  "Behind":      "#ef4444",
+  "High Risk":      "#ef4444",
   "Achieved":    "#06b6d4",
   "Not Started": "#94a3b8",
   "Cancelled":   "#6b7280",
@@ -542,7 +542,7 @@ export default function GanttPage() {
               <div className="flex items-center gap-4 mt-4 pt-3 border-t border-tyro-border/30 min-w-[900px] flex-wrap">
                 {[
                   { key: "On Track",    label: t("status.onTrack") },
-                  { key: "Behind",      label: t("status.behind") },
+                  { key: "High Risk",      label: t("status.behind") },
                   { key: "At Risk",     label: t("status.atRisk") },
                   { key: "Not Started", label: t("status.notStarted") },
                   { key: "On Hold",     label: t("status.onHold") },

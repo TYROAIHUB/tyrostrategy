@@ -17,7 +17,7 @@ export const treeData: TreeNode[] = [
             name: "Antep fıstığının Çin pazarına girmesi",
             type: "proje",
             progress: 83,
-            status: "Behind",
+            status: "High Risk",
             children: [
               {
                 id: "tsk-3",
@@ -374,7 +374,7 @@ export const treeData: TreeNode[] = [
             name: "Yem katkı ihracat arttırılması, Yem katkı ve premix ve yiy-dışı pazar genişlet.",
             type: "proje",
             progress: 63,
-            status: "Behind",
+            status: "High Risk",
             children: [
               {
                 id: "tsk-52",
@@ -1470,7 +1470,7 @@ export const treeData: TreeNode[] = [
                 name: "3-Proje ekibinin belirlenmesi, dep. yöneticileri ve finans ekibiyle görüşülmesi",
                 type: "gorev",
                 progress: 0,
-                status: "Behind",
+                status: "High Risk",
               },
               {
                 id: "tsk-200",
@@ -1484,7 +1484,7 @@ export const treeData: TreeNode[] = [
                 name: "5-KPI'ların Power BI platformuna taşınması",
                 type: "gorev",
                 progress: 0,
-                status: "Behind",
+                status: "High Risk",
               },
               {
                 id: "tsk-202",
@@ -1550,7 +1550,7 @@ export const treeData: TreeNode[] = [
                 name: "6-El terminallerinin satın alım sürecinin tamamlanması",
                 type: "gorev",
                 progress: 0,
-                status: "Behind",
+                status: "High Risk",
               },
               {
                 id: "tsk-211",
@@ -1616,7 +1616,7 @@ export const treeData: TreeNode[] = [
                 name: "4-Uygulanmasına karar verilen modellerin uygulamaya geçirilmesi",
                 type: "gorev",
                 progress: 0,
-                status: "Behind",
+                status: "High Risk",
               },
               {
                 id: "tsk-220",

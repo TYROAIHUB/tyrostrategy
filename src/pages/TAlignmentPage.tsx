@@ -412,7 +412,7 @@ function TAlignmentInner() {
     { key: "all", label: t("common.all") },
     { key: "On Track", label: t("status.onTrack") },
     { key: "Achieved", label: t("status.achieved") },
-    { key: "Behind", label: t("status.behind") },
+    { key: "High Risk", label: t("status.behind") },
     { key: "At Risk", label: t("status.atRisk") },
     { key: "Not Started", label: t("status.notStarted") },
   ];

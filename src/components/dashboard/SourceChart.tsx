@@ -71,7 +71,7 @@ export default function SourceChart() {
     }
     const sources = ["Türkiye", "Kurumsal", "Intl"];
     const statusMap: [string, string][] = [
-      ["On Track", "Yolunda"], ["At Risk", "Riskte"], ["Behind", "Yüksek Riskte"],
+      ["On Track", "Yolunda"], ["At Risk", "Riskte"], ["High Risk", "Yüksek Riskte"],
       ["Achieved", "Tamamlandı"], ["Not Started", "Başlanmadı"], ["On Hold", "Askıda"], ["Cancelled", "İptal"],
     ];
     return sources.map((source) => {

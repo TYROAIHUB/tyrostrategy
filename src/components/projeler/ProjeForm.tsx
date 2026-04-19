@@ -27,7 +27,7 @@ const createProjeSchema = (t: TFunction) =>
     participants: z.array(z.string()).default([]),
     department: z.string().default(""),
     source: z.enum(["T\u00fcrkiye", "Kurumsal", "International"]),
-    status: z.enum(["On Track", "At Risk", "Behind", "Achieved", "Not Started", "Cancelled", "On Hold"]),
+    status: z.enum(["On Track", "At Risk", "High Risk", "Achieved", "Not Started", "Cancelled", "On Hold"]),
     progress: z.number().min(0).max(100),
     tags: z.array(z.string()).default([]),
     parentObjectiveId: z.string().optional(),
@@ -37,7 +37,7 @@ const createProjeSchema = (t: TFunction) =>
   });
 
 const STATUS_HEX: Record<string, string> = {
-  "On Track": "#10b981", "At Risk": "#f59e0b", "Behind": "#ef4444",
+  "On Track": "#10b981", "At Risk": "#f59e0b", "High Risk": "#ef4444",
   "Achieved": "#3b82f6", "Not Started": "#94a3b8", "Cancelled": "#6b7280", "On Hold": "#8b5cf6",
 };
 

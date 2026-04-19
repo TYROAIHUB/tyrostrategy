@@ -29,7 +29,7 @@ const STATUS_BAR: Record<EntityStatus, string> = {
   "Not Started": "#94a3b8",
   "On Track": "#10b981",
   "At Risk": "#f59e0b",
-  "Behind": "#ef4444",
+  "High Risk": "#ef4444",
   "Achieved": "#3b82f6",
   "Cancelled": "#9ca3af",
   "On Hold": "#8b5cf6",
@@ -42,7 +42,7 @@ const PROGRESS_STEPS_MOBILE = [0, 15, 25, 50, 75, 100];
 const STATUS_HEX: Record<string, string> = {
   "On Track": "#10b981",
   "At Risk": "#f59e0b",
-  "Behind": "#ef4444",
+  "High Risk": "#ef4444",
   "Achieved": "#3b82f6",
   "Not Started": "#94a3b8",
   "Cancelled": "#6b7280",
@@ -256,7 +256,7 @@ function DetailPanel({
 
   // Status distribution for multi-color bar
   const statusCounts = useMemo(() => {
-    const counts: Record<string, number> = { "Achieved": 0, "On Track": 0, "At Risk": 0, "Behind": 0, "Not Started": 0 };
+    const counts: Record<string, number> = { "Achieved": 0, "On Track": 0, "At Risk": 0, "High Risk": 0, "Not Started": 0 };
     for (const a of aksiyonlar) counts[a.status] = (counts[a.status] ?? 0) + 1;
     return counts;
   }, [aksiyonlar]);
@@ -279,7 +279,7 @@ function DetailPanel({
         const diff = expectedProgress - progress;
         const behindT = Number(localStorage.getItem("tyro-behind-threshold")) || 20;
         const atRiskT = Number(localStorage.getItem("tyro-atrisk-threshold")) || 10;
-        if (diff > behindT) status = "Behind";
+        if (diff > behindT) status = "High Risk";
         else if (diff > atRiskT) status = "At Risk";
         else status = "On Track";
       } else {

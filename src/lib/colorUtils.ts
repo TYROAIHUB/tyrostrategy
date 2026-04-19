@@ -6,7 +6,7 @@ export function statusColor(status: EntityStatus): string {
     "Not Started": "#94a3b8",
     "On Track": "#10b981",
     "At Risk": "#f59e0b",
-    "Behind": "#ef4444",
+    "High Risk": "#ef4444",
     "Achieved": "#3b82f6",
     "Cancelled": "#9ca3af",
     "On Hold": "#8b5cf6",

@@ -122,7 +122,7 @@ function suggestStatusFromProgress(progress: number, startDate: string, endDate:
   // Thresholds from settings (lazy import to avoid circular dep)
   const behindT = Number(localStorage.getItem("tyro-behind-threshold")) || 20;
   const atRiskT = Number(localStorage.getItem("tyro-atrisk-threshold")) || 10;
-  if (diff > behindT) return "Behind";
+  if (diff > behindT) return "High Risk";
   if (diff > atRiskT) return "At Risk";
   return "On Track";
 }
@@ -344,7 +344,7 @@ export const useDataStore = create<DataState>()(
           } else if (a.status === "Not Started" && a.progress > 0) {
             updated.progress = 0;
           } else if (
-            (a.status === "On Track" || a.status === "At Risk" || a.status === "Behind") &&
+            (a.status === "On Track" || a.status === "At Risk" || a.status === "High Risk") &&
             a.progress === 0
           ) {
             // Calculate expected progress from timeline
@@ -357,7 +357,7 @@ export const useDataStore = create<DataState>()(
             }
             if (a.status === "On Track") updated.progress = Math.max(15, Math.round(expected));
             else if (a.status === "At Risk") updated.progress = Math.max(10, Math.round(expected * 0.7));
-            else if (a.status === "Behind") updated.progress = Math.max(10, Math.round(expected * 0.5));
+            else if (a.status === "High Risk") updated.progress = Math.max(10, Math.round(expected * 0.5));
           }
 
           if (updated.progress !== original.progress || updated.completedAt !== original.completedAt) {

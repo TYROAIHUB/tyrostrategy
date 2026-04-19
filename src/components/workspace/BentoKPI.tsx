@@ -10,14 +10,14 @@ import { getStatusLabel } from "@/lib/constants";
 const STATUS_COLORS: Record<string, string> = {
   "On Track": "#10b981",
   "At Risk": "#f59e0b",
-  "Behind": "#ef4444",
+  "High Risk": "#ef4444",
   "Achieved": "#3b82f6",
   "Not Started": "#94a3b8",
   "Cancelled": "#6b7280",
   "On Hold": "#8b5cf6",
 };
 
-const STATUS_ORDER: EntityStatus[] = ["On Track", "Behind", "At Risk", "Not Started", "On Hold", "Cancelled", "Achieved"];
+const STATUS_ORDER: EntityStatus[] = ["On Track", "High Risk", "At Risk", "Not Started", "On Hold", "Cancelled", "Achieved"];
 
 export default function BentoKPI() {
   const { t } = useTranslation();

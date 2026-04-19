@@ -39,7 +39,7 @@ const proje2: Proje = {
   id: "p2",
   name: "Proje 2",
   source: "Türkiye",
-  status: "Behind",
+  status: "High Risk",
   owner: "Kemal Yıldız",
   participants: ["Kemal Yıldız", "Cenk Şayli"],
   department: "IT",
@@ -89,7 +89,7 @@ const aksiyon3: Aksiyon = {
   name: "Aksiyon 3",
   owner: "Cenk Şayli",
   progress: 0,
-  status: "Behind",
+  status: "High Risk",
   startDate: "2024-03-01",
   endDate: "2024-04-30",
 };
@@ -200,7 +200,7 @@ describe("useMyWorkspace", () => {
       const { result } = renderHook(() => useMyWorkspace());
       expect(result.current.statusBreakdown["Achieved"]).toBe(1);
       expect(result.current.statusBreakdown["On Track"]).toBe(1);
-      expect(result.current.statusBreakdown["Behind"]).toBe(1);
+      expect(result.current.statusBreakdown["High Risk"]).toBe(1);
     });
   });
 

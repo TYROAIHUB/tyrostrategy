@@ -77,7 +77,7 @@ const KANBAN_STATUSES: EntityStatus[] = [
   "Not Started",
   "On Track",
   "At Risk",
-  "Behind",
+  "High Risk",
   "Achieved",
 ];
 

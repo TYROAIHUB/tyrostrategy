@@ -30,7 +30,7 @@ import { deptLabel } from "@/config/departments";
 const STATUS_COLOR: Record<EntityStatus, string> = {
   "On Track": "#10b981",
   "At Risk": "#f59e0b",
-  "Behind": "#ef4444",
+  "High Risk": "#ef4444",
   "Achieved": "#10b981",
   "Not Started": "#94a3b8",
   "On Hold": "#8b5cf6",
@@ -40,7 +40,7 @@ const STATUS_COLOR: Record<EntityStatus, string> = {
 const STATUS_DOT: Record<EntityStatus, typeof Check> = {
   "On Track": Clock,
   "At Risk": AlertTriangle,
-  "Behind": AlertTriangle,
+  "High Risk": AlertTriangle,
   "Achieved": Check,
   "Not Started": Minus,
   "On Hold": PauseCircle,
@@ -72,7 +72,7 @@ export default function RaporSihirbazi() {
   const STATUS_TR: Record<EntityStatus, string> = {
     "On Track": t("dashboard.statusOnTrack"),
     "At Risk": t("dashboard.statusAtRisk"),
-    "Behind": t("dashboard.statusBehind"),
+    "High Risk": t("dashboard.statusBehind"),
     "Achieved": t("dashboard.statusAchieved"),
     "Not Started": t("dashboard.statusNotStarted"),
     "On Hold": t("dashboard.statusOnHold"),
@@ -318,7 +318,7 @@ export default function RaporSihirbazi() {
       m[d].total++;
       m[d].avgProg += calcProjeProgress(h, aksiyonlar);
       if (h.status === "Achieved") m[d].achieved++;
-      else if (h.status === "Behind" || h.status === "At Risk") m[d].behind++;
+      else if (h.status === "High Risk" || h.status === "At Risk") m[d].behind++;
       else m[d].active++;
     });
     Object.values(m).forEach((v) => { v.avgProg = v.total > 0 ? Math.round(v.avgProg / v.total) : 0; });
@@ -327,7 +327,7 @@ export default function RaporSihirbazi() {
 
   const attentionItems = useMemo(
     () => reportProjeler.filter((h) =>
-      (h.status === "Behind" || h.status === "At Risk") && h.tags?.includes("Uygulama")
+      (h.status === "High Risk" || h.status === "At Risk") && h.tags?.includes("Uygulama")
     ),
     [reportProjeler]
   );
@@ -1149,7 +1149,7 @@ ${clone.outerHTML}
               { label: t("dashboard.total"), value: reportProjeler.length, color: "var(--tyro-navy, #1e3a5f)" },
               { label: STATUS_TR["On Track"], value: statusSummary["On Track"] || 0, color: "#10b981" },
               { label: STATUS_TR["At Risk"], value: statusSummary["At Risk"] || 0, color: "#f59e0b" },
-              { label: STATUS_TR["Behind"], value: statusSummary["Behind"] || 0, color: "#ef4444" },
+              { label: STATUS_TR["High Risk"], value: statusSummary["High Risk"] || 0, color: "#ef4444" },
               { label: STATUS_TR["Achieved"], value: statusSummary["Achieved"] || 0, color: "#059669" },
               { label: STATUS_TR["Not Started"], value: statusSummary["Not Started"] || 0, color: "#94a3b8" },
               { label: STATUS_TR["On Hold"], value: statusSummary["On Hold"] || 0, color: "#8b5cf6" },
@@ -1157,7 +1157,7 @@ ${clone.outerHTML}
             ].sort((a, b) => b.value - a.value);
 
             // Generate AI-like executive insights
-            const riskCount = (statusSummary["At Risk"] || 0) + (statusSummary["Behind"] || 0);
+            const riskCount = (statusSummary["At Risk"] || 0) + (statusSummary["High Risk"] || 0);
             const completionRate = reportProjeler.length > 0 ? Math.round(((statusSummary["Achieved"] || 0) / reportProjeler.length) * 100) : 0;
             const worstDept = deptBreakdown.length > 0 ? deptBreakdown.reduce((worst, [, d]) => d.avgProg < worst.avgProg ? d : worst, deptBreakdown[0][1]) : null;
             const worstDeptName = deptBreakdown.find(([, d]) => d === worstDept)?.[0] || "";

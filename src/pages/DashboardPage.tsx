@@ -105,10 +105,10 @@ export default function DashboardPage() {
   }, [projeler]);
 
   const onTrackCount = statusCounts["On Track"] ?? 0;
-  const behindCount = statusCounts["Behind"] ?? 0;
+  const behindCount = statusCounts["High Risk"] ?? 0;
   const atRiskCount = statusCounts["At Risk"] ?? 0;
   const aktivProjeler = projeler.filter((h) => h.status === "On Track" || h.status === "At Risk");
-  const gecikenProjeler = projeler.filter((h) => h.status === "Behind" || h.status === "At Risk");
+  const gecikenProjeler = projeler.filter((h) => h.status === "High Risk" || h.status === "At Risk");
 
   const kpiCards = [
     {
@@ -450,7 +450,7 @@ function ActiveBentoCard({ kpi, completedProjeler }: ActiveBentoCardProps) {
 const STATUS_COLORS: Record<string, string> = {
   "On Track": "#10b981",
   "At Risk": "#f59e0b",
-  "Behind": "#ef4444",
+  "High Risk": "#ef4444",
   "Achieved": "#06b6d4",
   "Not Started": "#94a3b8",
   "Cancelled": "#6b7280",
@@ -462,7 +462,7 @@ function useStatusLabels(): Record<string, string> {
   return {
     "On Track": t("dashboard.statusOnTrack"),
     "At Risk": t("dashboard.statusAtRisk"),
-    "Behind": t("dashboard.statusBehind"),
+    "High Risk": t("dashboard.statusBehind"),
     "Achieved": t("dashboard.statusAchieved"),
     "Not Started": t("dashboard.statusNotStarted"),
     "Cancelled": t("dashboard.statusCancelled"),

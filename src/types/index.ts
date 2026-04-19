@@ -1,6 +1,6 @@
 // ===== Domain Model: Proje → Aksiyon (2 seviye) =====
 
-export type EntityStatus = "On Track" | "Achieved" | "Behind" | "At Risk" | "Not Started" | "Cancelled" | "On Hold";
+export type EntityStatus = "On Track" | "Achieved" | "High Risk" | "At Risk" | "Not Started" | "Cancelled" | "On Hold";
 export type Source = "Türkiye" | "Kurumsal" | "International";
 export type ProjectStatus = "active" | "planned" | "completed" | "delayed";
 export type Priority = "critical" | "high" | "medium" | "low";
