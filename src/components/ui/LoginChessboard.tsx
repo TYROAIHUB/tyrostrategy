@@ -172,6 +172,19 @@ function Scene({ t, phase, onPortalClick, onFeatureArchive }: Props) {
   const [activeCard, setActiveCard] = useState<ActiveFeatureCard | null>(null);
   const cardTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // Board material ref + ripple state — for piece-move ripple effect
+  const boardMatRef = useRef<THREE.MeshPhysicalMaterial | null>(null);
+  const rippleStateRef = useRef<{
+    x: number;
+    z: number;
+    start: number;
+    color: THREE.Color;
+  } | null>(null);
+  const RIPPLE_DURATION_MS = 1400;
+  // Ripple tint matches the moving piece's material palette
+  const RIPPLE_GOLD = useMemo(() => new THREE.Color("#e0ad3e"), []);
+  const RIPPLE_NAVY = useMemo(() => new THREE.Color("#5a82c8"), []);
+
   // Mode derivation from phase
   const mode: Mode = useMemo(() => {
     if (phase === "idle") return "match";
@@ -186,9 +199,33 @@ function Scene({ t, phase, onPortalClick, onFeatureArchive }: Props) {
     };
   }, [scene]);
 
-  const handlePiecesReady = useCallback((p: PieceRefMap) => {
+  const handlePiecesReady = useCallback((p: PieceRefMap, board: THREE.Object3D | null) => {
     setPieces(p);
+    if (board && (board as THREE.Mesh).material) {
+      boardMatRef.current = (board as THREE.Mesh).material as THREE.MeshPhysicalMaterial;
+    }
   }, []);
+
+  // Frame loop — drive the ripple shader uniforms while a ripple is active
+  useFrame(() => {
+    const mat = boardMatRef.current;
+    const ud = mat?.userData?.shader;
+    if (!mat || !ud) return;
+    const state = rippleStateRef.current;
+    if (!state) {
+      if (ud.uniforms.uRippleTime.value < 1.1) ud.uniforms.uRippleTime.value = 1.1; // idle
+      return;
+    }
+    const t = (performance.now() - state.start) / RIPPLE_DURATION_MS;
+    if (t >= 1) {
+      rippleStateRef.current = null;
+      ud.uniforms.uRippleTime.value = 1.1;
+      return;
+    }
+    ud.uniforms.uRippleOrigin.value.set(state.x, state.z);
+    ud.uniforms.uRippleTime.value = t;
+    ud.uniforms.uRippleColor.value.copy(state.color);
+  });
 
   const handlePortalReveal = useCallback(() => {
     setPortalVisible(true);
@@ -196,6 +233,17 @@ function Scene({ t, phase, onPortalClick, onFeatureArchive }: Props) {
 
   const handleMoveComplete = useCallback(
     (move: Move, worldPos: [number, number, number]) => {
+      // Trigger a ripple emanating from the landed piece — fires for every
+      // move regardless of whether there's a feature card attached.
+      // Color matches the piece's material palette (gold for white, navy for black).
+      const isWhite = move.pieceName.includes("white");
+      rippleStateRef.current = {
+        x: worldPos[0],
+        z: worldPos[2],
+        start: performance.now(),
+        color: isWhite ? RIPPLE_GOLD : RIPPLE_NAVY,
+      };
+
       if (!move.feature) return;
       if (cardTimeoutRef.current) clearTimeout(cardTimeoutRef.current);
       setActiveCard((prev) => {

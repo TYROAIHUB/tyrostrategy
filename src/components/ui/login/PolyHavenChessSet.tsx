@@ -2,6 +2,7 @@ import { useGLTF, useTexture } from "@react-three/drei";
 import { useMemo, useLayoutEffect } from "react";
 import * as THREE from "three";
 import type { GroupProps } from "@react-three/fiber";
+import { SQUARE_SIZE, FILE_ORIGIN_X, RANK_ORIGIN_Z_WHITE } from "./ChessMatch";
 
 /**
  * PolyHavenChessSet — CC0 Staunton chess set from Poly Haven.
@@ -99,6 +100,121 @@ function applyLuxuryShader(
   material.needsUpdate = true;
 }
 
+/* ──────────────────────────────────────────────────────────────
+ * applyRippleShader — piece-move reactive ripple.
+ * A gold concentric wave emanates from an origin XZ (set when a
+ * piece moves) and expands outward with a decaying pulse band.
+ * Uniforms are updated from useFrame in the Scene via
+ * material.userData.shader.
+ * ────────────────────────────────────────────────────────────── */
+function applyRippleShader(material: THREE.MeshPhysicalMaterial) {
+  material.onBeforeCompile = (shader) => {
+    shader.uniforms.uRippleOrigin = { value: new THREE.Vector2(0, 0) };
+    shader.uniforms.uRippleTime = { value: 1.1 };       // >1 = idle (no ripple)
+    shader.uniforms.uRippleMaxR = { value: 0.28 };      // max wave radius
+    shader.uniforms.uRippleWidth = { value: 0.022 };    // thinner band for subtlety
+    shader.uniforms.uRippleColor = { value: new THREE.Color("#e0ad3e") };
+    shader.uniforms.uRippleStrength = { value: 0.32 };  // softer mix with navy
+
+    // Square tone fill uniforms
+    const halfSq = SQUARE_SIZE / 2;
+    shader.uniforms.uSqMinX = { value: FILE_ORIGIN_X - halfSq };
+    shader.uniforms.uSqMinZ = { value: RANK_ORIGIN_Z_WHITE - halfSq };
+    shader.uniforms.uSqSize = { value: SQUARE_SIZE };
+    shader.uniforms.uSqDark = { value: new THREE.Color("#0e1f3a") };  // deep navy square
+    shader.uniforms.uSqLight = { value: new THREE.Color("#1d3d64") }; // steel navy square
+    shader.uniforms.uSqOff = { value: new THREE.Color("#162a48") };   // off-board fallback
+
+    // Expose the shader for per-frame uniform updates
+    material.userData.shader = shader;
+
+    shader.vertexShader = shader.vertexShader
+      .replace(
+        "#include <common>",
+        `#include <common>
+        varying vec2 vRipplePosXZ;`,
+      )
+      .replace(
+        "#include <begin_vertex>",
+        `#include <begin_vertex>
+        vRipplePosXZ = position.xz;`,
+      );
+
+    shader.fragmentShader = shader.fragmentShader
+      .replace(
+        "#include <common>",
+        `#include <common>
+        varying vec2 vRipplePosXZ;
+        uniform vec2 uRippleOrigin;
+        uniform float uRippleTime;
+        uniform float uRippleMaxR;
+        uniform float uRippleWidth;
+        uniform vec3 uRippleColor;
+        uniform float uRippleStrength;
+        uniform float uSqMinX;
+        uniform float uSqMinZ;
+        uniform float uSqSize;
+        uniform vec3 uSqDark;
+        uniform vec3 uSqLight;
+        uniform vec3 uSqOff;`,
+      )
+      .replace(
+        "vec4 diffuseColor = vec4( diffuse, opacity );",
+        `
+        // ── Premium alternating tone fill with per-square chiaroscuro ──
+        vec2 boardLocal = vec2(
+          (vRipplePosXZ.x - uSqMinX) / uSqSize,
+          (vRipplePosXZ.y - uSqMinZ) / uSqSize
+        );
+        bool onBoard = boardLocal.x >= 0.0 && boardLocal.x < 8.0 &&
+                       boardLocal.y >= 0.0 && boardLocal.y < 8.0;
+
+        vec3 squareColor;
+        if (onBoard) {
+          vec2 sqIdx = floor(boardLocal);
+          bool isDark = mod(sqIdx.x + sqIdx.y, 2.0) < 0.5;
+          squareColor = isDark ? uSqDark : uSqLight;
+
+          // Per-square inner vignette — sinks edges for "pressed" depth
+          vec2 sqUV = fract(boardLocal);
+          vec2 ed = min(sqUV, vec2(1.0) - sqUV);
+          float vig = smoothstep(0.0, 0.28, min(ed.x, ed.y));
+          squareColor *= 0.82 + vig * 0.18;
+
+          // Diagonal chiaroscuro — simulates ambient key light from upper-left
+          float keyLight = sqUV.x * 0.5 + (1.0 - sqUV.y) * 0.5;
+          squareColor *= 0.93 + keyLight * 0.10;
+
+          // Strategic zone warm — e4/d4/e5/d5 central squares subtly warmer
+          float cDist = length(vRipplePosXZ);
+          float centerGlow = 1.0 - smoothstep(0.03, 0.11, cDist);
+          squareColor += vec3(0.018, 0.013, 0.004) * centerGlow;
+
+          // Faint micro-noise for surface grit (premium matte feel)
+          float grain = fract(sin(dot(vRipplePosXZ * 180.0, vec2(12.9898, 78.233))) * 43758.5453) - 0.5;
+          squareColor += grain * 0.012;
+        } else {
+          squareColor = uSqOff;
+        }
+
+        vec4 diffuseColor = vec4(squareColor, opacity);
+
+        // ── Ripple overlay on top of squares ──
+        if (uRippleTime >= 0.0 && uRippleTime <= 1.0) {
+          float rDist = length(vRipplePosXZ - uRippleOrigin);
+          float wavefront = uRippleTime * uRippleMaxR;
+          float d = (rDist - wavefront) / uRippleWidth;
+          float band = exp(-d * d * 2.5);
+          float decay = (1.0 - uRippleTime) * (1.0 - uRippleTime);
+          float outward = smoothstep(0.0, 0.02, rDist);
+          float ripple = band * decay * outward * uRippleStrength;
+          diffuseColor.rgb = mix(diffuseColor.rgb, uRippleColor, ripple);
+        }`,
+      );
+  };
+  material.needsUpdate = true;
+}
+
 export default function PolyHavenChessSet({ onReady, ...groupProps }: Props) {
   const gltf = useGLTF(GLTF_URL);
   const boardDiff = useTexture(BOARD_DIFF_URL);
@@ -163,17 +279,18 @@ export default function PolyHavenChessSet({ onReady, ...groupProps }: Props) {
     return m;
   }, []);
 
-  const boardMaterial = useMemo(
-    () =>
-      new THREE.MeshPhysicalMaterial({
-        color: new THREE.Color("#1c3152"),   // solid navy, no squares
-        roughness: 0.35,
-        metalness: 0.1,
-        clearcoat: 0.8,
-        clearcoatRoughness: 0.12,
-      }),
-    [],
-  );
+  /* ── Board — solid navy with piece-move ripple shader ── */
+  const boardMaterial = useMemo(() => {
+    const m = new THREE.MeshPhysicalMaterial({
+      color: new THREE.Color("#1c3152"),
+      roughness: 0.35,
+      metalness: 0.1,
+      clearcoat: 0.8,
+      clearcoatRoughness: 0.12,
+    });
+    applyRippleShader(m);
+    return m;
+  }, []);
 
   /* ── Traverse scene, apply materials, collect piece refs ── */
   useLayoutEffect(() => {
