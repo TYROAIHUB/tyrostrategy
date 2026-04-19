@@ -217,10 +217,9 @@ function applyRippleShader(material: THREE.MeshPhysicalMaterial) {
           squareColor = isDark ? uSqDark : uSqLight;
 
           // Breathing glow — opposing phase between dark/light squares
-          // 4s period, amplitude 0.05 (very subtle). Pieces and movement
-          // stay the focal point; board "breathes" in the background.
+          // 4s period, amplitude 0.15 (now actually visible on dark tones).
           float phase = isDark ? 0.0 : 3.14159;
-          float breath = sin(uTime * 1.5708 + phase) * 0.05;
+          float breath = sin(uTime * 1.5708 + phase) * 0.15;
           squareColor *= 1.0 + breath;
 
           // Per-square inner vignette — sinks edges for "pressed" depth
@@ -241,6 +240,30 @@ function applyRippleShader(material: THREE.MeshPhysicalMaterial) {
           // Faint micro-noise for surface grit (premium matte feel)
           float grain = fract(sin(dot(vRipplePosXZ * 180.0, vec2(12.9898, 78.233))) * 43758.5453) - 0.5;
           squareColor += grain * 0.012;
+
+          // ─── Single Seljuk 8-point star spanning d4/d5/e4/e5 ───
+          // Board origin is the shared corner of these four squares, so
+          // each central square renders one quadrant of the motif.
+          // Together the four quadrants assemble into one full star.
+          vec2 motifUV = vRipplePosXZ / uSqSize;   // ±1 across the 2x2 center region
+          if (abs(motifUV.x) < 1.0 && abs(motifUV.y) < 1.0) {
+            float sqA = max(abs(motifUV.x), abs(motifUV.y));
+            vec2 rotP = vec2(
+              (motifUV.x + motifUV.y) * 0.7071,
+              (motifUV.y - motifUV.x) * 0.7071
+            );
+            float sqB = max(abs(rotP.x), abs(rotP.y));
+            float starShape = min(sqA, sqB);
+            // Thin gold inlay outline ring at the star perimeter
+            float edgeDist = abs(starShape - 0.68);
+            float outline = 1.0 - smoothstep(0.0, 0.022, edgeDist);
+            // Soft fill inside the star
+            float fill = 1.0 - smoothstep(0.66, 0.70, starShape);
+            vec3 motifGold = vec3(0.784, 0.573, 0.165);   // #c8922a
+            vec3 motifBright = vec3(0.94, 0.78, 0.33);    // highlight gold
+            squareColor = mix(squareColor, motifGold, fill * 0.14);
+            squareColor = mix(squareColor, motifBright, outline * 0.55);
+          }
 
         } else {
           // Off-board: solid navy, no ornament

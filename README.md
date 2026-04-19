@@ -338,6 +338,15 @@ Telif hakki (c) 2025-2026 TTECH Business Solutions / Tiryaki Agro. Tum haklari s
 
 Bu yazilim ozel mulkiyettir (proprietary). Izinsiz kopyalama, dagitma veya degistirme yasaktir.
 
+### Uc Sahis 3D Asset Attribution
+
+- **Poly Haven Chess Set** (`public/models/chess_set/`) — CC0 lisansli,
+  [polyhaven.com/a/chess_set](https://polyhaven.com/a/chess_set)
+- **Chess Piece King** (`public/models/king_hero/`) — "Chess Piece, King" by
+  Csaba Baity ([tsabszy](https://sketchfab.com/tsabszy)), lisans:
+  [CC-BY-4.0](http://creativecommons.org/licenses/by/4.0/). Kaynak:
+  [Sketchfab](https://sketchfab.com/3d-models/chess-piece-king-51dc45670f114c48a3f63cf2dd4f169c).
+
 ---
 
 <p align="center">Powered by <strong>TTECH Business Solutions</strong></p>

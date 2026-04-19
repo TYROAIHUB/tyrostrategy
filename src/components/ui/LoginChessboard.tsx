@@ -6,6 +6,8 @@ import * as THREE from "three";
 import { Target, BarChart3, Network, CalendarClock, Shield } from "lucide-react";
 import PolyHavenChessSet, { type PieceRefMap } from "./login/PolyHavenChessSet";
 import BoardGrid from "./login/BoardGrid";
+import KingHero from "./login/KingHero";
+import PieceScatter from "./login/PieceScatter";
 import BoardBorderFrame from "./login/BoardBorderFrame";
 import MatchOrchestrator from "./login/MatchOrchestrator";
 import ScenePortalButton from "./login/ScenePortalButton";
@@ -174,6 +176,7 @@ function Scene({ t, phase, onPortalClick, onFeatureArchive }: Props) {
 
   // Board material ref + ripple state — for piece-move ripple effect
   const boardMatRef = useRef<THREE.MeshPhysicalMaterial | null>(null);
+  const gridMatRef = useRef<THREE.ShaderMaterial | null>(null);
   const rippleStateRef = useRef<{
     x: number;
     z: number;
@@ -206,30 +209,48 @@ function Scene({ t, phase, onPortalClick, onFeatureArchive }: Props) {
     }
   }, []);
 
-  // Frame loop — drive shader uniforms: breathing glow (always) + ripple (on move)
+  const handleGridReady = useCallback((mat: THREE.ShaderMaterial) => {
+    gridMatRef.current = mat;
+  }, []);
+
+  // Frame loop — drive shader uniforms for BOTH board material and grid
+  // material: breathing glow (always) + ripple (on move). Keeps the two
+  // surfaces visually synchronized.
   useFrame((s) => {
     const mat = boardMatRef.current;
+    const gridMat = gridMatRef.current;
     const ud = mat?.userData?.shader;
-    if (!mat || !ud) return;
+    const now = s.clock.elapsedTime;
 
-    // Breathing glow — always active, slow ambient pulse
-    ud.uniforms.uTime.value = s.clock.elapsedTime;
+    // Always: uTime for breathing
+    if (ud) ud.uniforms.uTime.value = now;
+    if (gridMat) gridMat.uniforms.uTime.value = now;
 
     // Ripple — only while a move is active
     const state = rippleStateRef.current;
     if (!state) {
-      if (ud.uniforms.uRippleTime.value < 1.1) ud.uniforms.uRippleTime.value = 1.1;
+      if (ud && ud.uniforms.uRippleTime.value < 1.1) ud.uniforms.uRippleTime.value = 1.1;
+      if (gridMat && gridMat.uniforms.uRippleTime.value < 1.1) gridMat.uniforms.uRippleTime.value = 1.1;
       return;
     }
     const t = (performance.now() - state.start) / RIPPLE_DURATION_MS;
     if (t >= 1) {
       rippleStateRef.current = null;
-      ud.uniforms.uRippleTime.value = 1.1;
+      if (ud) ud.uniforms.uRippleTime.value = 1.1;
+      if (gridMat) gridMat.uniforms.uRippleTime.value = 1.1;
       return;
     }
-    ud.uniforms.uRippleOrigin.value.set(state.x, state.z);
-    ud.uniforms.uRippleTime.value = t;
-    ud.uniforms.uRippleColor.value.copy(state.color);
+    if (ud) {
+      ud.uniforms.uRippleOrigin.value.set(state.x, state.z);
+      ud.uniforms.uRippleTime.value = t;
+      ud.uniforms.uRippleColor.value.copy(state.color);
+    }
+    if (gridMat) {
+      gridMat.uniforms.uRippleOrigin.value.set(state.x, state.z);
+      gridMat.uniforms.uRippleTime.value = t;
+      // Grid flashes crystal-white regardless of piece team — ripple color
+      // on grid stays fixed as the shimmer tint (board material keeps team color)
+    }
   });
 
   const handlePortalReveal = useCallback(() => {
@@ -310,11 +331,24 @@ function Scene({ t, phase, onPortalClick, onFeatureArchive }: Props) {
         <PolyHavenChessSet position={[0.14, 0, 0]} onReady={handlePiecesReady} />
       </Suspense>
 
+      {/* Detailed hero kings — one per team. Replace PH kings during
+          match, charge to center at checkmate, gold takes hero shot at
+          p5+ while navy recedes. Mounted at world root; positions driven
+          in useFrame via getWorldPosition of the PH king pieces. */}
+      <Suspense fallback={null}>
+        <KingHero team="white" pieces={pieces} phase={phase} />
+        <KingHero team="black" pieces={pieces} phase={phase} />
+      </Suspense>
+
+      {/* Piece scatter — at p4 (king arrives center) all non-king pieces
+          explode outward with gravity + tumble as a shockwave */}
+      <PieceScatter pieces={pieces} phase={phase} />
+
       {/* Gold polished inlay frame around the playing area */}
       <BoardBorderFrame position={[0.14, 0.018, 0]} />
 
       {/* Gold glow grid lines on the board */}
-      <BoardGrid position={[0.14, 0.0176, 0]} />
+      <BoardGrid position={[0.14, 0.0176, 0]} onReady={handleGridReady} />
 
       {/* Match orchestrator */}
       <MatchOrchestrator
