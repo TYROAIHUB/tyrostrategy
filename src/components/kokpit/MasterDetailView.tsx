@@ -321,7 +321,7 @@ function DetailPanel({
               {/* Title + ID */}
               <div>
                 <h2 className="text-[15px] font-bold text-tyro-text-primary leading-snug">
-                  <span className="font-normal text-tyro-text-muted text-[12px] mr-1">
+                  <span className="font-normal text-tyro-text-muted mr-1">
                     {t("common.projectName")}:
                   </span>
                   {proje.name}
@@ -354,7 +354,7 @@ function DetailPanel({
             <div className="hidden sm:flex items-start gap-4">
               <div className="flex-1 min-w-0">
                 <h2 className="text-[20px] font-bold text-tyro-text-primary leading-snug">
-                  <span className="font-normal text-tyro-text-muted text-[14px] mr-1.5">
+                  <span className="font-normal text-tyro-text-muted mr-1.5">
                     {t("common.projectName")}:
                   </span>
                   {proje.name}
