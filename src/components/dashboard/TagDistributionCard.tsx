@@ -58,6 +58,7 @@ export default function TagDistributionCard({ projeler }: Props) {
             // Bar width scaled to the biggest bucket so the heaviest
             // tag fills the row and the rest are relative to it.
             const pct = max > 0 ? Math.round((count / max) * 100) : 0;
+            const label = `${count} ${t("dashboard.project").toLowerCase()}`;
             return (
               <div key={name} className="flex items-center gap-3">
                 {/* Left: tag pill (name + dot) */}
@@ -70,24 +71,31 @@ export default function TagDistributionCard({ projeler }: Props) {
                     {name}
                   </span>
                 </div>
-                {/* Middle: proportional bar */}
-                <div className="flex-1 h-6 rounded-lg overflow-hidden" style={{ backgroundColor: `${color}14` }}>
+                {/* Bar with the count label painted inside the filled
+                    portion. Narrow bars fall back to placing the label
+                    just after the fill so it never gets clipped. */}
+                <div
+                  className="flex-1 h-6 rounded-lg overflow-hidden relative"
+                  style={{ backgroundColor: `${color}14` }}
+                >
                   <div
-                    className="h-full rounded-lg transition-all"
+                    className="h-full rounded-lg transition-all flex items-center justify-center"
                     style={{ width: `${pct}%`, backgroundColor: color }}
-                  />
-                </div>
-                {/* Right: count badge — circle + "proje" caption */}
-                <div className="flex flex-col items-center shrink-0 min-w-[44px]">
-                  <span
-                    className="flex items-center justify-center w-9 h-9 rounded-full border text-[12px] font-bold tabular-nums"
-                    style={{ borderColor: `${color}80`, color, backgroundColor: `${color}0F` }}
                   >
-                    {count}
-                  </span>
-                  <span className="text-[9px] text-tyro-text-muted mt-0.5 lowercase">
-                    {t("dashboard.project").toLowerCase()}
-                  </span>
+                    {pct >= 25 && (
+                      <span className="text-[11px] font-bold text-white/95 tabular-nums drop-shadow-sm px-1 truncate">
+                        {label}
+                      </span>
+                    )}
+                  </div>
+                  {pct < 25 && (
+                    <span
+                      className="absolute inset-y-0 flex items-center text-[11px] font-bold tabular-nums"
+                      style={{ left: `calc(${pct}% + 8px)`, color }}
+                    >
+                      {label}
+                    </span>
+                  )}
                 </div>
               </div>
             );
