@@ -69,6 +69,7 @@ function dbToProje(row: DbProje, tags: string[] = [], participants: string[] = [
     parentObjectiveId: row.parent_proje_id ?? undefined,
     createdBy: row.created_by ?? undefined,
     createdAt: row.created_at,
+    updatedBy: (row as DbProje & { updated_by?: string }).updated_by ?? undefined,
     updatedAt: row.updated_at,
     completedAt: row.completed_at ?? undefined,
   };
@@ -88,6 +89,14 @@ function projeToDb(data: Partial<Proje>): Record<string, unknown> {
   if (data.reviewDate !== undefined) map.review_date = data.reviewDate;
   if (data.parentObjectiveId !== undefined) map.parent_proje_id = data.parentObjectiveId;
   if (data.completedAt !== undefined) map.completed_at = data.completedAt;
+  // Audit columns — createdAt/updatedAt mirror local timestamps so a
+  // fetch-after-write shows the same value the user has in memory.
+  // (The DB trigger `update_updated_at` will re-bump updated_at on any
+  //  real UPDATE, which is fine — sub-second drift self-heals.)
+  if (data.createdBy !== undefined) map.created_by = data.createdBy;
+  if (data.createdAt !== undefined) map.created_at = data.createdAt;
+  if (data.updatedBy !== undefined) map.updated_by = data.updatedBy;
+  if (data.updatedAt !== undefined) map.updated_at = data.updatedAt;
   return map;
 }
 
@@ -105,6 +114,7 @@ function dbToAksiyon(row: DbAksiyon): Aksiyon {
     sortOrder: row.sort_order ?? undefined,
     createdBy: row.created_by ?? undefined,
     createdAt: row.created_at,
+    updatedBy: (row as DbAksiyon & { updated_by?: string }).updated_by ?? undefined,
     updatedAt: row.updated_at,
     completedAt: row.completed_at ?? undefined,
   };
@@ -122,6 +132,11 @@ function aksiyonToDb(data: Partial<Aksiyon>): Record<string, unknown> {
   if (data.endDate !== undefined) map.end_date = data.endDate;
   if (data.sortOrder !== undefined) map.sort_order = data.sortOrder;
   if (data.completedAt !== undefined) map.completed_at = data.completedAt;
+  // Same audit columns as projeler (see projeToDb for the trigger note).
+  if (data.createdBy !== undefined) map.created_by = data.createdBy;
+  if (data.createdAt !== undefined) map.created_at = data.createdAt;
+  if (data.updatedBy !== undefined) map.updated_by = data.updatedBy;
+  if (data.updatedAt !== undefined) map.updated_at = data.updatedAt;
   return map;
 }
 
@@ -422,9 +437,9 @@ export const supabaseAdapter: DataService = {
     }));
   },
 
-  async createUser(user: Omit<AppUser, "id" | "createdAt" | "updatedAt">): Promise<AppUser | null> {
+  async createUser(user: Omit<AppUser, "id" | "updatedAt"> & { id?: string; createdAt?: string }): Promise<AppUser | null> {
     if (!supabase) return null;
-    const { data, error } = await supabase.from("users").insert({
+    const row: Record<string, unknown> = {
       email: user.email,
       display_name: user.displayName,
       department: user.department,
@@ -432,7 +447,13 @@ export const supabaseAdapter: DataService = {
       locale: user.locale,
       title: user.title ?? null,
       is_active: user.isActive ?? true,
-    }).select().single();
+    };
+    // Pass through client-generated id + createdAt when the store
+    // already enriched them, so DB and local cache agree on the
+    // canonical row identity + creation time.
+    if (user.id) row.id = user.id;
+    if (user.createdAt) row.created_at = user.createdAt;
+    const { data, error } = await supabase.from("users").insert(row).select().single();
     if (error) { console.error("[Supabase] createUser:", error); return null; }
     return { id: data.id, email: data.email, displayName: data.display_name, department: data.department ?? "", role: data.role, locale: data.locale ?? "tr", title: data.title ?? undefined, isActive: data.is_active ?? true, createdAt: data.created_at, updatedAt: data.updated_at };
   },

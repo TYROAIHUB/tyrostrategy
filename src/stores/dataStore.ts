@@ -165,7 +165,10 @@ export const useDataStore = create<DataState>()(
       addUser: (u) =>
         set((s) => {
           const newUser = { ...u, id: uid(), createdAt: now() } as AppUser;
-          syncToSupabase(() => supabaseAdapter.createUser(u));
+          // Sync the enriched newUser so the DB row mirrors the local
+          // one (same createdAt instead of the DB's own server-time
+          // default, which would drift across browsers).
+          syncToSupabase(() => supabaseAdapter.createUser(newUser));
           return { users: [...s.users, newUser] };
         }),
       updateUser: (id, data) => {
@@ -197,7 +200,15 @@ export const useDataStore = create<DataState>()(
           // DB too — otherwise completedAt updated locally but stayed
           // NULL in Postgres.
           const before = s.projeler.find((h) => h.id === id);
-          const syncData: Partial<Proje> = { ...data };
+          const syncData: Partial<Proje> = {
+            ...data,
+            // Audit trail: stamp every write with who/when. Client sets
+            // them so the local cache matches; the DB's update_updated_at
+            // trigger may re-bump updated_at — sub-second drift heals on
+            // next fetch.
+            updatedBy: data.updatedBy ?? getCurrentUser(),
+            updatedAt: data.updatedAt ?? now(),
+          };
           if (before) {
             if (data.status === "Achieved" && before.status !== "Achieved") {
               syncData.completedAt = new Date().toISOString();
@@ -243,9 +254,14 @@ export const useDataStore = create<DataState>()(
         }),
       updateAksiyon: (id, data) =>
         set((s) => {
-          // Same completedAt-on-Achieved logic + DB sync as updateProje.
+          // Same completedAt-on-Achieved logic + DB sync as updateProje,
+          // plus the updatedBy / updatedAt audit stamp.
           const before = s.aksiyonlar.find((a) => a.id === id);
-          const syncData: Partial<Aksiyon> = { ...data };
+          const syncData: Partial<Aksiyon> = {
+            ...data,
+            updatedBy: data.updatedBy ?? getCurrentUser(),
+            updatedAt: data.updatedAt ?? now(),
+          };
           if (before) {
             if (data.status === "Achieved" && before.status !== "Achieved") {
               syncData.completedAt = new Date().toISOString();
@@ -328,21 +344,39 @@ export const useDataStore = create<DataState>()(
         syncToSupabase(() => supabaseAdapter.deleteTagDefinition(id));
       },
       renameTag: (oldName, newName) => {
-        const tagDef = get().tagDefinitions.find((t) => t.name === oldName);
+        const state = get();
+        const tagDef = state.tagDefinitions.find((t) => t.name === oldName);
+        // Collect the projeler whose tag array needs rewriting BEFORE we
+        // mutate state, so we can also push the new arrays to Postgres.
+        // Previously only the tag_definitions row was synced; each
+        // proje_tags link kept pointing at the old name in DB and the
+        // rename silently drifted.
+        const affected = state.projeler
+          .filter((h) => h.tags?.includes(oldName))
+          .map((h) => ({
+            id: h.id,
+            nextTags: (h.tags ?? []).map((t) => (t === oldName ? newName : t)),
+          }));
         set((s) => ({
-          // Update tag definition name
           tagDefinitions: s.tagDefinitions.map((t) =>
-            t.name === oldName ? { ...t, name: newName } : t
+            t.name === oldName ? { ...t, name: newName } : t,
           ),
-          // Update all proje references
           projeler: s.projeler.map((h) =>
             h.tags?.includes(oldName)
               ? { ...h, tags: h.tags.map((t) => (t === oldName ? newName : t)) }
-              : h
+              : h,
           ),
         }));
         if (tagDef) {
           syncToSupabase(() => supabaseAdapter.updateTagDefinition(tagDef.id, { name: newName }));
+        }
+        // Mirror the tag array change to DB for every affected proje.
+        // supabaseAdapter.updateProje re-inserts the proje_tags rows to
+        // match the new array (see its tag-rollback block).
+        for (const entry of affected) {
+          syncToSupabase(() =>
+            supabaseAdapter.updateProje(entry.id, { tags: entry.nextTags }),
+          );
         }
       },
 

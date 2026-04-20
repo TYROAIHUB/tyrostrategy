@@ -1387,14 +1387,22 @@ ${clone.outerHTML}
                         </div>
                       </div>
 
-                      {/* Meta row: Leader, Source, Dept, Tags, Actions */}
+                      {/* Meta row: "label: VALUE | label: VALUE | ..."
+                          Label is muted, value is bold — matches the
+                          form-field style the user asked for. */}
                       <div className="px-4 py-2 border-t border-tyro-border/8 text-[12px] space-y-1">
                         <div className="flex items-center flex-wrap gap-x-3 gap-y-1">
-                          <span className="text-tyro-text-secondary"><span className="font-semibold text-tyro-text-primary">{h.owner}</span> · {t("common.leader")}</span>
+                          <span className="text-tyro-text-muted">
+                            {t("dashboard.projectLeader")}: <span className="font-semibold text-tyro-text-primary">{h.owner}</span>
+                          </span>
                           <span className="text-tyro-border">|</span>
-                          <span className="text-tyro-text-secondary">{h.source}</span>
-                          <span className="text-tyro-border">·</span>
-                          <span className="text-tyro-text-secondary">{deptLabel(h.department, t)}</span>
+                          <span className="text-tyro-text-muted">
+                            {t("common.department")}: <span className="font-semibold text-tyro-text-primary">{deptLabel(h.department, t)}</span>
+                          </span>
+                          <span className="text-tyro-border">|</span>
+                          <span className="text-tyro-text-muted">
+                            {t("common.source")}: <span className="font-semibold text-tyro-text-primary">{h.source}</span>
+                          </span>
                           {h.tags && h.tags.length > 0 && (
                             <>
                               <span className="text-tyro-border">|</span>
