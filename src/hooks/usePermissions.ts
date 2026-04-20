@@ -35,7 +35,8 @@ export function usePermissions() {
     return ids;
   }, [perms.viewOnlyOwn, user.role, normalizedName, projeler]);
 
-  // Kullanicinin aksiyonlari (owner veya kendi hedeflerindeki)
+  // Kullanicinin aksiyonlari (owner veya kendi hedeflerindeki) —
+  // leader-tier view: "any aksiyon on a project I lead or participate in".
   const myAksiyonIds = useMemo(() => {
     const ids = new Set<string>();
     for (const a of aksiyonlar) {
@@ -49,6 +50,17 @@ export function usePermissions() {
     return ids;
   }, [aksiyonlar, normalizedName, myProjeIds]);
 
+  // Strictly-owned aksiyons — member-tier (Kullanıcı) edit scope.
+  // A regular member on a shared project can see the project but can
+  // only edit aksiyons they personally own, even on that project.
+  const myOwnedAksiyonIds = useMemo(() => {
+    const ids = new Set<string>();
+    for (const a of aksiyonlar) {
+      if (a.owner?.toLowerCase().trim() === normalizedName) ids.add(a.id);
+    }
+    return ids;
+  }, [aksiyonlar, normalizedName]);
+
   // ===== Sayfa erisim =====
   const canAccessPage = (pageKey: keyof RolePermissions["pages"]) => perms.pages[pageKey];
 
@@ -60,6 +72,13 @@ export function usePermissions() {
 
   const filterAksiyonlar = useCallback((list: Aksiyon[]): Aksiyon[] => {
     if (!perms.viewOnlyOwn) return list;
+    // Project membership ≠ project leadership.
+    //   * Proje Lideri / Management (leader-tier roles): see every aksiyon
+    //     on a project they own or participate in — team-lead context.
+    //   * Kullanıcı (member-tier role): only their own aksiyons, even on
+    //     projects where they're a member. They still SEE the project
+    //     itself (via filterProjeler + projeCount), but the aksiyon list
+    //     stays personal.
     if (user.role === "Kullanıcı") {
       return list.filter((a) => a.owner?.toLowerCase().trim() === normalizedName);
     }
@@ -93,6 +112,10 @@ export function usePermissions() {
   const canEditAksiyon = (aksiyonId: string) => {
     if (!perms.aksiyon.edit) return false;
     if (!perms.editOnlyOwn) return true;
+    // Kullanıcı role (member-tier): only edits aksiyons they personally
+    // own — project membership doesn't grant edit rights on teammates'
+    // aksiyons. Leader-tier roles edit any aksiyon on their projects.
+    if (user.role === "Kullanıcı") return myOwnedAksiyonIds.has(aksiyonId);
     return myAksiyonIds.has(aksiyonId);
   };
   const canDeleteAksiyon = (_aksiyonId: string) => perms.aksiyon.delete;
