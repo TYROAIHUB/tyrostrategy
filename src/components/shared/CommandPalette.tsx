@@ -10,10 +10,19 @@ import {
   GanttChart,
   Users,
   Settings,
+  Home,
+  Map,
+  GitMerge,
+  FileText,
+  Shield,
 } from "lucide-react";
 import { useUIStore } from "@/stores/uiStore";
 import { useDataStore } from "@/stores/dataStore";
+import { usePermissions } from "@/hooks/usePermissions";
 import type { LucideIcon } from "lucide-react";
+import type { RolePermissions } from "@/types";
+
+type PageKey = keyof RolePermissions["pages"];
 
 type CategoryKey = "pages" | "objectives" | "actions";
 
@@ -25,14 +34,26 @@ interface SearchResult {
   icon?: LucideIcon;
 }
 
-function getPages(t: (key: string) => string): { name: string; path: string; icon: LucideIcon }[] {
+// All routable pages with the page-permission key they're gated on —
+// mirrors Sidebar's item list so the palette offers exactly the same
+// surface that a user can actually navigate to (and nothing more).
+// Pages without a pageKey (profil, yardim) stay always-visible.
+function getPages(
+  t: (key: string) => string,
+): { name: string; path: string; icon: LucideIcon; pageKey?: PageKey }[] {
   return [
-    { name: t("dashboard.title"), path: "/dashboard", icon: LayoutDashboard },
-    { name: t("nav.objectives"), path: "/projeler", icon: Target },
-    { name: t("nav.actions"), path: "/aksiyonlar", icon: ListChecks },
-    { name: t("nav.gantt"), path: "/gantt", icon: GanttChart },
-    { name: t("nav.users"), path: "/kullanicilar", icon: Users },
-    { name: t("nav.settings"), path: "/ayarlar", icon: Settings },
+    { name: t("nav.home"), path: "/workspace", icon: Home, pageKey: "anasayfa" },
+    { name: t("dashboard.title"), path: "/dashboard", icon: LayoutDashboard, pageKey: "kpi" },
+    { name: t("nav.strategicHQ"), path: "/stratejik-kokpit", icon: LayoutDashboard, pageKey: "stratejikKokpit" },
+    { name: t("nav.objectives"), path: "/projeler", icon: Target, pageKey: "projeler" },
+    { name: t("nav.actions"), path: "/aksiyonlar", icon: ListChecks, pageKey: "aksiyonlar" },
+    { name: t("nav.gantt"), path: "/gantt", icon: GanttChart, pageKey: "gantt" },
+    { name: "T-Map", path: "/strategy-map", icon: Map, pageKey: "wbs" },
+    { name: t("nav.tAlignment"), path: "/t-alignment", icon: GitMerge, pageKey: "projeler" },
+    { name: t("dashboard.reportWizard"), path: "/dashboard?tab=rapor", icon: FileText, pageKey: "raporKonfigurasyonu" },
+    { name: t("nav.users"), path: "/kullanicilar", icon: Users, pageKey: "kullanicilar" },
+    { name: t("nav.settings"), path: "/ayarlar", icon: Settings, pageKey: "ayarlar" },
+    { name: t("nav.security"), path: "/guvenlik", icon: Shield, pageKey: "guvenlik" },
   ];
 }
 
@@ -40,11 +61,22 @@ export default function CommandPalette() {
   const { t } = useTranslation();
   const open = useUIStore((s) => s.commandPaletteOpen);
   const close = useUIStore((s) => s.closeCommandPalette);
-  const projeler = useDataStore((s) => s.projeler);
-  const aksiyonlar = useDataStore((s) => s.aksiyonlar);
+  const allProjeler = useDataStore((s) => s.projeler);
+  const allAksiyonlar = useDataStore((s) => s.aksiyonlar);
+  const { canAccessPage, filterProjeler, filterAksiyonlar } = usePermissions();
   const navigate = useNavigate();
 
-  const pages = useMemo(() => getPages(t), [t]);
+  // Role-gated views of the data — search only surfaces what the user
+  // is actually allowed to see, same rule that the list pages apply.
+  const projeler = useMemo(() => filterProjeler(allProjeler), [allProjeler, filterProjeler]);
+  const aksiyonlar = useMemo(() => filterAksiyonlar(allAksiyonlar), [allAksiyonlar, filterAksiyonlar]);
+
+  // Drop pages the current role can't open so they don't show up as
+  // dead targets in search. No pageKey = always visible (profil, yardım).
+  const pages = useMemo(
+    () => getPages(t).filter((p) => !p.pageKey || canAccessPage(p.pageKey)),
+    [t, canAccessPage],
+  );
   const [query, setQuery] = useState("");
   const [selectedIndex, setSelectedIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
