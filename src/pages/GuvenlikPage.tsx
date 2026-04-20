@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Button, Switch, Tooltip } from "@heroui/react";
 import { Shield, RotateCcw, Save, Crown, Briefcase, User, Info, BarChart2 } from "lucide-react";
@@ -55,9 +55,24 @@ export default function GuvenlikPage() {
     aksiyon: t("nav.actions"),
   };
 
-  const { permissions, updatePermissions, resetToDefaults } = useRoleStore();
+  const { permissions, updatePermissions, resetToDefaults, reloadFromDb } = useRoleStore();
   const [draft, setDraft] = useState<Record<UserRole, RolePermissions>>({ ...permissions });
   const [hasChanges, setHasChanges] = useState(false);
+
+  // Always fetch the authoritative state from DB when this page opens.
+  // localStorage is only a warm-cache; for the Güvenlik screen the DB is
+  // the single source of truth — otherwise two browsers / tabs can diverge.
+  useEffect(() => {
+    void reloadFromDb();
+  }, [reloadFromDb]);
+
+  // When permissions change (after the DB fetch above), rebase the draft
+  // — but never clobber unsaved user edits in the same session.
+  useEffect(() => {
+    if (!hasChanges) {
+      setDraft({ ...permissions });
+    }
+  }, [permissions, hasChanges]);
 
   const btnStyle = {
     backgroundColor: sidebarTheme.accentColor ?? sidebarTheme.bg,
