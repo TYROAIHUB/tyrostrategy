@@ -92,7 +92,9 @@ export default function RaporSihirbazi() {
     { id: "statusPie", label: t("dashboard.statusPieChart"), defaultOn: false },
     { id: "progressChart", label: t("dashboard.progressDistribution"), defaultOn: true },
     { id: "deptTable", label: t("dashboard.departmentTable"), defaultOn: true },
-    { id: "attention", label: t("dashboard.attentionRequired"), defaultOn: true },
+    // "Dikkat gerektiren" standalone section was removed — its content is
+    // surfaced inline in the AI Insights panel at the top of the Executive
+    // Summary instead.
     { id: "details", label: t("dashboard.projectDetails"), defaultOn: true },
     { id: "actions", label: t("dashboard.actionSteps"), defaultOn: true },
   ];
@@ -325,12 +327,9 @@ export default function RaporSihirbazi() {
     return Object.entries(m).sort((a, b) => b[1].total - a[1].total);
   }, [reportProjeler, aksiyonlar]);
 
-  const attentionItems = useMemo(
-    () => reportProjeler.filter((h) =>
-      (h.status === "High Risk" || h.status === "At Risk") && h.tags?.includes("Uygulama")
-    ),
-    [reportProjeler]
-  );
+  // attentionItems useMemo removed — the former "Dikkat Gerektiren"
+  // standalone section is gone, and the AI Insights panel computes its
+  // own filter (High Risk / At Risk, no tag filter) inline.
 
   const progressDist = useMemo(() => {
     const d = { full: 0, high: 0, mid: 0, low: 0, zero: 0 };
@@ -1160,23 +1159,71 @@ ${clone.outerHTML}
               { label: STATUS_TR["Cancelled"], value: statusSummary["Cancelled"] || 0, color: "#6b7280" },
             ].sort((a, b) => b.value - a.value);
 
-            // Generate AI-like executive insights
-            const riskCount = (statusSummary["At Risk"] || 0) + (statusSummary["High Risk"] || 0);
-            const completionRate = reportProjeler.length > 0 ? Math.round(((statusSummary["Achieved"] || 0) / reportProjeler.length) * 100) : 0;
-            const worstDept = deptBreakdown.length > 0 ? deptBreakdown.reduce((worst, [, d]) => d.avgProg < worst.avgProg ? d : worst, deptBreakdown[0][1]) : null;
-            const worstDeptName = deptBreakdown.find(([, d]) => d === worstDept)?.[0] || "";
-            const bestDept = deptBreakdown.length > 0 ? deptBreakdown.reduce((best, [, d]) => d.avgProg > best.avgProg ? d : best, deptBreakdown[0][1]) : null;
-            const bestDeptName = deptBreakdown.find(([, d]) => d === bestDept)?.[0] || "";
+            // (Old risk/completion/dept-ranking vars removed — insights
+            //  panel now computes only this month's opened/closed projects
+            //  and the attention list, each inline in its own filter.)
+
+            // AI Insights — per spec, only three categories:
+            //   1) Projects opened this month (startDate in current month/year)
+            //   2) Projects completed this month (status=Achieved, endDate in current month/year)
+            //   3) Projects needing attention (status High Risk or At Risk)
+            // The old composite insights (progress %, dept perf, etc.) were
+            // removed along with the standalone "Dikkat Gerektiren" section
+            // — that content lives here now.
+            const _now = new Date();
+            const _thisMonth = _now.getMonth();
+            const _thisYear = _now.getFullYear();
+
+            const openedThisMonth = reportProjeler.filter((h) => {
+              if (!h.startDate) return false;
+              const d = new Date(h.startDate);
+              return d.getMonth() === _thisMonth && d.getFullYear() === _thisYear;
+            });
+            const closedThisMonth = reportProjeler.filter((h) => {
+              if (h.status !== "Achieved" || !h.endDate) return false;
+              const d = new Date(h.endDate);
+              return d.getMonth() === _thisMonth && d.getFullYear() === _thisYear;
+            });
+            const attentionProjeler = reportProjeler.filter(
+              (h) => h.status === "High Risk" || h.status === "At Risk",
+            );
 
             const insights: { Icon: typeof Check; color: string; text: string; type: "success" | "warning" | "info" }[] = [];
-            if (avgProgress >= 70) insights.push({ Icon: TrendingUp, color: "#10b981", text: t("dashboard.insightOnTrack", { progress: avgProgress }), type: "success" });
-            else if (avgProgress >= 40) insights.push({ Icon: CircleAlert, color: "#f59e0b", text: t("dashboard.insightNeedsMomentum", { progress: avgProgress }), type: "warning" });
-            else insights.push({ Icon: CircleAlert, color: "#ef4444", text: t("dashboard.insightCritical", { progress: avgProgress }), type: "warning" });
-
-            if (riskCount > 0) insights.push({ Icon: AlertTriangle, color: "#f59e0b", text: t("dashboard.insightAtRisk", { count: riskCount }), type: "warning" });
-            if (completionRate > 0) insights.push({ Icon: BarChart3, color: "#3b82f6", text: t("dashboard.insightCompletionRate", { rate: completionRate, count: statusSummary["Achieved"] || 0 }), type: "info" });
-            if (worstDept && worstDept.avgProg < avgProgress) insights.push({ Icon: TrendingDown, color: "#ef4444", text: t("dashboard.insightWorstDept", { dept: worstDeptName, progress: worstDept.avgProg }), type: "warning" });
-            if (bestDept && bestDept.avgProg > avgProgress) insights.push({ Icon: Trophy, color: "#c8922a", text: t("dashboard.insightBestDept", { dept: bestDeptName, progress: bestDept.avgProg }), type: "success" });
+            if (openedThisMonth.length > 0) {
+              insights.push({
+                Icon: TrendingUp,
+                color: "#10b981",
+                text: t("dashboard.insightOpenedThisMonth", {
+                  count: openedThisMonth.length,
+                  names: openedThisMonth.map((h) => h.name).join(", "),
+                }),
+                type: "info",
+              });
+            }
+            if (closedThisMonth.length > 0) {
+              insights.push({
+                Icon: Trophy,
+                color: "#c8922a",
+                text: t("dashboard.insightClosedThisMonth", {
+                  count: closedThisMonth.length,
+                  names: closedThisMonth.map((h) => h.name).join(", "),
+                }),
+                type: "success",
+              });
+            }
+            if (attentionProjeler.length > 0) {
+              insights.push({
+                Icon: AlertTriangle,
+                color: "#ef4444",
+                text: t("dashboard.insightAttentionProjects", {
+                  count: attentionProjeler.length,
+                  names: attentionProjeler
+                    .map((h) => `${h.name} (${STATUS_TR[h.status]})`)
+                    .join(", "),
+                }),
+                type: "warning",
+              });
+            }
 
             // Circular progress SVG
             const circR = 60;
@@ -1353,28 +1400,12 @@ ${clone.outerHTML}
             </Section>
           )}
 
-          {/* 4. DİKKAT GEREKTİREN */}
-          {sections.attention && attentionItems.length > 0 && (
-            <Section num={4} title={t("dashboard.attentionProjectsHeading")} titleColor="#ef4444">
-              <div className="space-y-2">
-                {attentionItems.map((h) => (
-                  <div key={h.id} className="glass-card rounded-xl px-4 py-3 flex items-center justify-between" style={{ borderLeft: `3px solid ${STATUS_COLOR[h.status]}` }}>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-[12px] font-semibold text-tyro-text-primary truncate">{h.name}</p>
-                      <p className="text-[12px] text-tyro-text-secondary mt-0.5">{deptLabel(h.department, t)} · {h.owner} · {t("dashboard.endDateLabel")}: {new Date(h.endDate).toLocaleDateString(dateLocale)}</p>
-                    </div>
-                    <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full shrink-0 ml-3" style={{ backgroundColor: `${STATUS_COLOR[h.status]}12`, color: STATUS_COLOR[h.status] }}>
-                      {STATUS_TR[h.status]}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </Section>
-          )}
-
-          {/* 5. PROJE DETAYLARI — sorted by progress desc */}
+          {/* 4. PROJE DETAYLARI — sorted by progress desc
+               (The former section 4 "Dikkat Gerektiren Projeler" was
+                folded into the AI Insights panel at the top of the
+                Executive Summary — see that block for the list.) */}
           {sections.details && (
-            <Section num={5} title={t("dashboard.projectDetails")}>
+            <Section num={4} title={t("dashboard.projectDetails")}>
               <div className="space-y-3">
                 {[...reportProjeler].sort((a, b) => calcProjeProgress(b, aksiyonlar) - calcProjeProgress(a, aksiyonlar)).map((h) => {
                   const ha = aksiyonlar.filter((a) => a.projeId === h.id);

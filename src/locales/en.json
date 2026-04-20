@@ -517,7 +517,10 @@
     "insightAtRisk": "{{count}} projects are at risk or high risk — attention required.",
     "insightCompletionRate": "Project completion rate is {{rate}}%. {{count}} projects successfully completed.",
     "insightWorstDept": "{{dept}} department shows lowest performance at {{progress}}% average progress.",
-    "insightBestDept": "{{dept}} department leads with {{progress}}% highest performance."
+    "insightBestDept": "{{dept}} department leads with {{progress}}% highest performance.",
+    "insightOpenedThisMonth": "{{count}} projects opened this month: {{names}}",
+    "insightClosedThisMonth": "{{count}} projects completed this month: {{names}}",
+    "insightAttentionProjects": "{{count}} projects need attention: {{names}}"
   },
   "security": {
     "pageAccess": "Page Access",
