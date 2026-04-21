@@ -1,29 +1,27 @@
 -- ============================================================================
--- Migration 016: users tablosu WITH CHECK (yetki bazlı) + SELECT'te X-User-Email zorunluluğu
+-- Migration 016: users tablosu WITH CHECK (yetki bazlı) + column-level koruma
 -- ============================================================================
--- Amaç (iki kritik açık kapanıyor):
+-- Amaç — bir kritik açık kapatılıyor:
 --
---   1. "Yetkisiz self-update role escalation" açığı:
---      Migration 006'daki users_update policy'sinde WITH CHECK yoktu. O yüzden
---      herhangi bir çalışan DevTools'tan kendi users satırına `role='Admin'`
---      yazabiliyordu. Burada WITH CHECK ekliyoruz — self-update'te sadece
---      `locale` (dil) kolonu değişebilir, diğer her kolon mevcut değeriyle aynı
---      kalmak ZORUNDA.
+--   "Yetkisiz self-update role escalation" açığı:
+--   Migration 006'daki users_update policy'sinde WITH CHECK yoktu. O yüzden
+--   herhangi bir çalışan DevTools'tan kendi users satırına `role='Admin'`
+--   yazabiliyordu. Burada WITH CHECK ekliyoruz — self-update'te sadece
+--   `locale` (dil) kolonu değişebilir, diğer her kolon mevcut değeriyle aynı
+--   kalmak ZORUNDA.
 --
---   2. "Anon key ile header'sız veri dumpu" açığı:
---      Migration 001'deki SELECT policy'leri `USING (true)`. Bu yüzden bundle'daki
---      anon key'i çıkaran herhangi biri, login olmadan, X-User-Email header
---      göndermeden tüm projeler/aksiyonlar tablolarını dump edebiliyor. Burada
---      SELECT policy'leri header'da geçerli bir email istediğinden emin oluyoruz.
---      Uygulama zaten login'den sonra X-User-Email gönderdiği için normal akış
---      etkilenmez; sadece login-olmayan dış saldırgan yolu kapatılıyor.
+--   Ayrıca INSERT/DELETE artık sabit 'Admin' rolüne değil `pages.kullanicilar`
+--   yetkisine bağlı — Güvenlik sayfasındaki rol ayarları canlı çalışır.
 --
--- Dikkat: users ve tag_definitions SELECT'leri BİLEREK açık bırakılıyor çünkü
--- sidebar/dropdown'lar için login sonrası ilk render'da gerekli, ayrıca bunlarda
--- secret bir bilgi yok (email + display_name + role + dept + tag isim/renk).
+-- NOT: İlk versiyonda projeler/aksiyonlar/vb. SELECT policy'leri de
+-- `app.current_email() IS NOT NULL` ile sıkıştırılmıştı. Ama frontend module
+-- startup'ta (MSAL login bitmeden) fetch yaptığı için UI boş açılıyordu. SELECT
+-- sıkıştırması geri alındı (USING true). Frontend uyarlandığında (startup
+-- fetch'i auth sonrasına taşı) SELECT'ler tekrar sıkılaştırılabilir — şimdilik
+-- SELECT tarafında sıkılaştırma YAPMIYORUZ.
 -- ============================================================================
 
--- ─── 1. users tablosu: yetki bazlı CRUD + self-update-sadece-locale ─────────
+-- ─── users tablosu: yetki bazlı CRUD + self-update-sadece-locale ───────────
 DROP POLICY IF EXISTS "users_insert" ON public.users;
 DROP POLICY IF EXISTS "users_update" ON public.users;
 DROP POLICY IF EXISTS "users_delete" ON public.users;
@@ -58,71 +56,29 @@ CREATE POLICY "users_update" ON public.users FOR UPDATE
     )
   );
 
--- ─── 2. SELECT policy'leri — header'da email olmadan dump atılamasın ────────
--- projeler
-DROP POLICY IF EXISTS "projeler_select" ON public.projeler;
-CREATE POLICY "projeler_select" ON public.projeler FOR SELECT
-  USING (app.current_email() IS NOT NULL);
-
--- aksiyonlar
-DROP POLICY IF EXISTS "aksiyonlar_select" ON public.aksiyonlar;
-CREATE POLICY "aksiyonlar_select" ON public.aksiyonlar FOR SELECT
-  USING (app.current_email() IS NOT NULL);
-
--- proje_participants
-DROP POLICY IF EXISTS "participants_select" ON public.proje_participants;
-CREATE POLICY "participants_select" ON public.proje_participants FOR SELECT
-  USING (app.current_email() IS NOT NULL);
-
--- proje_tags
-DROP POLICY IF EXISTS "proje_tags_select" ON public.proje_tags;
-CREATE POLICY "proje_tags_select" ON public.proje_tags FOR SELECT
-  USING (app.current_email() IS NOT NULL);
-
--- report_templates
-DROP POLICY IF EXISTS "templates_select" ON public.report_templates;
-CREATE POLICY "templates_select" ON public.report_templates FOR SELECT
-  USING (app.current_email() IS NOT NULL);
-
--- app_settings ve role_permissions SELECT'i de tightenıyoruz — bunlar da sadece
--- login olmuş kullanıcıların görmesi gereken config tabloları
-DROP POLICY IF EXISTS "settings_select" ON public.app_settings;
-CREATE POLICY "settings_select" ON public.app_settings FOR SELECT
-  USING (app.current_email() IS NOT NULL);
-
-DROP POLICY IF EXISTS "role_perms_select" ON public.role_permissions;
-CREATE POLICY "role_perms_select" ON public.role_permissions FOR SELECT
-  USING (app.current_email() IS NOT NULL);
-
 -- ============================================================================
--- Doğrulama (SQL Editor'da migration çalıştıktan sonra elle test et):
+-- Doğrulama — REST API ile (anon key + X-User-Email header):
 --
--- 1) Self role escalation kapalı mı? (Supabase SQL Editor'da):
---      -- bir normal kullanıcı email'i simüle et
---      SELECT set_config('request.headers', '{"x-user-email":"kullanici@tiryaki.com.tr"}', true);
---      UPDATE public.users SET role = 'Admin' WHERE lower(email) = 'kullanici@tiryaki.com.tr';
---      → ERROR: new row violates check constraint beklenen davranış
+-- 1) Self role escalation reddediliyor mu?
+--      curl -X PATCH 'https://<proj>.supabase.co/rest/v1/users?email=eq.<self>' \
+--           -H 'apikey: <ANON>' -H 'Authorization: Bearer <ANON>' \
+--           -H 'X-User-Email: <self>' -H 'Content-Type: application/json' \
+--           -d '{"role":"Admin"}'
+--      → 401 + "new row violates row-level security policy" (beklenen)
 --
 -- 2) Locale self-update hâlâ çalışıyor mu?
---      SELECT set_config('request.headers', '{"x-user-email":"kullanici@tiryaki.com.tr"}', true);
---      UPDATE public.users SET locale = 'en' WHERE lower(email) = 'kullanici@tiryaki.com.tr';
---      → 1 row updated
+--      Aynı curl, -d '{"locale":"en"}' → 200 OK (beklenen)
 --
--- 3) Admin / kullanicilar yetkili diğer CRUD'ları yapabiliyor mu?
---      SELECT set_config('request.headers', '{"x-user-email":"cenk.sayli@tiryaki.com.tr"}', true);
---      UPDATE public.users SET role = 'Proje Lideri' WHERE email = 'birisi@tiryaki.com.tr';
---      → 1 row updated
+-- 3) Başka kullanıcıyı update etme denemesi?
+--      Farklı email için PATCH → 200 + [] (USING filter match yok — güvenli no-op)
 --
--- 4) Header'sız SELECT:
---      SELECT set_config('request.headers', '{}', true);
---      SELECT count(*) FROM public.projeler;
---      → 0 rows beklenen davranış
+-- NOT: Bu testleri direct pg bağlantısı ile yapmayın — superuser modunda RLS
+-- bypass olur, gerçek kullanıcı davranışını simüle etmez.
 -- ============================================================================
 
 -- ============================================================================
--- ROLLBACK (sorun olursa, bu migration'ı geri almak için):
+-- ROLLBACK (sorun olursa):
 --
---   -- Migration 006'daki orijinal policy'lere dön:
 --   DROP POLICY IF EXISTS "users_insert" ON public.users;
 --   DROP POLICY IF EXISTS "users_update" ON public.users;
 --   DROP POLICY IF EXISTS "users_delete" ON public.users;
@@ -132,20 +88,4 @@ CREATE POLICY "role_perms_select" ON public.role_permissions FOR SELECT
 --     USING (app.current_role() = 'Admin' OR lower(email) = lower(app.current_email()));
 --   CREATE POLICY "users_delete" ON public.users FOR DELETE
 --     USING (app.current_role() = 'Admin');
---
---   -- SELECT'leri eski haline (USING true) geri al:
---   DROP POLICY IF EXISTS "projeler_select" ON public.projeler;
---   CREATE POLICY "projeler_select" ON public.projeler FOR SELECT USING (true);
---   DROP POLICY IF EXISTS "aksiyonlar_select" ON public.aksiyonlar;
---   CREATE POLICY "aksiyonlar_select" ON public.aksiyonlar FOR SELECT USING (true);
---   DROP POLICY IF EXISTS "participants_select" ON public.proje_participants;
---   CREATE POLICY "participants_select" ON public.proje_participants FOR SELECT USING (true);
---   DROP POLICY IF EXISTS "proje_tags_select" ON public.proje_tags;
---   CREATE POLICY "proje_tags_select" ON public.proje_tags FOR SELECT USING (true);
---   DROP POLICY IF EXISTS "templates_select" ON public.report_templates;
---   CREATE POLICY "templates_select" ON public.report_templates FOR SELECT USING (true);
---   DROP POLICY IF EXISTS "settings_select" ON public.app_settings;
---   CREATE POLICY "settings_select" ON public.app_settings FOR SELECT USING (true);
---   DROP POLICY IF EXISTS "role_perms_select" ON public.role_permissions;
---   CREATE POLICY "role_perms_select" ON public.role_permissions FOR SELECT USING (true);
 -- ============================================================================
