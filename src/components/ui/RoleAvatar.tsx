@@ -45,6 +45,13 @@ const roleStyles: Record<
     badgeBg: "rgba(148,163,184,0.12)",
     badgeText: "#64748b",
   },
+  Management: {
+    gradient: "linear-gradient(135deg, #5b21b6, #8b5cf6, #a78bfa, #8b5cf6, #5b21b6)",
+    borderWidth: 3,
+    glow: "0 0 6px rgba(139,92,246,0.4), 0 0 12px rgba(139,92,246,0.15)",
+    badgeBg: "rgba(139,92,246,0.12)",
+    badgeText: "#7c3aed",
+  },
 };
 
 function lightenHex(hex: string, amt: number): string {
