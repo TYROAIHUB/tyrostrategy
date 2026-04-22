@@ -210,6 +210,8 @@ export default function KokpitAdvancedFilter({ isOpen, onClose, projeler, aksiyo
                   <SelectItem key="Türkiye">{t("kokpit.filter.sourceTurkiye")}</SelectItem>
                   <SelectItem key="Kurumsal">{t("kokpit.filter.sourceKurumsal")}</SelectItem>
                   <SelectItem key="International">{t("kokpit.filter.sourceInternational")}</SelectItem>
+                  <SelectItem key="LALE">{t("kokpit.filter.sourceLALE")}</SelectItem>
+                  <SelectItem key="Organik">{t("kokpit.filter.sourceOrganik")}</SelectItem>
                 </Select>
               </Section>
 

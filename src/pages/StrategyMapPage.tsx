@@ -1,9 +1,9 @@
-import { useState, useMemo, useRef } from "react";
+import { useState, useMemo, useRef, lazy, Suspense } from "react";
 import { useTranslation } from "react-i18next";
 import { motion, AnimatePresence } from "framer-motion";
-import { ZoomIn, ZoomOut, RotateCcw, Eye, EyeOff, Target, ListChecks, ChevronDown, ChevronUp, Search } from "lucide-react";
+import { ZoomIn, ZoomOut, RotateCcw, Eye, EyeOff, Target, ListChecks, ChevronDown, ChevronUp, Search, SlidersHorizontal } from "lucide-react";
 import { TyroLogo } from "@/components/ui/TyroLogo";
-import { Button } from "@heroui/react";
+import { Button, Tooltip } from "@heroui/react";
 import { useDataStore } from "@/stores/dataStore";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useSidebarTheme } from "@/hooks/useSidebarTheme";
@@ -15,7 +15,12 @@ import PageHeader from "@/components/layout/PageHeader";
 import SlidingPanel from "@/components/shared/SlidingPanel";
 import ProjeDetail from "@/components/projeler/ProjeDetail";
 import AksiyonDetail from "@/components/aksiyonlar/AksiyonDetail";
-import type { Proje, Source } from "@/types";
+import type { Proje, Source, AdvancedFilters } from "@/types";
+
+// Kokpit ile aynı panel — source/status/department/owner/tag/date/progress
+// filtreleri. T-Map'te de aynı semantiği kullanıyoruz ki iki sayfa arasında
+// mental model tutarlı kalsın.
+const KokpitAdvancedFilter = lazy(() => import("@/components/kokpit/KokpitAdvancedFilter"));
 
 // Tema renkleri (source → renk paleti)
 const THEME_COLORS: Record<Source, { bg: string; border: string; text: string; light: string }> = {
@@ -264,6 +269,23 @@ export default function StrategyMapPage() {
   const [panelOpen, setPanelOpen] = useState(false);
   const [panelType, setPanelType] = useState<"proje" | "aksiyon">("proje");
   const [selectedAksiyonId, setSelectedAksiyonId] = useState<string | null>(null);
+  const [advFilters, setAdvFilters] = useState<AdvancedFilters | null>(null);
+  const [advFilterOpen, setAdvFilterOpen] = useState(false);
+
+  // Aktif filtre dimension sayısı — butonun yanındaki rozette gösterilir
+  const advFilterCount = useMemo(() => {
+    if (!advFilters) return 0;
+    let n = 0;
+    if (advFilters.statuses?.length) n++;
+    if (advFilters.sources?.length) n++;
+    if (advFilters.departments?.length) n++;
+    if (advFilters.owners?.length) n++;
+    if (advFilters.tags?.length) n++;
+    if (advFilters.dateFrom || advFilters.dateTo) n++;
+    if (advFilters.reviewDateFrom || advFilters.reviewDateTo) n++;
+    if ((advFilters.progressMin ?? 0) > 0 || (advFilters.progressMax ?? 100) < 100) n++;
+    return n;
+  }, [advFilters]);
 
   const toggleProjeExpand = (projeId: string) => {
     setExpandedProjeIds((prev) => {
@@ -287,11 +309,25 @@ export default function StrategyMapPage() {
     return ids;
   }, [projeler, mapSearch]);
 
-  // Filtreli projeler
+  // Filtreli projeler — önce search (matchedProjeIds), sonra gelişmiş filtreler
+  // (Kokpit ile aynı dimension set'i). İki filtre AND mantığıyla zincirleniyor.
   const filteredProjeler = useMemo(() => {
-    if (!matchedProjeIds) return projeler; // null = no search
-    return projeler.filter((h) => matchedProjeIds.has(h.id));
-  }, [projeler, matchedProjeIds]);
+    let list = matchedProjeIds ? projeler.filter((h) => matchedProjeIds.has(h.id)) : projeler;
+    if (advFilters) {
+      if (advFilters.statuses?.length)    list = list.filter((h) => advFilters.statuses!.includes(h.status));
+      if (advFilters.sources?.length)     list = list.filter((h) => advFilters.sources!.includes(h.source));
+      if (advFilters.departments?.length) list = list.filter((h) => advFilters.departments!.includes(h.department));
+      if (advFilters.owners?.length)      list = list.filter((h) => advFilters.owners!.includes(h.owner));
+      if (advFilters.tags?.length)        list = list.filter((h) => h.tags?.some((t) => advFilters.tags!.includes(t)));
+      if (advFilters.dateFrom)            list = list.filter((h) => h.startDate >= advFilters.dateFrom!);
+      if (advFilters.dateTo)              list = list.filter((h) => h.endDate <= advFilters.dateTo!);
+      if (advFilters.reviewDateFrom)      list = list.filter((h) => h.reviewDate && h.reviewDate >= advFilters.reviewDateFrom!);
+      if (advFilters.reviewDateTo)        list = list.filter((h) => h.reviewDate && h.reviewDate <= advFilters.reviewDateTo!);
+      if ((advFilters.progressMin ?? 0) > 0)    list = list.filter((h) => h.progress >= advFilters.progressMin!);
+      if ((advFilters.progressMax ?? 100) < 100) list = list.filter((h) => h.progress <= advFilters.progressMax!);
+    }
+    return list;
+  }, [projeler, matchedProjeIds, advFilters]);
 
   // Source'a göre grupla (filtreli) — tüm Source enum üyelerini baştan
   // oluştur ki LALE/Organik gibi yeni kaynaklar da gruba girsin.
@@ -357,6 +393,20 @@ export default function StrategyMapPage() {
             className="w-full h-8 pl-8 pr-3 text-[12px] rounded-xl border border-tyro-border bg-tyro-surface text-tyro-text-primary placeholder:text-tyro-text-muted focus:outline-none focus:ring-2 focus:ring-tyro-gold/30"
           />
         </div>
+        {/* Gelişmiş Filtre — Kokpit'teki ile aynı pattern */}
+        <Tooltip content={t("kokpit.filter.tooltip", { defaultValue: t("dashboard.advancedFilter") })} placement="bottom" delay={500} closeDelay={0}>
+          <button
+            type="button"
+            onClick={() => setAdvFilterOpen(true)}
+            className="h-8 px-3 rounded-xl border border-tyro-border bg-tyro-surface flex items-center gap-1.5 cursor-pointer hover:bg-tyro-navy/5 transition-all shrink-0 relative"
+          >
+            <SlidersHorizontal size={14} className="text-tyro-text-secondary" />
+            <span className="text-[12px] font-semibold text-tyro-text-secondary hidden sm:inline">{t("dashboard.advancedFilter")}</span>
+            {advFilterCount > 0 && (
+              <span className="flex items-center justify-center w-4 h-4 rounded-full text-white text-[10px] font-bold" style={{ backgroundColor: sidebarTheme.accentColor ?? "#c8922a" }}>{advFilterCount}</span>
+            )}
+          </button>
+        </Tooltip>
         <Button
           size="sm"
           variant={showAllActions ? "solid" : "bordered"}
@@ -539,6 +589,18 @@ export default function StrategyMapPage() {
           );
         })()}
       </SlidingPanel>
+
+      {/* Gelişmiş Filtre paneli — Kokpit'teki ile aynı component */}
+      <Suspense fallback={null}>
+        <KokpitAdvancedFilter
+          isOpen={advFilterOpen}
+          onClose={() => setAdvFilterOpen(false)}
+          projeler={projeler}
+          aksiyonlar={aksiyonlar}
+          filters={advFilters}
+          onApply={setAdvFilters}
+        />
+      </Suspense>
     </div>
   );
 }

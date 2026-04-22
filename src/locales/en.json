@@ -909,7 +909,9 @@
       "actionProgress": "Action Progress",
       "sourceTurkiye": "Turkey",
       "sourceKurumsal": "Corporate",
-      "sourceInternational": "International"
+      "sourceInternational": "International",
+      "sourceLALE": "LALE",
+      "sourceOrganik": "Organik"
     }
   },
   "table": {
