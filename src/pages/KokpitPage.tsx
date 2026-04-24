@@ -654,8 +654,12 @@ export default function KokpitPage() {
         <motion.button
           type="button"
           onClick={() => { setNewMenuOpen(!newMenuOpen); setEditMenuOpen(false); }}
-          className="fixed bottom-24 right-4 z-20 w-12 h-12 rounded-full backdrop-blur-[16px] backdrop-saturate-[1.4] border border-tyro-gold/30 shadow-[0_4px_24px_rgba(200,146,42,0.3),inset_0_1px_0_rgba(255,255,255,0.5)] flex items-center justify-center cursor-pointer"
-          style={{ background: `radial-gradient(ellipse at 50% 30%, ${brandColor}d9, ${brandColor}a6 70%)` }}
+          className="fixed right-4 z-20 w-12 h-12 rounded-full backdrop-blur-[16px] backdrop-saturate-[1.4] border border-tyro-gold/30 shadow-[0_4px_24px_rgba(200,146,42,0.3),inset_0_1px_0_rgba(255,255,255,0.5)] flex items-center justify-center cursor-pointer"
+          style={{
+            background: `radial-gradient(ellipse at 50% 30%, ${brandColor}d9, ${brandColor}a6 70%)`,
+            // BottomNav arkasında kalmasın — bottom-3 (12) + safe-area + h-68 + 16 nefes = ~110-130px
+            bottom: "calc(env(safe-area-inset-bottom, 0px) + 96px)",
+          }}
           whileTap={{ scale: 0.9 }}
           aria-label={t("common.new")}
         >
@@ -670,8 +674,11 @@ export default function KokpitPage() {
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0, opacity: 0 }}
             onClick={() => { setEditMenuOpen(!editMenuOpen); setNewMenuOpen(false); }}
-            className="fixed bottom-24 right-[72px] z-20 w-11 h-11 rounded-full backdrop-blur-[20px] backdrop-saturate-[1.8] border border-white/40 dark:border-white/15 shadow-[0_4px_20px_rgba(0,0,0,0.1),0_0_32px_rgba(255,255,255,0.08),inset_0_1.5px_0_rgba(255,255,255,0.7),inset_0_-2px_4px_rgba(0,0,0,0.04)] flex items-center justify-center cursor-pointer overflow-hidden"
-            style={{ background: "radial-gradient(ellipse at 50% 25%, rgba(255,255,255,0.75), rgba(255,255,255,0.45) 60%, rgba(240,245,250,0.35) 100%)" }}
+            className="fixed right-[72px] z-20 w-11 h-11 rounded-full backdrop-blur-[20px] backdrop-saturate-[1.8] border border-white/40 dark:border-white/15 shadow-[0_4px_20px_rgba(0,0,0,0.1),0_0_32px_rgba(255,255,255,0.08),inset_0_1.5px_0_rgba(255,255,255,0.7),inset_0_-2px_4px_rgba(0,0,0,0.04)] flex items-center justify-center cursor-pointer overflow-hidden"
+            style={{
+              background: "radial-gradient(ellipse at 50% 25%, rgba(255,255,255,0.75), rgba(255,255,255,0.45) 60%, rgba(240,245,250,0.35) 100%)",
+              bottom: "calc(env(safe-area-inset-bottom, 0px) + 96px)",
+            }}
             whileTap={{ scale: 0.9 }}
             aria-label={t("common.edit")}
           >
@@ -689,7 +696,8 @@ export default function KokpitPage() {
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: 8, scale: 0.95 }}
                 transition={{ duration: 0.15 }}
-                className="fixed bottom-[136px] right-4 z-50 w-[220px] rounded-xl bg-white dark:bg-tyro-surface border border-tyro-border/40 shadow-xl overflow-hidden py-1.5"
+                className="fixed right-4 z-50 w-[220px] rounded-xl bg-white dark:bg-tyro-surface border border-tyro-border/40 shadow-xl overflow-hidden py-1.5"
+                style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 160px)" }}
               >
                 <button
                   type="button"
@@ -724,7 +732,8 @@ export default function KokpitPage() {
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: 8, scale: 0.95 }}
                 transition={{ duration: 0.15 }}
-                className="fixed bottom-[136px] right-4 z-50 w-[240px] rounded-xl bg-white dark:bg-tyro-surface border border-tyro-border/40 shadow-xl overflow-hidden py-1.5"
+                className="fixed right-4 z-50 w-[240px] rounded-xl bg-white dark:bg-tyro-surface border border-tyro-border/40 shadow-xl overflow-hidden py-1.5"
+                style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 160px)" }}
               >
                 <button
                   type="button"

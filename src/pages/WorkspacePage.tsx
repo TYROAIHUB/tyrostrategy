@@ -294,8 +294,11 @@ export default function WorkspacePage() {
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0, opacity: 0 }}
             transition={{ type: "spring", stiffness: 400, damping: 22 }}
-            className="fixed bottom-24 right-4 z-20 w-12 h-12 rounded-full backdrop-blur-[16px] backdrop-saturate-[1.4] border border-tyro-gold/30 shadow-[0_4px_24px_rgba(200,146,42,0.3),inset_0_1px_0_rgba(255,255,255,0.5)] flex items-center justify-center cursor-pointer sm:hidden"
-            style={{ background: "radial-gradient(ellipse at 50% 30%, rgba(200,146,42,0.85), rgba(200,146,42,0.65) 70%)" }}
+            className="fixed right-4 z-20 w-12 h-12 rounded-full backdrop-blur-[16px] backdrop-saturate-[1.4] border border-tyro-gold/30 shadow-[0_4px_24px_rgba(200,146,42,0.3),inset_0_1px_0_rgba(255,255,255,0.5)] flex items-center justify-center cursor-pointer sm:hidden"
+            style={{
+              background: "radial-gradient(ellipse at 50% 30%, rgba(200,146,42,0.85), rgba(200,146,42,0.65) 70%)",
+              bottom: "calc(env(safe-area-inset-bottom, 0px) + 96px)",
+            }}
             whileTap={{ scale: 0.9 }}
             aria-label={t("kokpit.projectWizard")}
           >
