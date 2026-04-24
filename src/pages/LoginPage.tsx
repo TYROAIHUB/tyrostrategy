@@ -435,8 +435,8 @@ export default function LoginPage() {
 
           {msalError && (
             <div className="flex items-start gap-2 p-3 rounded-xl backdrop-blur-sm border bg-red-500/10 border-red-400/25 text-left max-w-[440px]">
-              <Shield size={13} className="mt-0.5 shrink-0 text-red-300" />
-              <p className="text-[11px] leading-relaxed text-red-100">{msalError}</p>
+              <Shield size={14} className="mt-0.5 shrink-0 text-red-300" />
+              <p className="text-[12px] leading-relaxed text-red-100">{msalError}</p>
             </div>
           )}
         </motion.div>

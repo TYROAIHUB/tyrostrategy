@@ -498,7 +498,9 @@ export default function AksiyonForm({ aksiyon, defaultProjeId, onSuccess, onClos
       />
 
 
-      <div className="grid grid-cols-2 gap-3">
+      {/* Mobile: tek sütun, date picker'lar tam genişlik sığsın (iPhone SE
+          375px'de 2 sütun birbirine giriyordu). Tablet+ → iki sütun. */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <Controller
           name="startDate"
           control={control}

@@ -8,7 +8,11 @@ interface ColorPickerProps {
 
 export default function ColorPicker({ value, onChange }: ColorPickerProps) {
   return (
-    <div className="grid grid-cols-8 gap-1.5">
+    // Mobil tap target sorununu çözmek için dış buton 36x36 (hit area),
+    // iç renk dairesi görsel olarak 24x24 kalıyor — böylece tasarım değişmeden
+    // parmak için rahat hedef oluyor. Grid'de gap-1 mobil genişliğini aşmasın
+    // diye (8 × 36 + 7 × 4 = 316px, iPhone SE 375px'e sığar).
+    <div className="grid grid-cols-8 gap-1">
       {TAG_COLOR_PALETTE.map((color) => {
         const isSelected = color === value;
         return (
@@ -16,14 +20,18 @@ export default function ColorPicker({ value, onChange }: ColorPickerProps) {
             key={color}
             type="button"
             onClick={() => onChange(color)}
-            className="w-6 h-6 rounded-full flex items-center justify-center cursor-pointer transition-transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-tyro-navy/30"
-            style={{
-              backgroundColor: color,
-              boxShadow: isSelected ? `0 0 0 2px white, 0 0 0 4px ${color}` : undefined,
-            }}
+            className="w-9 h-9 rounded-full flex items-center justify-center cursor-pointer focus:outline-none focus:ring-2 focus:ring-tyro-navy/30 hover:bg-tyro-bg/40 transition-colors"
             title={color}
           >
-            {isSelected && <Check size={12} style={{ color: getContrastText(color) }} />}
+            <span
+              className="w-6 h-6 rounded-full flex items-center justify-center transition-transform hover:scale-110 pointer-events-none"
+              style={{
+                backgroundColor: color,
+                boxShadow: isSelected ? `0 0 0 2px white, 0 0 0 4px ${color}` : undefined,
+              }}
+            >
+              {isSelected && <Check size={12} style={{ color: getContrastText(color) }} />}
+            </span>
           </button>
         );
       })}

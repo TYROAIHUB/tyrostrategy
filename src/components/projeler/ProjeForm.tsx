@@ -332,7 +332,8 @@ export default function ProjeForm({ proje, onSuccess, onClose }: ProjeFormProps)
       />
 
 
-      <div className="grid grid-cols-2 gap-3">
+      {/* Mobile: kaynak + departman tek sütuna dönsün */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <Controller
           name="source"
           control={control}
@@ -556,7 +557,9 @@ export default function ProjeForm({ proje, onSuccess, onClose }: ProjeFormProps)
       />
 
 
-      <div className="grid grid-cols-2 gap-3">
+      {/* Mobile: başlangıç + bitiş tarihleri tek sütuna — DatePicker iPhone'da
+          sıkışıyordu */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <Controller
           name="startDate"
           control={control}

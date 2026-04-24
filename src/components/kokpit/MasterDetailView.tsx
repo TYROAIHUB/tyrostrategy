@@ -541,12 +541,15 @@ function AksiyonRow({
               {aksiyon.name}
             </h4>
             {onEdit && (
+              // Mobil: her zaman görünür (hover yok); desktop: sadece row hover'da
+              // çıkıyor (temiz liste görünümü). Tap target 32x32 → mobilde parmak için uygun.
               <button
                 type="button"
                 onClick={(e) => { e.stopPropagation(); onEdit?.(); }}
-                className="w-6 h-6 rounded-lg flex items-center justify-center text-tyro-text-muted hover:text-tyro-navy hover:bg-tyro-navy/5 cursor-pointer sm:opacity-0 sm:group-hover/row:opacity-100 transition-all shrink-0"
+                className="w-8 h-8 rounded-lg flex items-center justify-center text-tyro-text-muted hover:text-tyro-navy hover:bg-tyro-navy/5 cursor-pointer sm:w-6 sm:h-6 sm:opacity-0 sm:group-hover/row:opacity-100 transition-all shrink-0"
+                aria-label="Aksiyonu düzenle"
               >
-                <Pencil size={12} />
+                <Pencil size={14} className="sm:w-3 sm:h-3" />
               </button>
             )}
             <StatusBadge status={aksiyon.status} />
