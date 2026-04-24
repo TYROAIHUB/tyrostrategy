@@ -56,19 +56,22 @@ if (hasRealAuth) {
       console.error("[MSAL] handleRedirectPromise failed:", err);
     }
 
-    // Mobile loginRedirect sonrası (veya desktop F5 on /login with MSAL cache):
-    // `dataStore` module-level fetch /login route'unda SKIP ediyor (bouncer
-    // koruması) — bu yüzden MSAL auth biten ama store hâlâ boş kaldığı
-    // durumda AuthGuard users.length=0 → "Giriş yapılıyor..." sonsuza kadar.
-    // Burada redirect döndükten sonra, MSAL account varsa fetch'i elden
-    // tetikliyoruz. Module zaten fetch ettiyse (non-login route F5) bu ikinci
-    // çağrı idempotent — aynı veriyi tekrar yazar, loop yok.
+    // MSAL init sonrası (redirect return, page reload with cache, vs.):
+    // her durumda account varsa setSupabaseUserContext + fetchAllFromSupabase.
+    //
+    // Neden isLoginRoute kontrolü yok: loginRedirect Microsoft'tan dönerken
+    // URL `origin + pathname` oluyor (hash kayboluyor), bu yüzden /#/login
+    // kaybolur. Ayrıca dataStore module-level fetch sessionStorage'da henüz
+    // MSAL account olmadığı için (handleRedirectPromise işlemden önce ölçüm)
+    // ilk turda skip ediyor. Sonuç: hiçbir yerde fetch tetiklenmez ve
+    // AuthGuard "Giriş yapılıyor..." ekranında kalır.
+    //
+    // Idempotent — module zaten fetch ettiyse bu ikinci çağrı aynı veriyi
+    // tekrar yazar. Loop yok (setState aynı değeri geçer).
+    //
+    // Bouncer koruması: eğer account yoksa bu blok hiç çalışmaz, egress = 0.
     const accounts = msalInstance.getAllAccounts();
-    const hash = window.location.hash || "";
-    const path = window.location.pathname || "";
-    const isLoginRoute = hash.startsWith("#/login") || path === "/login";
-
-    if (accounts.length > 0 && isLoginRoute) {
+    if (accounts.length > 0) {
       const email = (accounts[0].username || "").toLowerCase().trim();
       if (email) {
         try {
@@ -78,9 +81,9 @@ if (hasRealAuth) {
           ]);
           setSupabaseUserContext(email);
           await fetchAllFromSupabase();
-          console.log(`[MSAL] Post-redirect bootstrap complete for ${email}`);
+          console.log(`[MSAL] Post-init bootstrap complete for ${email}`);
         } catch (bootErr) {
-          console.error("[MSAL] Post-redirect fetch failed:", bootErr);
+          console.error("[MSAL] Post-init fetch failed:", bootErr);
         }
       }
     }
