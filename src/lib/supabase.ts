@@ -23,7 +23,29 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undef
 // Mutable module-level ref — fetch wrapper reads this FRESH on every request,
 // so the value at login time is reflected on the next DB call without needing
 // to recreate the client.
-let currentUserEmail: string | null = null;
+//
+// Module load anında MSAL localStorage cache'inden email'i SENKRON oku.
+// MSAL initialize() async biraz zaman alır; o arada user hızlı tıklayabilir
+// (örn. Ayarlar → tag color). Header set olmadan UPDATE giderse RLS
+// app.current_email() null görür → policy reddeder → .single() 0 satır →
+// retry storm + "Veri senkronizasyonu başarısız" toast. Bu erken-set sayesinde
+// MSAL init beklemeye gerek kalmıyor; F5 sonrası ilk request bile header'lı.
+function readMsalEmailFromStorage(): string | null {
+  if (typeof window === "undefined") return null;
+  try {
+    for (const k of Object.keys(localStorage)) {
+      if (k.startsWith("msal.") && k.includes(".account.")) {
+        const obj = JSON.parse(localStorage.getItem(k) || "{}");
+        if (typeof obj?.username === "string" && obj.username.includes("@")) {
+          return obj.username.toLowerCase().trim();
+        }
+      }
+    }
+  } catch { /* corrupt JSON / SecurityError → null */ }
+  return null;
+}
+
+let currentUserEmail: string | null = readMsalEmailFromStorage();
 
 /**
  * Updates the active user email for RLS. Pass null on logout.
