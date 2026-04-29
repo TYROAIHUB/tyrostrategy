@@ -526,6 +526,17 @@ export default function RaporSihirbazi() {
               if (cls.startsWith("line-clamp-")) e.classList.remove(cls);
             });
           });
+          // truncate temizle — single-line + ellipsis kombinasyonu
+          // descender'ları (ş, ç, p, y) html2canvas'ta yarım kesiyordu.
+          // Tam metin görünsün, gerekirse satır sarılsın.
+          doc.querySelectorAll(".truncate").forEach((node) => {
+            const e = node as HTMLElement;
+            e.style.whiteSpace = "normal";
+            e.style.overflow = "visible";
+            e.style.textOverflow = "clip";
+            e.style.lineHeight = "1.4";
+            e.classList.remove("truncate");
+          });
         },
       });
 
@@ -1609,20 +1620,25 @@ ${clone.outerHTML}
                               </motion.div>
                             )}
                           </AnimatePresence>
-                          {/* Print — show actions unless hidden */}
+                          {/* Print — show actions unless hidden.
+                              `items-start` + leading-snug + `break-words`:
+                              uzun aksiyon adları ekran kapasitesini aşarsa
+                              tek satırda kesilmek yerine birden fazla satıra
+                              sarılsın. truncate descender'ları (ş, ç, p, y)
+                              html2canvas'ta yarım kesiyordu. */}
                           <div className={`hidden ${hideActionsInExport ? "" : "print:block"} px-4 pb-3 space-y-0.5`}>
                             <p className="text-[11px] font-bold uppercase text-tyro-text-muted tracking-wider mb-1">{t("dashboard.actionsLabel")} ({ha.length})</p>
                             {ha.map((a) => {
                               const AIcon = STATUS_DOT[a.status];
                               return (
-                                <div key={a.id} className="flex items-center justify-between py-1.5 border-b border-tyro-border/8 last:border-0">
-                                  <div className="flex items-center gap-2 flex-1 min-w-0">
-                                    <AIcon size={11} style={{ color: STATUS_COLOR[a.status] }} className="shrink-0" />
-                                    <p className="text-[12px] font-medium text-tyro-text-primary truncate">{a.name}</p>
+                                <div key={a.id} className="flex items-start justify-between gap-2 py-1.5 border-b border-tyro-border/8 last:border-0">
+                                  <div className="flex items-start gap-2 flex-1 min-w-0">
+                                    <AIcon size={11} style={{ color: STATUS_COLOR[a.status] }} className="shrink-0 mt-0.5" />
+                                    <p className="text-[12px] font-medium text-tyro-text-primary leading-snug break-words">{a.name}</p>
                                   </div>
-                                  <div className="flex items-center gap-2 shrink-0">
+                                  <div className="flex items-center gap-2 shrink-0 mt-0.5">
                                     <span className="text-[11px] font-bold tabular-nums" style={{ color: progressColor(a.progress) }}>{a.progress}%</span>
-                                    <span className="text-[9px] font-semibold" style={{ color: STATUS_COLOR[a.status] }}>{STATUS_TR[a.status]}</span>
+                                    <span className="text-[9px] font-semibold whitespace-nowrap" style={{ color: STATUS_COLOR[a.status] }}>{STATUS_TR[a.status]}</span>
                                   </div>
                                 </div>
                               );
