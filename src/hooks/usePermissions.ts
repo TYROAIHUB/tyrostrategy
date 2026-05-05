@@ -50,24 +50,21 @@ export function usePermissions() {
     return ids;
   }, [aksiyonlar, normalizedName, myProjeIds]);
 
-  // Strictly-owned proje IDs — used by editOnlyOwn checks. Role-agnostic:
-  // "own" always means "I'm the owner field", regardless of membership.
-  const myOwnedProjeIds = useMemo(() => {
+  // Project membership — leader (owner field) OR participant. Role-agnostic
+  // ve viewOnlyOwn-bağımsız: edit kararının tek kaynağı budur (migration
+  // 023 sonrası). owner field'ı denklemden çıkarıldı — proje üyesi olan
+  // herkes hem projeyi hem aksiyonlarını edit edebilir.
+  const myMemberProjeIds = useMemo(() => {
     const ids = new Set<string>();
     for (const h of projeler) {
-      if (h.owner?.toLowerCase().trim() === normalizedName) ids.add(h.id);
+      const isLeader = h.owner?.toLowerCase().trim() === normalizedName;
+      const isParticipant = h.participants?.some(
+        (p) => p.toLowerCase().trim() === normalizedName,
+      );
+      if (isLeader || isParticipant) ids.add(h.id);
     }
     return ids;
   }, [projeler, normalizedName]);
-
-  // Strictly-owned aksiyons — same semantics as myOwnedProjeIds.
-  const myOwnedAksiyonIds = useMemo(() => {
-    const ids = new Set<string>();
-    for (const a of aksiyonlar) {
-      if (a.owner?.toLowerCase().trim() === normalizedName) ids.add(a.id);
-    }
-    return ids;
-  }, [aksiyonlar, normalizedName]);
 
   // ===== Sayfa erisim =====
   const canAccessPage = (pageKey: keyof RolePermissions["pages"]) => perms.pages[pageKey];
@@ -96,11 +93,11 @@ export function usePermissions() {
   const canEditProje = (projeId: string) => {
     if (!perms.proje.edit) return false;
     if (!perms.editOnlyOwn) return true;
-    // editOnlyOwn is a strict ownership check — role-agnostic. If an
-    // admin wants leaders to edit any project in their team, they flip
-    // that role's editOnlyOwn to false in Güvenlik. Membership alone
-    // never grants edit rights.
-    return myOwnedProjeIds.has(projeId);
+    // editOnlyOwn=true rolünde edit yetkisi PROJE ÜYELİĞİNE bağlı:
+    // owner (lider) veya participant (üye) → edit. owner field'ı
+    // tek başına yetki belirleyici DEĞİL (migration 023). RLS de aynı
+    // kuralı uyguluyor.
+    return myMemberProjeIds.has(projeId);
   };
   const canDeleteProje = (projeId: string) => {
     if (!perms.proje.delete) return false;
@@ -120,10 +117,12 @@ export function usePermissions() {
   const canEditAksiyon = (aksiyonId: string) => {
     if (!perms.aksiyon.edit) return false;
     if (!perms.editOnlyOwn) return true;
-    // Same rule as canEditProje — strict owner check, uniform across
-    // roles. Role determines whether the user has `aksiyon.edit` and
-    // `editOnlyOwn` at all; what counts as "own" is always owner-equals-me.
-    return myOwnedAksiyonIds.has(aksiyonId);
+    // Migration 023 sonrası: aksiyon edit kararı PARENT PROJE üyeliğine
+    // bağlı — aksiyon owner'ı dikkate alınmaz. Lider veya üye olduğun
+    // projedeki HER aksiyonu edit edebilirsin.
+    const aksiyon = aksiyonlar.find((a) => a.id === aksiyonId);
+    if (!aksiyon) return false;
+    return myMemberProjeIds.has(aksiyon.projeId);
   };
   const canDeleteAksiyon = (_aksiyonId: string) => perms.aksiyon.delete;
 
