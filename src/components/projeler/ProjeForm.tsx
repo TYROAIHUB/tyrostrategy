@@ -117,6 +117,17 @@ export default function ProjeForm({ proje, onSuccess, onClose }: ProjeFormProps)
         if (data.department !== proje.department) details.push({ label: t("common.department"), value: deptLabel(data.department, t) });
         if (data.startDate !== proje.startDate) details.push({ label: t("common.startDate"), value: data.startDate });
         if (data.endDate !== proje.endDate) details.push({ label: t("common.endDate"), value: data.endDate });
+        // Tags ve participants — array karşılaştırması (sıralamayı önemsiz say)
+        const oldTags = [...(proje.tags ?? [])].sort().join(",");
+        const newTags = [...data.tags].sort().join(",");
+        if (oldTags !== newTags) {
+          details.push({ label: t("common.tags", "Etiketler"), value: data.tags.length > 0 ? data.tags.join(", ") : "—" });
+        }
+        const oldParts = [...(proje.participants ?? [])].sort().join(",");
+        const newParts = [...(data.participants ?? [])].sort().join(",");
+        if (oldParts !== newParts) {
+          details.push({ label: t("common.participants", "Üyeler"), value: (data.participants ?? []).length > 0 ? (data.participants ?? []).join(", ") : "—" });
+        }
         updateProje(proje.id, payload);
         toast.success(t("toast.objectiveUpdated"), {
           message: data.name,

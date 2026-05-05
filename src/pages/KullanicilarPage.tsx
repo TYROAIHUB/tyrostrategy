@@ -660,6 +660,7 @@ export default function KullanicilarPage() {
                         if (editDept.trim() !== selectedUser.department) changes.push({ label: t("users.department"), value: editDept.trim() });
                         if (editRole !== selectedUser.role) changes.push({ label: t("users.authRole"), value: editRole });
                         if (editLocale !== selectedUser.locale) changes.push({ label: t("users.language"), value: editLocale === "en" ? t("profile.english") : t("profile.turkish") });
+                        if (editActive !== selectedUser.isActive) changes.push({ label: t("users.status"), value: editActive ? t("users.active", "Aktif") : t("users.inactive", "Pasif") });
                         updateUserDb(selectedUser.id, { displayName: editName.trim(), email: editEmail.trim(), title: editTitle.trim() || undefined, department: editDept.trim(), role: editRole, locale: editLocale, isActive: editActive });
                         toast.success(t("users.userUpdated"), {
                           message: editName.trim(),
