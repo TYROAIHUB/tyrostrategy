@@ -79,4 +79,27 @@ const client = new Client({ host, user, password, database, port, ssl: { rejectU
   } finally {
     await client.end();
   }
+
+  // ── Post-apply smoke test ──
+  // Migration başarılı uygulandıktan sonra otomatik CRUD doğrulaması.
+  // Migration RLS / constraint / function regression yarattıysa hemen
+  // yakalar — kullanıcı UI'da görmeden önce. SKIP_SMOKE=1 ile atlanabilir
+  // (örn. seed migration sonrası, hızlı iterasyon).
+  if (process.env.SKIP_SMOKE === '1') {
+    console.log('\nℹ️  SKIP_SMOKE=1 — post-migration smoke skipped.');
+    return;
+  }
+  console.log('\n🧪 Running smoke test post-migration...');
+  const { spawnSync } = require('child_process');
+  const result = spawnSync('node', [path.join(__dirname, 'smoke-test-crud.cjs')], {
+    stdio: 'inherit',
+    env: process.env,
+  });
+  if (result.status !== 0) {
+    console.error('\n⚠️  Migration uygulandı AMA smoke test FAIL!');
+    console.error('   DB regresyona uğramış olabilir. İncele ve gerekirse');
+    console.error('   rollback migration yaz veya bu migration\'ı geri al.');
+    process.exit(2);
+  }
+  console.log('\n✅ Migration applied + smoke passed — DB sağlam.');
 })();
