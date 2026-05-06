@@ -47,21 +47,8 @@ const roleStyles: Record<
   },
 };
 
-function lightenHex(hex: string, amt: number): string {
-  const r = parseInt(hex.slice(1, 3), 16);
-  const g = parseInt(hex.slice(3, 5), 16);
-  const b = parseInt(hex.slice(5, 7), 16);
-  const l = (v: number) => Math.min(255, Math.round(v + (255 - v) * amt));
-  return `rgb(${l(r)},${l(g)},${l(b)})`;
-}
-
-function darkenHex(hex: string, amt: number): string {
-  const r = parseInt(hex.slice(1, 3), 16);
-  const g = parseInt(hex.slice(3, 5), 16);
-  const b = parseInt(hex.slice(5, 7), 16);
-  const d = (v: number) => Math.max(0, Math.round(v * (1 - amt)));
-  return `rgb(${d(r)},${d(g)},${d(b)})`;
-}
+// lightenHex/darkenHex helpers kaldırıldı — role-bağımsız accent override
+// kaldırılınca artık kullanılmıyor.
 
 function getInitials(name: string): string {
   return name
@@ -77,18 +64,14 @@ export function RoleAvatar({ name, role, size = "md", showBadge = false, innerBg
   const px = sizeMap[size];
   const baseStyle = roleStyles[role];
 
-  // If accentColor provided, derive ring from it based on role tier
+  // Halka HER ZAMAN role'a özgü gradient — Admin gold, Proje Lideri blue,
+  // Management violet (kullanıcı raporu 2026-05-06: tyro Proje Lideri
+  // sidebarda gold halka görünüyordu, profilde blue — tutarsızdı).
+  // accentColor önceden gradient'ı override ediyordu (theme uyumu için)
+  // ama bu role kimliğini siliyordu. Şimdi accentColor sadece glow'u
+  // dengeleyebiliyor; ring rengi role'a sabit.
   const style = accentColor
-    ? {
-        ...baseStyle,
-        gradient:
-          role === "Admin"
-            ? `conic-gradient(from 0deg, ${accentColor}, ${lightenHex(accentColor, 0.3)}, ${accentColor}, ${darkenHex(accentColor, 0.15)}, ${lightenHex(accentColor, 0.3)}, ${accentColor})`
-            : role === "Proje Lideri"
-              ? `linear-gradient(135deg, ${darkenHex(accentColor, 0.2)}, ${accentColor}, ${lightenHex(accentColor, 0.25)}, ${accentColor}, ${darkenHex(accentColor, 0.2)})`
-              : `linear-gradient(135deg, ${darkenHex(accentColor, 0.15)}, ${accentColor}, ${lightenHex(accentColor, 0.15)}, ${accentColor}, ${darkenHex(accentColor, 0.15)})`,
-        glow: `0 0 6px ${accentColor}55, 0 0 12px ${accentColor}25`,
-      }
+    ? { ...baseStyle, glow: `${baseStyle.glow}, 0 0 14px ${accentColor}20` }
     : baseStyle;
   const initials = getInitials(name);
   const fontSize = size === "sm" ? 11 : size === "md" ? 13 : 18;
