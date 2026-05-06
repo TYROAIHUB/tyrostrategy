@@ -542,16 +542,37 @@ export const useDataStore = create<DataState>()(
               : h,
           ),
         }));
+        // Sıralama önemli (kullanıcı raporu 2026-05-04: rename "Veri
+        // senkronizasyonu hatası" toast'ı veriyordu, F5 sonrası ise
+        // değişiklik uygulanmış görünüyordu). Sebep: paralel iki sync
+        // zinciri — tagDef rename ve etkilenen projelerin updateProje'si
+        // aynı anda fire ediliyor. Bazı durumlarda updateProje, adapter
+        // içinde tag_definitions tablosuna SELECT atıp newName→id mapping
+        // arar; tagDef rename DB'ye ulaşmadan bu lookup eski ad ile
+        // dönüyor, newName mapping'de bulunmuyor → proje_tags re-insert
+        // boş kalıyor → tag link kayboluyor.
+        //
+        // Çözüm: tagDef rename sync bittikten SONRA proje update'lerini
+        // fire et. then() chain ile sıralı.
         if (tagDef) {
-          syncToSupabase(() => supabaseAdapter.updateTagDefinition(tagDef.id, { name: newName }));
-        }
-        // Mirror the tag array change to DB for every affected proje.
-        // supabaseAdapter.updateProje re-inserts the proje_tags rows to
-        // match the new array (see its tag-rollback block).
-        for (const entry of affected) {
-          syncToSupabase(() =>
-            supabaseAdapter.updateProje(entry.id, { tags: entry.nextTags }),
-          );
+          syncToSupabase(
+            () => supabaseAdapter.updateTagDefinition(tagDef.id, { name: newName }),
+            { entity: "Etiket", action: "yeniden adlandırma", label: `${oldName} → ${newName}` }
+          ).then(() => {
+            // tagDef rename DB'de tamamlandı — şimdi proje tag arraylerini
+            // güvenle update edebiliriz (lookup yeni ismi bulur).
+            const projeMap = new Map(get().projeler.map((p) => [p.id, p.name]));
+            for (const entry of affected) {
+              syncToSupabase(
+                () => supabaseAdapter.updateProje(entry.id, { tags: entry.nextTags }),
+                { entity: "Proje", action: "etiket güncelleme", label: projeMap.get(entry.id) ?? entry.id }
+              );
+            }
+          }).catch(() => {
+            // tagDef rename fail — toast zaten syncToSupabase tarafından
+            // gösterildi (context-aware). Proje güncellemelerini hiç
+            // başlatma — DB tutarsız kalmasın.
+          });
         }
       },
 
