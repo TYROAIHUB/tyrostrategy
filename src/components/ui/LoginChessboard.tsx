@@ -11,7 +11,9 @@ import PieceScatter from "./login/PieceScatter";
 import BoardBorderFrame from "./login/BoardBorderFrame";
 import MatchOrchestrator from "./login/MatchOrchestrator";
 import ScenePortalButton from "./login/ScenePortalButton";
-import MoveFeatureCard, { type ActiveFeatureCard } from "./login/MoveFeatureCard";
+// MoveFeatureCard render edilmiyor (kullanıcı isteği 2026-05-06) — sadece
+// ActiveFeatureCard type'ı arşivleme akışı için lazım.
+import type { ActiveFeatureCard } from "./login/MoveFeatureCard";
 import MeteorShower from "./login/MeteorShower";
 import StarField from "./login/StarField";
 import type { FeatureIconId, Move } from "./login/ChessMatch";
@@ -391,8 +393,12 @@ function Scene({ t, phase, onPortalClick, onFeatureArchive, onSceneReady }: Scen
         worldPosition={[0.14, 0.08, 0]}
       />
 
-      {/* Feature card overlay above active piece */}
-      <MoveFeatureCard card={activeCard} />
+      {/* Sahne üzerinde feature kartı RENDER ETMİYORUZ (kullanıcı isteği
+          2026-05-06: tahta üstünde özellik kartı çıkmasın, sol panelde
+          ArchivedFeatureList yeterli). handleMoveComplete hâlâ kart
+          oluşturuyor (LoginPage onFeatureArchive'a gidip listede
+          birikiyor) ama ekranda şamandıra olarak görünmüyor.
+          <MoveFeatureCard card={activeCard} /> */}
 
       {/* Ambient starfield + meteor shower (both deep background) */}
       <StarField />

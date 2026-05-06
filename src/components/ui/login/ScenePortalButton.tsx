@@ -82,6 +82,21 @@ export default function ScenePortalButton({
   const [hover, setHover] = useState(false);
   const [scrambleDone, setScrambleDone] = useState(false);
 
+  // Attention state — show idle'da 5sn tıklanmadıysa orbital halka + glow %50
+  // daha yoğun pulse atar. PortalButton (mobile) ile birebir aynı kural.
+  const [attention, setAttention] = useState(false);
+  useEffect(() => {
+    if (!show || phase !== "idle") {
+      setAttention(false);
+      return;
+    }
+    const timer = setTimeout(() => setAttention(true), 5000);
+    return () => clearTimeout(timer);
+  }, [show, phase]);
+  useEffect(() => {
+    if (hover) setAttention(false);
+  }, [hover]);
+
   // Scramble animations for each text segment
   const tyroText = useScrambleText("tyro", show, 700);
   const verseText = useScrambleText("verse", show, 800);
@@ -131,7 +146,7 @@ export default function ScenePortalButton({
               }}
               aria-hidden="true"
             >
-              {/* Outer radial bloom — extends BEYOND the outer ring */}
+              {/* Outer radial bloom — attention'da %50 daha yoğun + hızlı pulse */}
               <div
                 className="absolute rounded-full"
                 style={{
@@ -141,8 +156,10 @@ export default function ScenePortalButton({
                   height: "440px",
                   background: hover
                     ? "radial-gradient(circle, rgba(224,173,62,0.32) 0%, rgba(200,146,42,0.18) 45%, transparent 78%)"
-                    : "radial-gradient(circle, rgba(224,173,62,0.12) 0%, rgba(200,146,42,0.05) 45%, transparent 78%)",
-                  animation: "portalRing 3s ease-in-out infinite",
+                    : attention
+                      ? "radial-gradient(circle, rgba(224,173,62,0.20) 0%, rgba(200,146,42,0.10) 45%, transparent 78%)"
+                      : "radial-gradient(circle, rgba(224,173,62,0.12) 0%, rgba(200,146,42,0.05) 45%, transparent 78%)",
+                  animation: `portalRing ${attention ? "2s" : "3s"} ease-in-out infinite`,
                   transition: "background 0.35s",
                 }}
               />
@@ -157,8 +174,10 @@ export default function ScenePortalButton({
                   height: "300px",
                   background: hover
                     ? "radial-gradient(circle, rgba(200,146,42,0.45) 0%, transparent 72%)"
-                    : "radial-gradient(circle, rgba(200,146,42,0.18) 0%, transparent 72%)",
-                  animation: "portalRing 3s ease-in-out infinite",
+                    : attention
+                      ? "radial-gradient(circle, rgba(200,146,42,0.30) 0%, transparent 72%)"
+                      : "radial-gradient(circle, rgba(200,146,42,0.18) 0%, transparent 72%)",
+                  animation: `portalRing ${attention ? "2s" : "3s"} ease-in-out infinite`,
                   transition: "background 0.4s",
                 }}
               />
@@ -171,15 +190,17 @@ export default function ScenePortalButton({
                   left: "-140px",
                   width: "280px",
                   height: "280px",
-                  border: `1px solid ${phase === "p1" ? "rgba(240,201,94,0.95)" : hover ? "rgba(224,173,62,0.70)" : "rgba(200,146,42,0.35)"}`,
+                  border: `1px solid ${phase === "p1" ? "rgba(240,201,94,0.95)" : hover ? "rgba(224,173,62,0.70)" : attention ? "rgba(224,173,62,0.55)" : "rgba(200,146,42,0.35)"}`,
                   boxShadow: phase === "p1"
                     ? "inset 0 0 35px rgba(240,201,94,0.55), 0 0 28px rgba(240,201,94,0.6)"
-                    : hover ? "inset 0 0 20px rgba(200,146,42,0.28)" : "none",
+                    : hover ? "inset 0 0 20px rgba(200,146,42,0.28)"
+                    : attention ? "inset 0 0 16px rgba(200,146,42,0.22), 0 0 20px rgba(200,146,42,0.28)"
+                    : "none",
                   transition: "border-color 0.25s, box-shadow 0.25s",
                 }}
                 animate={{ rotate: -360 }}
                 transition={{
-                  duration: phase === "p1" ? 0.5 : hover ? 10 : 22,
+                  duration: phase === "p1" ? 0.5 : hover ? 10 : attention ? 14 : 22,
                   repeat: Infinity,
                   ease: phase === "p1" ? "easeIn" : "linear",
                 }}
@@ -193,15 +214,17 @@ export default function ScenePortalButton({
                   left: "-170px",
                   width: "340px",
                   height: "340px",
-                  border: `1.5px dashed ${phase === "p1" ? "rgba(240,201,94,1)" : hover ? "rgba(224,173,62,0.82)" : "rgba(200,146,42,0.40)"}`,
+                  border: `1.5px dashed ${phase === "p1" ? "rgba(240,201,94,1)" : hover ? "rgba(224,173,62,0.82)" : attention ? "rgba(224,173,62,0.65)" : "rgba(200,146,42,0.40)"}`,
                   boxShadow: phase === "p1"
                     ? "0 0 70px rgba(240,201,94,0.75)"
-                    : hover ? "0 0 44px rgba(200,146,42,0.45)" : "none",
+                    : hover ? "0 0 44px rgba(200,146,42,0.45)"
+                    : attention ? "0 0 32px rgba(200,146,42,0.36)"
+                    : "none",
                   transition: "border-color 0.25s, box-shadow 0.25s",
                 }}
                 animate={{ rotate: 360 }}
                 transition={{
-                  duration: phase === "p1" ? 0.4 : hover ? 7 : 16,
+                  duration: phase === "p1" ? 0.4 : hover ? 7 : attention ? 10 : 16,
                   repeat: Infinity,
                   ease: phase === "p1" ? "easeIn" : "linear",
                 }}
@@ -342,89 +365,131 @@ export default function ScenePortalButton({
               </AnimatePresence>
             </div>
 
-            {/* Button */}
+            {/* Button — cool teal-cyan gradient (chess board sıcak ahşap +
+                altın paletinden ayrılır, dikkat çeker). Gold border
+                marka bağını koruyor. Attention'da hafif scale-pulse
+                tıklamayı davet eder. */}
             <motion.button
               type="button"
               onClick={onClick}
               whileHover={!imploding && phase === "idle" ? { scale: 1.05, y: -1 } : undefined}
               whileTap={!imploding ? { scale: 0.96 } : undefined}
-              className="relative z-10 inline-flex items-center gap-3 px-6 py-3 rounded-[18px] cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c8922a]/70"
+              animate={attention ? { scale: [1, 1.035, 1] } : { scale: 1 }}
+              transition={
+                attention
+                  ? { scale: { duration: 1.6, repeat: Infinity, ease: "easeInOut" } }
+                  : { duration: 0.2 }
+              }
+              className="relative z-10 inline-flex flex-col items-center gap-1.5 px-6 py-2.5 rounded-[18px] cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c8922a]/70"
               style={{
-                background:
-                  "linear-gradient(135deg, rgba(18,32,56,0.92) 0%, rgba(10,22,40,0.88) 100%)",
-                backdropFilter: "blur(24px) saturate(180%)",
-                WebkitBackdropFilter: "blur(24px) saturate(180%)",
-                border: "1.5px solid rgba(224,173,62,0.55)",
+                // Navy ↔ cyan ortasının ortası — koyu (#182a48) ile açık
+                // (#1d4264) iterasyonlar arası uzlaşma. Marka navy ailesi,
+                // hafif cyan undertone, gold border + glow.
+                background: hover
+                  ? "linear-gradient(135deg, #264a6e 0%, #2e5a82 50%, #264a6e 100%)"
+                  : "linear-gradient(135deg, #1b3656 0%, #23476b 50%, #1b3656 100%)",
+                backdropFilter: "blur(21px) saturate(150%)",
+                WebkitBackdropFilter: "blur(21px) saturate(150%)",
+                border: "1.85px solid rgba(224,173,62,0.82)",
                 boxShadow: hover
-                  ? "0 14px 38px rgba(0,0,0,0.6), 0 0 48px rgba(200,146,42,0.35), inset 0 1px 0 rgba(255,255,255,0.25), inset 0 -1px 0 rgba(0,0,0,0.3)"
-                  : "0 12px 32px rgba(0,0,0,0.55), 0 0 32px rgba(200,146,42,0.22), inset 0 1px 0 rgba(255,255,255,0.22), inset 0 -1px 0 rgba(0,0,0,0.3)",
-                transition: "box-shadow 0.3s",
+                  ? "0 14px 42px rgba(0,0,0,0.63), 0 0 44px rgba(46,90,130,0.45), 0 0 24px rgba(224,173,62,0.34), inset 0 1.5px 0 rgba(240,201,94,0.36), inset 0 -1px 0 rgba(0,0,0,0.36)"
+                  : attention
+                    ? "0 12px 36px rgba(0,0,0,0.59), 0 0 36px rgba(46,90,130,0.36), 0 0 18px rgba(224,173,62,0.26), inset 0 1.5px 0 rgba(240,201,94,0.30), inset 0 -1px 0 rgba(0,0,0,0.36)"
+                    : "0 12px 32px rgba(0,0,0,0.59), 0 0 26px rgba(46,90,130,0.27), 0 0 12px rgba(224,173,62,0.20), inset 0 1.5px 0 rgba(240,201,94,0.26), inset 0 -1px 0 rgba(0,0,0,0.36)",
+                transition: "box-shadow 0.3s, background 0.3s",
               }}
             >
-              {/* Logo */}
-              <TyroLogo size={22} variant="login" />
-
-              {/* tyro white + verse gold (scramble reveal) — uniform font across all text */}
-              <span className="inline-flex items-center">
-                <span
-                  style={{
-                    fontFamily: "inherit",
-                    fontSize: "17px",
-                    fontWeight: 800,
-                    letterSpacing: "-0.01em",
-                    lineHeight: 1,
-                    color: "#ffffff",
+              {/* Üst satır — yatay (logo + tyroverse + divider + Bağlan) */}
+              <div className="inline-flex items-center gap-3">
+                {/* Logo "verse" text gradient'iyle aynı altın paleti —
+                    tutarlı marka dokunuşu. */}
+                <TyroLogo
+                  size={22}
+                  themeColors={{
+                    gradStart: "#f0c95e",
+                    gradEnd: "#c8922a",
+                    fillA: "#c8922a",
+                    fillB: "#e0ad3e",
+                    fillC: "#a07828",
                   }}
-                >
-                  {scrambleDone ? "tyro" : tyroText}
-                </span>
-                <span
-                  style={{
-                    fontFamily: "inherit",
-                    fontSize: "17px",
-                    fontWeight: 800,
-                    letterSpacing: "-0.01em",
-                    lineHeight: 1,
-                    background:
-                      "linear-gradient(90deg, #c8922a 0%, #f0c95e 45%, #e0ad3e 55%, #c8922a 100%)",
-                    WebkitBackgroundClip: "text",
-                    WebkitTextFillColor: "transparent",
-                    backgroundClip: "text",
-                    color: scrambleDone ? "transparent" : "#e0ad3e",
-                  }}
-                >
-                  {scrambleDone ? "verse" : verseText}
-                </span>
-              </span>
+                />
 
-              {/* Divider */}
+                {/* tyro white + verse gold (scramble reveal) — uniform font across all text */}
+                <span className="inline-flex items-center">
+                  <span
+                    style={{
+                      fontFamily: "inherit",
+                      fontSize: "17px",
+                      fontWeight: 800,
+                      letterSpacing: "-0.01em",
+                      lineHeight: 1,
+                      color: "#ffffff",
+                    }}
+                  >
+                    {scrambleDone ? "tyro" : tyroText}
+                  </span>
+                  <span
+                    style={{
+                      fontFamily: "inherit",
+                      fontSize: "17px",
+                      fontWeight: 800,
+                      letterSpacing: "-0.01em",
+                      lineHeight: 1,
+                      background:
+                        "linear-gradient(90deg, #c8922a 0%, #f0c95e 45%, #e0ad3e 55%, #c8922a 100%)",
+                      WebkitBackgroundClip: "text",
+                      WebkitTextFillColor: "transparent",
+                      backgroundClip: "text",
+                      color: scrambleDone ? "transparent" : "#e0ad3e",
+                    }}
+                  >
+                    {scrambleDone ? "verse" : verseText}
+                  </span>
+                </span>
+
+                {/* Divider */}
+                <span
+                  className="inline-block w-px h-4 rounded-full"
+                  style={{ background: "rgba(255,255,255,0.3)" }}
+                  aria-hidden="true"
+                />
+
+                {/* "Bağlan" — exact same font styling as tyro/verse */}
+                <span className="inline-flex items-center gap-1.5">
+                  <span
+                    style={{
+                      fontFamily: "inherit",
+                      fontSize: "17px",
+                      fontWeight: 800,
+                      letterSpacing: "-0.01em",
+                      lineHeight: 1,
+                      color: "#ffffff",
+                    }}
+                  >
+                    {scrambleDone ? connectLabel : baglanText}
+                  </span>
+                  <motion.span
+                    style={{ display: "inline-flex" }}
+                    animate={hover ? { y: [0, 3, 0] } : { y: 0 }}
+                    transition={{ duration: 0.8, repeat: hover ? Infinity : 0, ease: "easeInOut" }}
+                  >
+                    <MousePointerClick size={14} style={{ color: "#e0ad3e" }} strokeWidth={2.5} />
+                  </motion.span>
+                </span>
+              </div>
+
+              {/* Alt satır — kurumsal SSO bilgilendirmesi */}
               <span
-                className="inline-block w-px h-4 rounded-full"
-                style={{ background: "rgba(255,255,255,0.3)" }}
-                aria-hidden="true"
-              />
-
-              {/* "Bağlan" — exact same font styling as tyro/verse */}
-              <span className="inline-flex items-center gap-1.5">
-                <span
-                  style={{
-                    fontFamily: "inherit",
-                    fontSize: "17px",
-                    fontWeight: 800,
-                    letterSpacing: "-0.01em",
-                    lineHeight: 1,
-                    color: "#ffffff",
-                  }}
-                >
-                  {scrambleDone ? connectLabel : baglanText}
-                </span>
-                <motion.span
-                  style={{ display: "inline-flex" }}
-                  animate={hover ? { y: [0, 3, 0] } : { y: 0 }}
-                  transition={{ duration: 0.8, repeat: hover ? Infinity : 0, ease: "easeInOut" }}
-                >
-                  <MousePointerClick size={14} style={{ color: "#e0ad3e" }} strokeWidth={2.5} />
-                </motion.span>
+                style={{
+                  fontFamily: "inherit",
+                  fontSize: "10.5px",
+                  fontWeight: 500,
+                  letterSpacing: "0.01em",
+                  color: "rgba(255,255,255,0.62)",
+                  lineHeight: 1.1,
+                }}
+              >
+                {t("login.ssoSubtitle")}
               </span>
             </motion.button>
           </motion.div>

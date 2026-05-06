@@ -48,6 +48,11 @@ export function squareToWorld(sq: Square): [number, number, number] {
  * Opening match sequence — Italian-ish opening, 6 moves over ~14s.
  * First move (m1) has no feature card (it's the "curtain open" move).
  * Moves m2-m6 each reveal a feature.
+ *
+ * Tempo (kullanıcı feedback 2026-05-06): tüm sequence -0.5s shift edildi
+ * — ilk piyon ~0.1s'de hareket ediyor (önceden 0.6s), portal reveal
+ * ~1.15s'de görünüyor (önceden 1.65s). Hamleler arası cadence aynı,
+ * sadece ön gecikme kaldırıldı. Akıcı, "hemen başladı" hissi.
  */
 export const MATCH: Move[] = [
   // m1: White e-pawn opens (piece_pawn_white_04 sits at e2, moves to e4)
@@ -55,7 +60,7 @@ export const MATCH: Move[] = [
     id: "m1",
     pieceName: "piece_pawn_white_04",
     to: { file: "e", rank: 4 },
-    startTime: 0.6,
+    startTime: 0.1,
     duration: 0.9,
   },
   // m2: Black e-pawn responds (piece_pawn_black_04 at e7 → e5)
@@ -63,7 +68,7 @@ export const MATCH: Move[] = [
     id: "m2",
     pieceName: "piece_pawn_black_04",
     to: { file: "e", rank: 5 },
-    startTime: 2.6,
+    startTime: 2.1,
     duration: 0.9,
     feature: { i18nKey: "login.revealedFeature.planning", iconId: "target" },
   },
@@ -72,7 +77,7 @@ export const MATCH: Move[] = [
     id: "m3",
     pieceName: "piece_knight_white_02",
     to: { file: "f", rank: 3 },
-    startTime: 5.0,
+    startTime: 4.5,
     duration: 1.0,
     feature: { i18nKey: "login.revealedFeature.kpi", iconId: "chart" },
   },
@@ -81,7 +86,7 @@ export const MATCH: Move[] = [
     id: "m4",
     pieceName: "piece_knight_black_01",
     to: { file: "c", rank: 6 },
-    startTime: 7.6,
+    startTime: 7.1,
     duration: 1.0,
     feature: { i18nKey: "login.revealedFeature.strategyMap", iconId: "network" },
   },
@@ -90,7 +95,7 @@ export const MATCH: Move[] = [
     id: "m5",
     pieceName: "piece_bishop_white_02",
     to: { file: "c", rank: 4 },
-    startTime: 10.2,
+    startTime: 9.7,
     duration: 1.0,
     feature: { i18nKey: "login.revealedFeature.gantt", iconId: "clock" },
   },
@@ -99,7 +104,7 @@ export const MATCH: Move[] = [
     id: "m6",
     pieceName: "piece_pawn_black_03",
     to: { file: "d", rank: 6 },
-    startTime: 12.6,
+    startTime: 12.1,
     duration: 0.8,
     feature: { i18nKey: "login.revealedFeature.security", iconId: "shield" },
   },
