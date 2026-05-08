@@ -56,8 +56,6 @@ export default function TagDistributionCard({ projeler }: Props) {
       }));
   }, [projeler]);
 
-  const max = rows[0]?.count ?? 0;
-
   return (
     <GlassCard className="p-5 flex-1 flex flex-col w-full">
       <h3 className="text-[13px] font-bold text-tyro-text-primary mb-1">
@@ -74,56 +72,23 @@ export default function TagDistributionCard({ projeler }: Props) {
       ) : (
         <div className="flex-1 flex flex-col gap-2 overflow-y-auto">
           {rows.map(({ name, count, color }) => {
-            // Fill width scaled to the biggest bucket so the heaviest tag
-            // fills the row and the rest are relative to it. Tag name +
-            // count both render INSIDE the pill (user request 2026-05-08):
-            // a single full-width pill per tag instead of a separate
-            // left-side label + bar. Two layers handle text contrast —
-            // colored text under, white text clipped to the filled width.
-            const pct = max > 0 ? Math.round((count / max) * 100) : 0;
+            // Sayıya göre dolma çubuğu kaldırıldı (kullanıcı geri bildirimi
+            // 2026-05-08): her etiket TEK RENK tam genişlik pill — sıralama
+            // BLUE_GRADIENT ile tonlama üzerinden okunuyor, dar dolma+geniş
+            // boş yan yana görünmüyor. Yazılar her zaman beyaz.
             const label = `${count} ${t("dashboard.project").toLowerCase()}`;
             return (
               <div
                 key={name}
-                className="relative h-12 rounded-xl overflow-hidden"
-                style={{ backgroundColor: `${color}14` }}
+                className="relative h-12 rounded-xl flex items-center justify-between gap-2 px-4"
+                style={{ backgroundColor: color }}
               >
-                {/* Filled portion (colored) */}
-                <div
-                  className="absolute inset-y-0 left-0 transition-all"
-                  style={{ width: `${pct}%`, backgroundColor: color }}
-                />
-                {/* Color text layer — visible on the light unfilled side */}
-                <div className="absolute inset-0 flex items-center justify-between gap-2 px-4 pointer-events-none">
-                  <span
-                    className="text-[12.5px] font-semibold truncate"
-                    style={{ color }}
-                  >
-                    {name}
-                  </span>
-                  <span
-                    className="text-[11.5px] font-bold tabular-nums shrink-0"
-                    style={{ color }}
-                  >
-                    {label}
-                  </span>
-                </div>
-                {/* White text layer — clipped to the filled width so it
-                    only shows on top of the colored fill, giving proper
-                    contrast on both halves of the pill. */}
-                <div
-                  className="absolute inset-0 overflow-hidden pointer-events-none"
-                  style={{ clipPath: `inset(0 ${100 - pct}% 0 0)` }}
-                >
-                  <div className="absolute inset-0 flex items-center justify-between gap-2 px-4">
-                    <span className="text-[12.5px] font-semibold truncate text-white drop-shadow-sm">
-                      {name}
-                    </span>
-                    <span className="text-[11.5px] font-bold tabular-nums shrink-0 text-white drop-shadow-sm">
-                      {label}
-                    </span>
-                  </div>
-                </div>
+                <span className="text-[12.5px] font-semibold truncate text-white drop-shadow-sm">
+                  {name}
+                </span>
+                <span className="text-[11.5px] font-bold tabular-nums shrink-0 text-white drop-shadow-sm">
+                  {label}
+                </span>
               </div>
             );
           })}
