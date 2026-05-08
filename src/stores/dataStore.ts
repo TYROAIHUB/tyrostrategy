@@ -201,16 +201,24 @@ function now(): string {
   return new Date().toISOString();
 }
 
-/** Calculate status from progress + dates — thresholds from app settings */
+/** Calculate status from progress + dates — thresholds from app settings.
+ *
+ * Eskiden progress=0 olunca direkt "Not Started" dönüyordu (line 206) — bu
+ * yüzden bitiş tarihi geçmiş ve %0'da kalan proje/aksiyonlar "Yüksek Riskte"
+ * yerine "Başlanmadı" olarak görünüyordu (kullanıcı geri bildirimi
+ * 2026-05-08). Şimdi tarih bazlı risk hesabı progress=0 için de çalışıyor;
+ * sadece risk eşiklerinin ALTINDAYSA "Not Started" döner (örn. proje
+ * başlangıcına yakın, henüz geç kalınmamış). */
 function suggestStatusFromProgress(progress: number, startDate: string, endDate: string): EntityStatus {
-  if (progress === 0) return "Not Started";
   if (progress >= 100) return "Achieved";
-  if (!startDate || !endDate) return "On Track";
+  if (!startDate || !endDate) {
+    return progress === 0 ? "Not Started" : "On Track";
+  }
   const now = Date.now();
   const startMs = new Date(startDate).getTime();
   const endMs = new Date(endDate).getTime();
   const totalDuration = endMs - startMs;
-  if (totalDuration <= 0) return "On Track";
+  if (totalDuration <= 0) return progress === 0 ? "Not Started" : "On Track";
   const elapsed = now - startMs;
   const expectedProgress = Math.min(100, Math.max(0, (elapsed / totalDuration) * 100));
   const diff = expectedProgress - progress;
@@ -219,7 +227,9 @@ function suggestStatusFromProgress(progress: number, startDate: string, endDate:
   const atRiskT = Number(localStorage.getItem("tyro-atrisk-threshold")) || 10;
   if (diff > behindT) return "High Risk";
   if (diff > atRiskT) return "At Risk";
-  return "On Track";
+  // Risk eşiklerinin altında: progress=0 ise "Not Started" (henüz başlanmamış,
+  // gecikme de yok). Aksi halde "On Track".
+  return progress === 0 ? "Not Started" : "On Track";
 }
 
 /** Recalculate a Proje's progress + status from its aksiyonlar.
@@ -360,6 +370,26 @@ export const useDataStore = create<DataState>()(
             } else if (data.status && data.status !== "Achieved" && before.status === "Achieved") {
               syncData.completedAt = undefined;
             }
+            // Otomatik risk hesaplaması (kullanıcı geri bildirimi 2026-05-08):
+            // proje doğrudan güncellendiğinde progress + dates üzerinden
+            // suggestStatusFromProgress ile statü tetiklensin. Lifecycle
+            // statüleri (On Hold, Cancelled, Achieved) korunuyor; bunların
+            // dışında "Not Started" / "On Track" / "At Risk" / "High Risk"
+            // arasında geçişler otomatik. Aksiyon CRUD'ları da
+            // recalcProjeProgress üzerinden aynı fonksiyona düşer.
+            const merged = { ...before, ...syncData };
+            const finalStatus = merged.status as EntityStatus | undefined;
+            const isLifecycle = finalStatus === "On Hold" || finalStatus === "Cancelled" || finalStatus === "Achieved";
+            if (!isLifecycle) {
+              const suggested = suggestStatusFromProgress(
+                merged.progress ?? 0,
+                merged.startDate,
+                merged.endDate
+              );
+              if (suggested !== finalStatus) {
+                syncData.status = suggested;
+              }
+            }
           }
           const projeler = s.projeler.map((h) => {
             if (h.id !== id) return h;
@@ -449,6 +479,24 @@ export const useDataStore = create<DataState>()(
               syncData.completedAt = new Date().toISOString();
             } else if (data.status && data.status !== "Achieved" && before.status === "Achieved") {
               syncData.completedAt = undefined;
+            }
+            // Otomatik risk hesaplaması (kullanıcı geri bildirimi 2026-05-08):
+            // aksiyon güncellendiğinde de progress + dates üzerinden statü
+            // tetiklensin. Aynı lifecycle koruması (On Hold, Cancelled,
+            // Achieved). Örneğin %0 ve bitiş tarihi geçmiş bir aksiyon
+            // kayıt güncellemesinde otomatik "Yüksek Riskte"ye geçer.
+            const merged = { ...before, ...syncData };
+            const finalStatus = merged.status as EntityStatus | undefined;
+            const isLifecycle = finalStatus === "On Hold" || finalStatus === "Cancelled" || finalStatus === "Achieved";
+            if (!isLifecycle) {
+              const suggested = suggestStatusFromProgress(
+                merged.progress ?? 0,
+                merged.startDate,
+                merged.endDate
+              );
+              if (suggested !== finalStatus) {
+                syncData.status = suggested;
+              }
             }
           }
           const aksiyonlar = s.aksiyonlar.map((a) => {
