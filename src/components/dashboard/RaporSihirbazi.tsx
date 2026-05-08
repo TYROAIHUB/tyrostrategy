@@ -567,14 +567,108 @@ export default function RaporSihirbazi() {
       });
     }
 
-    // 4) Pill TABLE-CELL centering — html2canvas baseline rendering
-    //    flex/line-height/inline-block ile pill metnini dikeyde
-    //    ortalayamıyor. table-cell + vertical-align: middle garantili
-    //    çalışıyor. Connector dot (data-connector-dot işaretli) atlanır
-    //    — onun içeriği yok, rewrite edilirse halka kayboluyor.
-    doc.querySelectorAll('span[class*="rounded-full"]').forEach((node) => {
-      const e = node as HTMLElement;
-      if (e.dataset.connectorDot !== undefined) return;
+    // 4) Pill rendering: SVG conversion — KALICI ÇÖZÜM (2026-05-09).
+    //
+    // Tarihçe:
+    //   - line-height-based centering → html2canvas font metric'lerini
+    //     browser'la birebir aynı hesaplamadığı için pill metni kayıyor.
+    //   - inline-flex + alignItems: center → html2canvas flexbox baseline
+    //     hizalamasını eksik render ediyor (özellikle tek-sayfa PDF gibi
+    //     uzun canvas'larda).
+    //   - inline-table + display: table-cell → multi-page'de görece
+    //     çalışıyor ama tek-sayfa PDF'te metin pill'in altına kayıyor
+    //     (kullanıcı raporu 2026-05-09: "Tamamlandı yazısı yarısı pill
+    //     içinde yarısı dışında").
+    //
+    // Çözüm: pill'i tamamen <svg> ile değiştir. SVG koordinat sistemi
+    // mutlaktır; `text-anchor="middle"` + `dominant-baseline="central"`
+    // her renderer'da pixel-perfect ortalama verir. html2canvas SVG'yi
+    // foreignObject veya doğrudan canvas-render ile işler — ikisinde de
+    // SVG kendi koordinatlarını korur. Font metric'leri canvas API ile
+    // ana doc'tan ölçülüp SVG genişliği hesaplanır.
+    //
+    // Kapsam:
+    //   - data-connector-dot işaretli span'ler atlanır (içeriği yok).
+    //   - Sadece TEK metin içerikli span'ler SVG'ye dönüşür (children
+    //     varsa table-cell fallback'i kullanılır — örn. ikon + metin
+    //     kombinasyonu olan pill'ler).
+    const measureCtx = (() => {
+      try {
+        const c = document.createElement("canvas");
+        return c.getContext("2d");
+      } catch {
+        return null;
+      }
+    })();
+
+    function pillToSvg(e: HTMLElement) {
+      const text = (e.textContent ?? "").trim();
+      if (!text || !measureCtx) return false;
+      const cs = getComputedStyle(e);
+      const fs = parseFloat(cs.fontSize) || 11;
+      const fw = cs.fontWeight || "600";
+      const ff = cs.fontFamily || "system-ui, sans-serif";
+      const pl = parseFloat(cs.paddingLeft) || 8;
+      const pr = parseFloat(cs.paddingRight) || 8;
+      const pt = parseFloat(cs.paddingTop) || 2;
+      const pb = parseFloat(cs.paddingBottom) || 2;
+      const minW = parseFloat(cs.minWidth) || 0;
+      // Border (varsa SVG'de stroke ile çiz)
+      const bw = parseFloat(cs.borderTopWidth) || 0;
+      const bc = cs.borderTopColor;
+      const hasBorder = bw > 0 && bc !== "transparent" && bc !== "rgba(0, 0, 0, 0)";
+
+      measureCtx.font = `${fw} ${fs}px ${ff}`;
+      const textW = measureCtx.measureText(text).width;
+
+      const w = Math.max(minW, Math.ceil(textW + pl + pr + (hasBorder ? bw * 2 : 0)));
+      const h = Math.ceil(fs + pt + pb + (hasBorder ? bw * 2 : 0));
+      const radius = Math.min(w, h) / 2;
+
+      const NS = "http://www.w3.org/2000/svg";
+      const svg = doc.createElementNS(NS, "svg");
+      svg.setAttribute("width", String(w));
+      svg.setAttribute("height", String(h));
+      svg.setAttribute("viewBox", `0 0 ${w} ${h}`);
+      svg.setAttribute("xmlns", NS);
+      svg.style.display = "inline-block";
+      svg.style.verticalAlign = "middle";
+
+      const rect = doc.createElementNS(NS, "rect");
+      // Inset 0.5px so border (if any) sits cleanly inside viewBox
+      const inset = hasBorder ? bw / 2 : 0;
+      rect.setAttribute("x", String(inset));
+      rect.setAttribute("y", String(inset));
+      rect.setAttribute("width", String(w - 2 * inset));
+      rect.setAttribute("height", String(h - 2 * inset));
+      rect.setAttribute("rx", String(Math.max(0, radius - inset)));
+      rect.setAttribute("ry", String(Math.max(0, radius - inset)));
+      rect.setAttribute("fill", cs.backgroundColor);
+      if (hasBorder) {
+        rect.setAttribute("stroke", bc);
+        rect.setAttribute("stroke-width", String(bw));
+      }
+      svg.appendChild(rect);
+
+      const txt = doc.createElementNS(NS, "text");
+      txt.setAttribute("x", String(w / 2));
+      txt.setAttribute("y", String(h / 2));
+      txt.setAttribute("text-anchor", "middle");
+      txt.setAttribute("dominant-baseline", "central");
+      txt.setAttribute("font-size", String(fs));
+      txt.setAttribute("font-weight", fw);
+      txt.setAttribute("font-family", ff);
+      txt.setAttribute("fill", cs.color);
+      txt.textContent = text;
+      svg.appendChild(txt);
+
+      e.parentNode?.replaceChild(svg, e);
+      return true;
+    }
+
+    function pillToTableCell(e: HTMLElement) {
+      // Fallback for pills with nested elements (icon + text, etc.) —
+      // SVG path doesn't handle these. Same TABLE-CELL approach as before.
       const cs = getComputedStyle(e);
       const pt = parseFloat(cs.paddingTop) || 0;
       const pb = parseFloat(cs.paddingBottom) || 0;
@@ -593,6 +687,14 @@ export default function RaporSihirbazi() {
       e.style.paddingBottom = "0";
       e.style.lineHeight = "1";
       e.style.boxSizing = "border-box";
+    }
+
+    doc.querySelectorAll('span[class*="rounded-full"]').forEach((node) => {
+      const e = node as HTMLElement;
+      if (e.dataset.connectorDot !== undefined) return;
+      // Text-only pills → SVG (pixel-perfect). Nested children → table-cell.
+      if (e.children.length === 0 && pillToSvg(e)) return;
+      pillToTableCell(e);
     });
   }
 
