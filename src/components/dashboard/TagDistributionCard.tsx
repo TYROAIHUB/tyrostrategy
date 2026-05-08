@@ -72,49 +72,57 @@ export default function TagDistributionCard({ projeler }: Props) {
           {t("common.noResults")}
         </div>
       ) : (
-        <div className="flex-1 flex flex-col gap-2.5 overflow-y-auto">
+        <div className="flex-1 flex flex-col gap-2 overflow-y-auto">
           {rows.map(({ name, count, color }) => {
-            // Bar width scaled to the biggest bucket so the heaviest
-            // tag fills the row and the rest are relative to it.
+            // Fill width scaled to the biggest bucket so the heaviest tag
+            // fills the row and the rest are relative to it. Tag name +
+            // count both render INSIDE the pill (user request 2026-05-08):
+            // a single full-width pill per tag instead of a separate
+            // left-side label + bar. Two layers handle text contrast —
+            // colored text under, white text clipped to the filled width.
             const pct = max > 0 ? Math.round((count / max) * 100) : 0;
             const label = `${count} ${t("dashboard.project").toLowerCase()}`;
             return (
-              <div key={name} className="flex items-center gap-3">
-                {/* Left: tag pill (name + dot) */}
-                <div className="flex items-center gap-1.5 shrink-0 min-w-[110px]">
+              <div
+                key={name}
+                className="relative h-12 rounded-xl overflow-hidden"
+                style={{ backgroundColor: `${color}14` }}
+              >
+                {/* Filled portion (colored) */}
+                <div
+                  className="absolute inset-y-0 left-0 transition-all"
+                  style={{ width: `${pct}%`, backgroundColor: color }}
+                />
+                {/* Color text layer — visible on the light unfilled side */}
+                <div className="absolute inset-0 flex items-center justify-between gap-2 px-4 pointer-events-none">
                   <span
-                    className="w-2.5 h-2.5 rounded-full"
-                    style={{ backgroundColor: color }}
-                  />
-                  <span className="text-[12px] font-medium text-tyro-text-primary truncate">
+                    className="text-[12.5px] font-semibold truncate"
+                    style={{ color }}
+                  >
                     {name}
                   </span>
-                </div>
-                {/* Bar with the count label painted inside the filled
-                    portion. Narrow bars fall back to placing the label
-                    just after the fill so it never gets clipped. */}
-                <div
-                  className="flex-1 h-6 rounded-lg overflow-hidden relative"
-                  style={{ backgroundColor: `${color}14` }}
-                >
-                  <div
-                    className="h-full rounded-lg transition-all flex items-center justify-center"
-                    style={{ width: `${pct}%`, backgroundColor: color }}
+                  <span
+                    className="text-[11.5px] font-bold tabular-nums shrink-0"
+                    style={{ color }}
                   >
-                    {pct >= 25 && (
-                      <span className="text-[11px] font-bold text-white/95 tabular-nums drop-shadow-sm px-1 truncate">
-                        {label}
-                      </span>
-                    )}
-                  </div>
-                  {pct < 25 && (
-                    <span
-                      className="absolute inset-y-0 flex items-center text-[11px] font-bold tabular-nums"
-                      style={{ left: `calc(${pct}% + 8px)`, color }}
-                    >
+                    {label}
+                  </span>
+                </div>
+                {/* White text layer — clipped to the filled width so it
+                    only shows on top of the colored fill, giving proper
+                    contrast on both halves of the pill. */}
+                <div
+                  className="absolute inset-0 overflow-hidden pointer-events-none"
+                  style={{ clipPath: `inset(0 ${100 - pct}% 0 0)` }}
+                >
+                  <div className="absolute inset-0 flex items-center justify-between gap-2 px-4">
+                    <span className="text-[12.5px] font-semibold truncate text-white drop-shadow-sm">
+                      {name}
+                    </span>
+                    <span className="text-[11.5px] font-bold tabular-nums shrink-0 text-white drop-shadow-sm">
                       {label}
                     </span>
-                  )}
+                  </div>
                 </div>
               </div>
             );
