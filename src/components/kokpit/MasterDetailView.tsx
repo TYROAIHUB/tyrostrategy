@@ -555,6 +555,24 @@ function InfoCell({ icon, label, value, className }: { icon?: React.ReactNode; l
   );
 }
 
+// Expected-progress marker rengi için luminance kontrolü — kullanıcı isteği
+// 2026-05-09: marker tema rengini takip etsin, ama beyaz / açık gri olmasın
+// (görünür kalması garanti). Perceived luminance > 200/255 ise "çok açık"
+// kabul edilir, alternatif daha koyu renge düşer.
+function _isTooLightMarker(hex: string | undefined | null): boolean {
+  if (!hex) return true;
+  const m = hex.match(/^#([0-9a-f]{3,8})$/i);
+  if (!m) return false; // non-hex (rgb(), var()) — assume usable
+  let h = m[1];
+  if (h.length === 3) h = h.split("").map((c) => c + c).join("");
+  if (h.length === 8) h = h.slice(0, 6);
+  const r = parseInt(h.slice(0, 2), 16);
+  const g = parseInt(h.slice(2, 4), 16);
+  const b = parseInt(h.slice(4, 6), 16);
+  // Rec. 601 luma — basit ve hızlı; >200 = açık ton (beyaz/açık gri/light-pastel)
+  return 0.299 * r + 0.587 * g + 0.114 * b > 200;
+}
+
 // ========================================
 // AKSIYON ROW
 // ========================================
@@ -574,7 +592,19 @@ function AksiyonRow({
   onClick?: () => void;
 }) {
   const { t } = useTranslation();
+  const sidebarTheme = useSidebarTheme();
   const stColor = STATUS_HEX[aksiyon.status] ?? "#94a3b8";
+
+  // Beklenen-progress marker rengi: tema "brandStrategy" ya da "accentColor"
+  // — hangisi yeterince koyuysa o. İkisi de açıksa --tyro-navy fallback'i.
+  // useMemo gereksiz (her render'da aynı obj refs).
+  const markerColor = (() => {
+    const candidates = [sidebarTheme.brandStrategy, sidebarTheme.accentColor];
+    for (const c of candidates) {
+      if (c && !_isTooLightMarker(c)) return c;
+    }
+    return "var(--tyro-navy)";
+  })();
   return (
     <div
       className="glass-card rounded-xl p-3 hover:shadow-md transition-all group/row cursor-pointer relative border-l-[3px] border-l-transparent"
@@ -643,9 +673,9 @@ function AksiyonRow({
                     size="sm"
                   >
                     {/* Marker grubu — bar'ı dikey ortalayan absolute container.
-                        Üstte ters üçgen (▼), bar boyunca ince çizgi, altta üçgen (▲).
-                        Gold renk (--tyro-gold) statü renklerinden farklı, target/hedef
-                        semantiği veriyor. */}
+                        Üstte ▼, bar boyunca ince çizgi, altta ▲. Renk seçilen
+                        temadan (markerColor) — beyaz/açık gri olmaması için
+                        luminance kontrolü ile. Hedef/expected semantiği. */}
                     <div
                       className="absolute pointer-events-auto cursor-help"
                       style={{
@@ -664,12 +694,13 @@ function AksiyonRow({
                           style={{
                             borderLeft: "4px solid transparent",
                             borderRight: "4px solid transparent",
-                            borderTop: "5px solid var(--tyro-gold)",
+                            borderTop: `5px solid ${markerColor}`,
                           }}
                         />
                         {/* ince dikey çizgi (bar boyunca) */}
                         <span
-                          className="flex-1 w-[1.5px] bg-tyro-gold/70 rounded-full"
+                          className="flex-1 w-[1.5px] rounded-full"
+                          style={{ backgroundColor: markerColor, opacity: 0.7 }}
                           aria-hidden
                         />
                         {/* ▲ alt */}
@@ -678,7 +709,7 @@ function AksiyonRow({
                           style={{
                             borderLeft: "4px solid transparent",
                             borderRight: "4px solid transparent",
-                            borderBottom: "5px solid var(--tyro-gold)",
+                            borderBottom: `5px solid ${markerColor}`,
                           }}
                         />
                       </div>
