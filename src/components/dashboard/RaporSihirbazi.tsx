@@ -1802,17 +1802,23 @@ ${clone.outerHTML}
                                           key={a.id}
                                           className="relative flex items-start gap-3 py-2 border-b border-tyro-border/8 last:border-0"
                                         >
-                                          {/* Per-row trunk segment — birden fazla aksiyon varsa.
-                                              isFirst: nokta merkezinden (top:17) başla.
-                                              isLast: nokta merkezinde bit (bottom:calc(100%-17px)).
-                                              Aralardaki satırlar tüm yüksekliği kaplar. */}
+                                          {/* Per-row trunk segment — kullanıcı raporu 2026-05-09:
+                                              Önceden satırlar arasında space-y-0.5 (2px) gap
+                                              vardı, trunk satır sınırına kadar (bottom:0)
+                                              uzanıyordu — gap bölgesinde KESİNTİ olarak görünüyordu.
+                                              Çözüm: non-last satırlarda `bottom: -2` ile gap köprülenir.
+                                              Tek-yönlü uzatma (sadece aşağı) — komşu satır kendi
+                                              top:0'ından başlar, opacity overlap olmaz.
+                                              - isFirst: top: 17 (nokta merkezi), bottom: -2
+                                              - middle:  top: 0,  bottom: -2
+                                              - isLast:  top: 0,  bottom: calc(100% - 17px) */}
                                           {ha.length > 1 && (
                                             <span
-                                              className="absolute w-[1.5px] bg-tyro-navy/20 print:bg-slate-400"
+                                              className="absolute w-[1.5px] bg-tyro-navy/25 print:bg-slate-400"
                                               style={{
                                                 left: -10,
                                                 top: isFirst ? 17 : 0,
-                                                bottom: isLast ? "calc(100% - 17px)" : 0,
+                                                bottom: isLast ? "calc(100% - 17px)" : -2,
                                               }}
                                               aria-hidden
                                             />
@@ -1834,7 +1840,7 @@ ${clone.outerHTML}
                                           />
                                           {/* Horizontal stub — dotun sağından satır içeriğine */}
                                           <span
-                                            className="absolute h-[1.5px] bg-tyro-navy/20 print:bg-slate-400"
+                                            className="absolute h-[1.5px] bg-tyro-navy/25 print:bg-slate-400"
                                             style={{ left: -5, top: 16, width: 5 }}
                                             aria-hidden
                                           />
