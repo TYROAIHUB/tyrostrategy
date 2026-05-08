@@ -7,8 +7,9 @@ import {
   CheckSquare, Square, PieChart, CalendarRange,
   FileText, FileSpreadsheet, FileCode, Printer,
   TrendingDown, TrendingUp, Trophy, BarChart3, CircleAlert, Target,
-  Bookmark, Save,
+  Bookmark, Save, Pencil, RotateCcw,
 } from "lucide-react";
+import SlidingPanel from "@/components/shared/SlidingPanel";
 import { useTranslation } from "react-i18next";
 import i18n from "@/lib/i18n";
 import { useDataStore } from "@/stores/dataStore";
@@ -190,6 +191,19 @@ export default function RaporSihirbazi() {
   const [exportOpen, setExportOpen] = useState(false);
   const [hideActionsInExport, setHideActionsInExport] = useState(false);
 
+  // ===== Anlık Yönetici İçgörüleri Düzenleme =====
+  // Kullanıcı (geri bildirim 2026-05-08) AI'ın ürettiği "Yapay Zeka
+  // İçgörüleri" bölümündeki başlıkları/madde listelerini sadece o anki
+  // çıktı için düzenlemek + öyle dışarı aktarmak istiyor. Bilinçli
+  // tasarım: KALICI DEĞİL — sayfa yenilenince useState sıfırdan başlar,
+  // raporu tekrar çalıştırınca (handleGenerate) override'lar temizlenir,
+  // template'e bağlı değil. Persistence istemediği için DB / localStorage
+  // dokunulmuyor.
+  type InsightKey = "opened" | "closed" | "attention";
+  type InsightOverride = { title?: string; items?: string[] };
+  const [insightOverrides, setInsightOverrides] = useState<Partial<Record<InsightKey, InsightOverride>>>({});
+  const [insightEditOpen, setInsightEditOpen] = useState(false);
+
   // Load template into filters
   const loadTemplate = (tmpl: ReportTemplate) => {
     setSourceFilter(tmpl.sourceFilter);
@@ -355,6 +369,70 @@ export default function RaporSihirbazi() {
     [aksiyonlar, reportProjeler]
   );
 
+  // AI Insights base — component level hoisting (2026-05-08): hem render
+  // sırasında IIFE'den, hem de "Yönetici İçgörüleri Düzenle" SlidingPanel'inden
+  // aynı veri okunsun. Eski hali sadece IIFE içindeydi, panel'e taşınamıyordu.
+  const aiInsightsBase = useMemo(() => {
+    const _now = new Date();
+    const _thisMonth = _now.getMonth();
+    const _thisYear = _now.getFullYear();
+    const _inThisMonth = (iso?: string) => {
+      if (!iso) return false;
+      const d = new Date(iso);
+      return d.getMonth() === _thisMonth && d.getFullYear() === _thisYear;
+    };
+    const openedThisMonth = reportProjeler.filter((h) => _inThisMonth(h.createdAt));
+    const closedThisMonth = reportProjeler.filter((h) => _inThisMonth(h.completedAt));
+    const attentionProjeler = reportProjeler.filter(
+      (h) => h.status === "High Risk" || h.status === "At Risk",
+    );
+    const out: { key: InsightKey; Icon: typeof Check; color: string; title: string; items: string[]; type: "success" | "warning" | "info" }[] = [];
+    if (openedThisMonth.length > 0) {
+      out.push({
+        key: "opened",
+        Icon: TrendingUp,
+        color: "#10b981",
+        title: t("dashboard.insightOpenedThisMonth", { count: openedThisMonth.length }),
+        items: openedThisMonth.map((h) => h.name),
+        type: "info",
+      });
+    }
+    if (closedThisMonth.length > 0) {
+      out.push({
+        key: "closed",
+        Icon: Trophy,
+        color: "#c8922a",
+        title: t("dashboard.insightClosedThisMonth", { count: closedThisMonth.length }),
+        items: closedThisMonth.map((h) => h.name),
+        type: "success",
+      });
+    }
+    if (attentionProjeler.length > 0) {
+      out.push({
+        key: "attention",
+        Icon: AlertTriangle,
+        color: "#ef4444",
+        title: t("dashboard.insightAttentionProjects", { count: attentionProjeler.length }),
+        items: attentionProjeler.map((h) => `${h.name} (${STATUS_TR[h.status]})`),
+        type: "warning",
+      });
+    }
+    return out;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [reportProjeler, t, i18n.language]);
+
+  // Override merge — kullanıcı düzenlemesi varsa AI değerlerini ezsin.
+  const insights = useMemo(() => aiInsightsBase.map((ins) => {
+    const ov = insightOverrides[ins.key];
+    return {
+      ...ins,
+      title: ov?.title !== undefined ? ov.title : ins.title,
+      items: ov?.items !== undefined ? ov.items : ins.items,
+      edited: ov !== undefined,
+    };
+  }), [aiInsightsBase, insightOverrides]);
+  const hasInsightEdits = Object.keys(insightOverrides).length > 0;
+
   // Title based on filters
   const reportTitle = t("dashboard.strategicProjectReport");
   const reportSubtitle = sourceFilter === "all" ? t("dashboard.allSources") : sourceFilter;
@@ -388,6 +466,10 @@ export default function RaporSihirbazi() {
 
   const handleGenerate = () => {
     setReportGenerated(true);
+    // Yenile basıldığında manuel düzenlenmiş içgörü metinlerini sıfırla —
+    // veri yeniden hesaplandığı için kullanıcının elle yazdığı eski
+    // sayılar/listeler tutarsız kalmasın (kullanıcı isteği 2026-05-08).
+    setInsightOverrides({});
     // Aksiyon adımları bölümü açıksa tüm projeleri varsayılan olarak
     // genişlet — kullanıcı tek tek expand etmek zorunda kalmasın.
     // sections.actions kapalıysa zaten aksiyonlar render edilmiyor,
@@ -1367,72 +1449,9 @@ ${clone.outerHTML}
               { label: STATUS_TR["Cancelled"], value: statusSummary["Cancelled"] || 0, color: "#6b7280" },
             ].sort((a, b) => b.value - a.value);
 
-            // (Old risk/completion/dept-ranking vars removed — insights
-            //  panel now computes only this month's opened/closed projects
-            //  and the attention list, each inline in its own filter.)
-
-            // AI Insights — per spec, only three categories:
-            //   1) Projects OPENED this month = createdAt in current month/year.
-            //      ("açıldı" in the app = added to the system, not scheduled
-            //       start date — which is a business schedule field that can
-            //       be any past/future date.)
-            //   2) Projects CLOSED this month = completedAt in current
-            //      month/year. completedAt auto-fills in dataStore the
-            //      moment a proje's status flips to Achieved (and clears
-            //      when it flips back out), so it's the direct "closed on"
-            //      timestamp — no dependence on status=currently-Achieved
-            //      since a proje re-opened later would still have lost its
-            //      completedAt (good: re-opened = not closed anymore).
-            //   3) Projects needing attention = status High Risk or At Risk.
-            const _now = new Date();
-            const _thisMonth = _now.getMonth();
-            const _thisYear = _now.getFullYear();
-            const _inThisMonth = (iso?: string) => {
-              if (!iso) return false;
-              const d = new Date(iso);
-              return d.getMonth() === _thisMonth && d.getFullYear() === _thisYear;
-            };
-
-            const openedThisMonth = reportProjeler.filter((h) => _inThisMonth(h.createdAt));
-            const closedThisMonth = reportProjeler.filter((h) => _inThisMonth(h.completedAt));
-            const attentionProjeler = reportProjeler.filter(
-              (h) => h.status === "High Risk" || h.status === "At Risk",
-            );
-
-            // Insights: her madde başlık (count ile) + isim listesi (bullet).
-            // Önceden tek satırda comma-join olduğu için uzun listeler
-            // okunaksızdı; şimdi başlık üstte, proje isimleri alt alta bullet.
-            const insights: { Icon: typeof Check; color: string; title: string; items: string[]; type: "success" | "warning" | "info" }[] = [];
-            if (openedThisMonth.length > 0) {
-              insights.push({
-                Icon: TrendingUp,
-                color: "#10b981",
-                title: t("dashboard.insightOpenedThisMonth", { count: openedThisMonth.length }),
-                items: openedThisMonth.map((h) => h.name),
-                type: "info",
-              });
-            }
-            if (closedThisMonth.length > 0) {
-              insights.push({
-                Icon: Trophy,
-                color: "#c8922a",
-                title: t("dashboard.insightClosedThisMonth", { count: closedThisMonth.length }),
-                items: closedThisMonth.map((h) => h.name),
-                type: "success",
-              });
-            }
-            if (attentionProjeler.length > 0) {
-              insights.push({
-                Icon: AlertTriangle,
-                color: "#ef4444",
-                title: t("dashboard.insightAttentionProjects", { count: attentionProjeler.length }),
-                items: attentionProjeler.map((h) => `${h.name} (${STATUS_TR[h.status]})`),
-                type: "warning",
-              });
-            }
-
-            // (circR / circC / circOffset donut helpers removed along
-            //  with the Circular Progress card.)
+            // (AI insights & override merge artık component level'da
+            //  hoisted — SlidingPanel ve render aynı veriyi kullansın diye.
+            //  `insights` + `hasInsightEdits` üst kapsamdan geliyor.)
 
             return (
               <Section num={1} title={t("dashboard.executiveSummary")}>
@@ -1441,7 +1460,26 @@ ${clone.outerHTML}
                     şimdi başlık üstte (ikonlu), proje isimleri alt alta
                     bullet olarak listeleniyor. */}
                 <div className="glass-card rounded-xl p-4 mb-4">
-                  <p className="text-[11px] font-bold text-tyro-text-muted uppercase tracking-wider mb-3">{t("dashboard.aiInsights")}</p>
+                  <div className="flex items-center justify-between mb-3 gap-2">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <p className="text-[11px] font-bold text-tyro-text-muted uppercase tracking-wider">{t("dashboard.aiInsights")}</p>
+                      {hasInsightEdits && (
+                        <span className="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-md bg-tyro-gold/15 text-tyro-gold print:hidden">
+                          {t("dashboard.insightEditedBadge")}
+                        </span>
+                      )}
+                    </div>
+                    {insights.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => setInsightEditOpen(true)}
+                        className="inline-flex items-center gap-1 text-[11px] font-semibold text-tyro-navy hover:bg-tyro-navy/5 px-2 py-1 rounded-md transition-colors cursor-pointer print:hidden"
+                      >
+                        <Pencil size={12} />
+                        {t("dashboard.insightEditButton")}
+                      </button>
+                    )}
+                  </div>
                   <div className="space-y-3">
                     {insights.map((ins, i) => (
                       <div key={i} className="flex items-start gap-2">
@@ -1738,6 +1776,237 @@ ${clone.outerHTML}
 
       {/* Filter Modal */}
       {filterModal}
+
+      {/* Yönetici İçgörüleri Toplu Düzenle Paneli — kullanıcı isteği
+          (2026-05-08): rapor önizlemesindeki AI metinlerini sadece o
+          anki çıktı için elden geçirmek. Persistence yok, Yenile veya
+          sayfa yenileme sıfırlar. SlidingPanel mevcut UI pattern'i. */}
+      <SlidingPanel
+        isOpen={insightEditOpen}
+        onClose={() => setInsightEditOpen(false)}
+        title={t("dashboard.insightEditTitle")}
+        icon={<Pencil size={16} className="text-tyro-navy" />}
+        maxWidth={680}
+      >
+        {insightEditOpen && (
+          aiInsightsBase.length === 0 ? (
+            <div className="p-6 text-center text-[13px] text-tyro-text-muted">
+              {t("dashboard.insightEditEmpty")}
+            </div>
+          ) : (
+            <InsightEditPanelContent
+              baseInsights={aiInsightsBase}
+              initialOverrides={insightOverrides}
+              onSave={(next) => {
+                setInsightOverrides(next);
+                setInsightEditOpen(false);
+              }}
+              onCancel={() => setInsightEditOpen(false)}
+            />
+          )
+        )}
+      </SlidingPanel>
+    </div>
+  );
+}
+
+// ===== Insight Edit Panel — toplu düzenleme formu =====
+// Local draft state (isOpen=true iken mount oluyor, false'a giderken
+// unmount → bir sonraki açılışta initialOverrides + base'den temiz
+// başlasın). Her blok için title input + items textarea (her satır = 1
+// madde). Per-block "AI'a sıfırla" + "Tümünü AI'a sıfırla" + Save/Cancel.
+type InsightEditKey = "opened" | "closed" | "attention";
+type InsightEditBase = {
+  key: InsightEditKey;
+  Icon: typeof Pencil;
+  color: string;
+  title: string;
+  items: string[];
+  type: "success" | "warning" | "info";
+};
+type InsightEditOverrides = Partial<Record<InsightEditKey, { title?: string; items?: string[] }>>;
+
+function InsightEditPanelContent({
+  baseInsights,
+  initialOverrides,
+  onSave,
+  onCancel,
+}: {
+  baseInsights: InsightEditBase[];
+  initialOverrides: InsightEditOverrides;
+  onSave: (next: InsightEditOverrides) => void;
+  onCancel: () => void;
+}) {
+  const { t } = useTranslation();
+
+  const sectionLabel: Record<InsightEditKey, string> = {
+    opened: t("dashboard.insightSectionOpened"),
+    closed: t("dashboard.insightSectionClosed"),
+    attention: t("dashboard.insightSectionAttention"),
+  };
+
+  // Draft: her block için title (string) + items (textarea text — newline ayrımlı).
+  // initialOverrides varsa ondan; yoksa AI base'inden başla.
+  const initialDraft = () => {
+    const out: Record<string, { title: string; items: string }> = {};
+    baseInsights.forEach((ins) => {
+      const ov = initialOverrides[ins.key];
+      out[ins.key] = {
+        title: ov?.title !== undefined ? ov.title : ins.title,
+        items: (ov?.items !== undefined ? ov.items : ins.items).join("\n"),
+      };
+    });
+    return out;
+  };
+  const [draft, setDraft] = useState<Record<string, { title: string; items: string }>>(initialDraft);
+
+  const aiOf = (key: string) => baseInsights.find((b) => b.key === key)!;
+  // "Edited" hesaplaması: draft AI base'den farklıysa edited=true.
+  const isEdited = (key: string) => {
+    const d = draft[key];
+    const base = aiOf(key);
+    if (!d || !base) return false;
+    if (d.title !== base.title) return true;
+    const draftItems = d.items.split("\n").map((s) => s.trim()).filter(Boolean);
+    if (draftItems.length !== base.items.length) return true;
+    return draftItems.some((it, i) => it !== base.items[i]);
+  };
+
+  const handleField = (key: string, field: "title" | "items", value: string) => {
+    setDraft((prev) => ({ ...prev, [key]: { ...prev[key], [field]: value } }));
+  };
+
+  const handleResetOne = (key: string) => {
+    const base = aiOf(key);
+    if (!base) return;
+    setDraft((prev) => ({
+      ...prev,
+      [key]: { title: base.title, items: base.items.join("\n") },
+    }));
+  };
+
+  const handleResetAll = () => {
+    const out: Record<string, { title: string; items: string }> = {};
+    baseInsights.forEach((ins) => {
+      out[ins.key] = { title: ins.title, items: ins.items.join("\n") };
+    });
+    setDraft(out);
+  };
+
+  const handleSave = () => {
+    // Sparse override: sadece değişen alanları kaydet — title değişmediyse
+    // override'a eklenmez, items değişmediyse eklenmez. Böylece kullanıcı
+    // sadece bir alanı düzenlerse AI base'den tek alan ezilir.
+    const result: InsightEditOverrides = {};
+    baseInsights.forEach((ins) => {
+      const d = draft[ins.key];
+      if (!d) return;
+      const titleChanged = d.title !== ins.title;
+      const draftItems = d.items.split("\n").map((s) => s.trim()).filter(Boolean);
+      const itemsChanged =
+        draftItems.length !== ins.items.length ||
+        draftItems.some((it, i) => it !== ins.items[i]);
+      if (titleChanged || itemsChanged) {
+        result[ins.key] = {};
+        if (titleChanged) result[ins.key]!.title = d.title;
+        if (itemsChanged) result[ins.key]!.items = draftItems;
+      }
+    });
+    onSave(result);
+  };
+
+  const anyEdited = baseInsights.some((b) => isEdited(b.key));
+
+  return (
+    <div className="flex flex-col h-full">
+      <div className="flex-1 overflow-y-auto p-5 space-y-5">
+        <p className="text-[12px] text-tyro-text-secondary leading-relaxed">
+          {t("dashboard.insightEditSubtitle")}
+        </p>
+
+        {baseInsights.map((ins) => {
+          const edited = isEdited(ins.key);
+          const d = draft[ins.key];
+          return (
+            <div
+              key={ins.key}
+              className="rounded-xl border border-tyro-border/40 bg-white/60 dark:bg-white/5 p-4"
+            >
+              <div className="flex items-center justify-between mb-3 gap-2">
+                <div className="flex items-center gap-2 min-w-0">
+                  <ins.Icon size={16} style={{ color: ins.color }} className="shrink-0" />
+                  <h4 className="text-[13px] font-bold text-tyro-text-primary truncate">
+                    {sectionLabel[ins.key]}
+                  </h4>
+                  {edited && (
+                    <span className="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-md bg-tyro-gold/15 text-tyro-gold">
+                      {t("dashboard.insightEditedBadge")}
+                    </span>
+                  )}
+                </div>
+                {edited && (
+                  <button
+                    type="button"
+                    onClick={() => handleResetOne(ins.key)}
+                    className="inline-flex items-center gap-1 text-[11px] font-semibold text-tyro-text-secondary hover:text-tyro-navy hover:bg-tyro-bg/60 px-2 py-1 rounded-md transition-colors cursor-pointer shrink-0"
+                  >
+                    <RotateCcw size={11} />
+                    {t("dashboard.insightResetOne")}
+                  </button>
+                )}
+              </div>
+
+              <label className="block text-[11px] font-semibold text-tyro-text-secondary mb-1">
+                {t("dashboard.insightFieldTitle")}
+              </label>
+              <input
+                type="text"
+                value={d?.title ?? ""}
+                onChange={(e) => handleField(ins.key, "title", e.target.value)}
+                className="w-full px-3 py-2 rounded-lg border border-tyro-border bg-tyro-surface text-[13px] text-tyro-text-primary focus:outline-none focus:border-tyro-navy/40 mb-3"
+              />
+
+              <label className="block text-[11px] font-semibold text-tyro-text-secondary mb-1">
+                {t("dashboard.insightFieldItems")}
+              </label>
+              <textarea
+                value={d?.items ?? ""}
+                onChange={(e) => handleField(ins.key, "items", e.target.value)}
+                rows={Math.max(3, Math.min(10, (d?.items ?? "").split("\n").length))}
+                className="w-full px-3 py-2 rounded-lg border border-tyro-border bg-tyro-surface text-[13px] text-tyro-text-primary focus:outline-none focus:border-tyro-navy/40 resize-y font-mono"
+              />
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="border-t border-tyro-border/40 px-5 py-3 flex items-center justify-between gap-2 bg-tyro-bg/30">
+        <button
+          type="button"
+          onClick={handleResetAll}
+          disabled={!anyEdited}
+          className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-tyro-text-secondary hover:text-tyro-navy hover:bg-tyro-bg px-2.5 py-1.5 rounded-md transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+        >
+          <RotateCcw size={13} />
+          {t("dashboard.insightResetAll")}
+        </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={onCancel}
+            className="px-3.5 py-1.5 rounded-md text-[12px] font-semibold text-tyro-text-secondary hover:bg-tyro-bg cursor-pointer transition-colors"
+          >
+            {t("dashboard.insightCancelBtn")}
+          </button>
+          <button
+            type="button"
+            onClick={handleSave}
+            className="px-4 py-1.5 rounded-md text-[12px] font-semibold text-white bg-tyro-navy hover:brightness-110 cursor-pointer transition-all"
+          >
+            {t("dashboard.insightSaveBtn")}
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
