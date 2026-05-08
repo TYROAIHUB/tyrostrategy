@@ -522,6 +522,80 @@ export default function RaporSihirbazi() {
     }
   }
 
+  // Ortak html2canvas onclone fix'leri — 2026-05-09: önceki halde
+  // handleExportPDF (multi-page) ve handleExportSinglePagePDF (tek-sayfa)
+  // onclone callback'leri benzer ama farklı geliştirilmişti. Tek-sayfa
+  // PDF'te pill'ler tamamen sıyrılıyordu (transparent bg, no border) →
+  // statü pill'i metne dönüyor, connector dot da görünmez oluyordu.
+  // Multi-page'in TABLE-CELL trick'i pill'leri koruyordu. Şimdi her iki
+  // PDF aynı helper'ı çağırıyor; ileride drift olmasın.
+  function applyHtml2CanvasFixes(doc: Document, opts?: { stripTruncate?: boolean }) {
+    // 1) oklab/oklch/color() → rgb (Tailwind v4 modern color spaces
+    //    html2canvas ile uyumsuz)
+    doc.querySelectorAll("*").forEach((node) => {
+      const e = node as HTMLElement;
+      const cs = getComputedStyle(e);
+      ["color", "backgroundColor", "borderColor", "borderLeftColor", "borderRightColor", "borderTopColor", "borderBottomColor"].forEach((prop) => {
+        const val = cs.getPropertyValue(prop.replace(/[A-Z]/g, (m) => `-${m.toLowerCase()}`));
+        if (val && (val.includes("oklab") || val.includes("oklch") || val.includes("color("))) {
+          (e.style as unknown as Record<string, string>)[prop] = _toRgb(val);
+        }
+      });
+    });
+
+    // 2) line-clamp temizle — açıklamalar kesilip "..." ile yarım çıkmasın
+    doc.querySelectorAll(".line-clamp-1, .line-clamp-2, .line-clamp-3, [class*='line-clamp-']").forEach((node) => {
+      const e = node as HTMLElement;
+      e.style.webkitLineClamp = "unset";
+      e.style.display = "block";
+      e.style.overflow = "visible";
+      e.classList.forEach((cls) => {
+        if (cls.startsWith("line-clamp-")) e.classList.remove(cls);
+      });
+    });
+
+    // 3) (sadece tek-sayfa için) truncate temizle — descender'lar
+    //    (ş, ç, p, y) html2canvas'ta yarım kesilmesin
+    if (opts?.stripTruncate) {
+      doc.querySelectorAll(".truncate").forEach((node) => {
+        const e = node as HTMLElement;
+        e.style.whiteSpace = "normal";
+        e.style.overflow = "visible";
+        e.style.textOverflow = "clip";
+        e.style.lineHeight = "1.4";
+        e.classList.remove("truncate");
+      });
+    }
+
+    // 4) Pill TABLE-CELL centering — html2canvas baseline rendering
+    //    flex/line-height/inline-block ile pill metnini dikeyde
+    //    ortalayamıyor. table-cell + vertical-align: middle garantili
+    //    çalışıyor. Connector dot (data-connector-dot işaretli) atlanır
+    //    — onun içeriği yok, rewrite edilirse halka kayboluyor.
+    doc.querySelectorAll('span[class*="rounded-full"]').forEach((node) => {
+      const e = node as HTMLElement;
+      if (e.dataset.connectorDot !== undefined) return;
+      const cs = getComputedStyle(e);
+      const pt = parseFloat(cs.paddingTop) || 0;
+      const pb = parseFloat(cs.paddingBottom) || 0;
+      const fs = parseFloat(cs.fontSize) || 11;
+      const h = Math.round(fs + pt + pb);
+      const inner = doc.createElement("span");
+      while (e.firstChild) inner.appendChild(e.firstChild);
+      inner.style.display = "table-cell";
+      inner.style.verticalAlign = "middle";
+      inner.style.lineHeight = "1";
+      e.appendChild(inner);
+      e.style.display = "inline-table";
+      e.style.verticalAlign = "middle";
+      e.style.height = `${h}px`;
+      e.style.paddingTop = "0";
+      e.style.paddingBottom = "0";
+      e.style.lineHeight = "1";
+      e.style.boxSizing = "border-box";
+    });
+  }
+
   const handleExportPDF = async () => {
     if (!reportRef.current) return;
     try {
@@ -533,65 +607,7 @@ export default function RaporSihirbazi() {
       scale: 2,
       useCORS: true,
       backgroundColor: "#ffffff",
-      onclone: (doc) => {
-        // Replace all oklab/oklch computed styles with fallback
-        doc.querySelectorAll("*").forEach((node) => {
-          const el = node as HTMLElement;
-          const cs = getComputedStyle(el);
-          // Force color properties to rgb
-          ["color", "backgroundColor", "borderColor", "borderLeftColor", "borderRightColor", "borderTopColor", "borderBottomColor"].forEach((prop) => {
-            const val = cs.getPropertyValue(prop.replace(/[A-Z]/g, (m) => `-${m.toLowerCase()}`));
-            if (val && (val.includes("oklab") || val.includes("oklch") || val.includes("color("))) {
-              (el.style as unknown as Record<string, string>)[prop] = _toRgb(val);
-            }
-          });
-        });
-        // line-clamp kaldır — açıklama yarım çıkmasın (single-page PDF ile aynı fix)
-        doc.querySelectorAll(".line-clamp-1, .line-clamp-2, .line-clamp-3, [class*='line-clamp-']").forEach((node) => {
-          const el = node as HTMLElement;
-          el.style.webkitLineClamp = "unset";
-          el.style.display = "block";
-          el.style.overflow = "visible";
-          el.classList.forEach((cls) => {
-            if (cls.startsWith("line-clamp-")) el.classList.remove(cls);
-          });
-        });
-        // Pill metninin dikey merkezleme sorunu — html2canvas'a karşı 3.
-        // deneme. line-height-based yaklaşım yetmedi, inline-flex de.
-        // En güvenilir yöntem: TABLE-CELL centering. CSS table layout
-        // html2canvas tarafından ana akış tablolama olarak işleniyor,
-        // vertical-align: middle table-cell'de garantili çalışıyor.
-        //
-        // Pattern:
-        //   <span> (was the pill)            → inline-table + sabit height
-        //     <span> (yeni, içeriği sarar)   → table-cell + vertical-align: middle
-        //
-        // Yatay padding korunuyor, yazı (▸/text/içeride span'ler dahil)
-        // table-cell'in altına taşınıyor.
-        doc.querySelectorAll('span[class*="rounded-full"]').forEach((node) => {
-          const e = node as HTMLElement;
-          const cs = getComputedStyle(e);
-          const pt = parseFloat(cs.paddingTop) || 0;
-          const pb = parseFloat(cs.paddingBottom) || 0;
-          const fs = parseFloat(cs.fontSize) || 11;
-          const h = Math.round(fs + pt + pb);
-          // Mevcut çocukları iç span'e taşı
-          const inner = doc.createElement("span");
-          while (e.firstChild) inner.appendChild(e.firstChild);
-          inner.style.display = "table-cell";
-          inner.style.verticalAlign = "middle";
-          inner.style.lineHeight = "1";
-          e.appendChild(inner);
-          // Outer span'i inline-table yap; height ve vertical padding sıfır
-          e.style.display = "inline-table";
-          e.style.verticalAlign = "middle";
-          e.style.height = `${h}px`;
-          e.style.paddingTop = "0";
-          e.style.paddingBottom = "0";
-          e.style.lineHeight = "1";
-          e.style.boxSizing = "border-box";
-        });
-      },
+      onclone: (doc) => applyHtml2CanvasFixes(doc),
     });
     const imgData = canvas.toDataURL("image/png");
     const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
@@ -641,69 +657,12 @@ export default function RaporSihirbazi() {
         scale: 2,
         useCORS: true,
         backgroundColor: "#ffffff",
-        onclone: (doc) => {
-          // oklab/oklch renkleri transparent'a düşür (handleExportPDF ile aynı
-          // defensive çalışma — Tailwind v4 modern renk space'leri html2canvas
-          // ile uyumsuz).
-          doc.querySelectorAll("*").forEach((node) => {
-            const e = node as HTMLElement;
-            const cs = getComputedStyle(e);
-            ["color", "backgroundColor", "borderColor", "borderLeftColor", "borderRightColor", "borderTopColor", "borderBottomColor"].forEach((prop) => {
-              const val = cs.getPropertyValue(prop.replace(/[A-Z]/g, (m) => `-${m.toLowerCase()}`));
-              if (val && (val.includes("oklab") || val.includes("oklch") || val.includes("color("))) {
-                (e.style as unknown as Record<string, string>)[prop] = _toRgb(val);
-              }
-            });
-          });
-          // line-clamp temizle — proje açıklamaları 2 satırda kesilip "..."
-          // ile yarım çıkıyordu (kullanıcı raporu 2026-04-25). PDF tek sayfa
-          // olduğundan layout sınırı yok, tam metin gösterilebilir.
-          doc.querySelectorAll(".line-clamp-1, .line-clamp-2, .line-clamp-3, [class*='line-clamp-']").forEach((node) => {
-            const e = node as HTMLElement;
-            e.style.webkitLineClamp = "unset";
-            e.style.display = "block";
-            e.style.overflow = "visible";
-            // Tailwind sınıfını da kaldır ki specificity savaşı yaşanmasın
-            e.classList.forEach((cls) => {
-              if (cls.startsWith("line-clamp-")) e.classList.remove(cls);
-            });
-          });
-          // truncate temizle — single-line + ellipsis kombinasyonu
-          // descender'ları (ş, ç, p, y) html2canvas'ta yarım kesiyordu.
-          // Tam metin görünsün, gerekirse satır sarılsın.
-          doc.querySelectorAll(".truncate").forEach((node) => {
-            const e = node as HTMLElement;
-            e.style.whiteSpace = "normal";
-            e.style.overflow = "visible";
-            e.style.textOverflow = "clip";
-            e.style.lineHeight = "1.4";
-            e.classList.remove("truncate");
-          });
-          // Tek-sayfa PDF kararı (kullanıcı isteği 2026-05-04): pill alignment
-          // çabasını bıraktık. html2canvas'ın baseline rendering'i 3 farklı
-          // yaklaşımla (flex / line-height / table-cell) tatmin edici sonuç
-          // vermedi. Çözüm: pill arka planlarını tamamen sıyır. Geriye sadece
-          // renkli ikon + renkli yazı kalır — statü/etiket bilgisi ikonlardan
-          // ve renkten okunur, pill'e gerek yok. Renkler ve ikonlar (Clock /
-          // Check / AlertTriangle / PauseCircle vs.) zaten yeterince ayırt
-          // edici. Normal (paginated) PDF table-cell fix'iyle pill'leri
-          // koruyor — sadece tek-sayfa PDF bu temizliği uyguluyor.
-          doc.querySelectorAll('span[class*="rounded-full"]').forEach((node) => {
-            const e = node as HTMLElement;
-            e.style.backgroundColor = "transparent";
-            e.style.border = "none";
-            e.style.borderRadius = "0";
-            e.style.paddingTop = "0";
-            e.style.paddingBottom = "0";
-            e.style.paddingLeft = "0";
-            e.style.paddingRight = "0";
-            e.style.minWidth = "0";
-            // İçerideki ikon + text inline-flex ile gap'li gözüksün
-            e.style.display = "inline-flex";
-            e.style.alignItems = "center";
-            e.style.gap = "4px";
-          });
-        },
+        // 2026-05-09: tek-sayfa PDF artık multi-page ile aynı pill
+        // centering'i kullanıyor (kullanıcı geri bildirimi: önceki strip
+        // yaklaşımı her revizyonda aksiyonları kaydırıyordu, multi-page
+        // sürümüne eşleştirme isteği). Tek farkı: tek-sayfa truncate de
+        // temizliyor (descender bug fix).
+        onclone: (doc) => applyHtml2CanvasFixes(doc, { stripTruncate: true }),
       });
 
       // Sayfa geometri hesabı:
@@ -1719,33 +1678,50 @@ ${clone.outerHTML}
                                 transition={{ duration: 0.15 }}
                                 className="overflow-hidden"
                               >
-                                {/* Aksiyon listesi — kullanıcı geri bildirimi 2026-05-08:
+                                {/* Aksiyon listesi — kullanıcı geri bildirimi 2026-05-08/09:
                                      (1) sol tarafta birbirine bağlı "tree" connector
                                          (vertical trunk + horizontal stub) görsel hiyerarşi
-                                         versin
+                                         versin — trunk son aksiyonda nokta hizasında bitsin,
+                                         aşağı taşmasın.
                                      (2) aksiyon adı ve yüzde arasında statü renkli progress
                                          çubuk; aksiyon adı uzunsa alt satıra sarsın, çubuğa
                                          çarpmasın.
-                                     pl-6: connector için sol boşluk. */}
+                                     Trunk artık container'da DEĞİL, her satırda kendi
+                                     segment'i — first/last için top/bottom koşullu. Tek
+                                     aksiyonlu (length===1) projede trunk hiç render edilmiyor. */}
                                 <div className="relative px-4 pb-3 pl-9">
-                                  {/* Vertical trunk — ilk aksiyondan sonuncuya */}
-                                  <span
-                                    className="absolute left-[26px] w-[1.5px] bg-tyro-navy/20 print:bg-slate-400"
-                                    style={{ top: 14, bottom: 14 }}
-                                    aria-hidden
-                                  />
                                   <div className="space-y-0.5">
-                                    {ha.map((a) => {
+                                    {ha.map((a, idx) => {
                                       const sColor = STATUS_COLOR[a.status];
+                                      const isFirst = idx === 0;
+                                      const isLast = idx === ha.length - 1;
                                       return (
                                         <div
                                           key={a.id}
                                           className="relative flex items-start gap-3 py-2 border-b border-tyro-border/8 last:border-0"
                                         >
-                                          {/* Connector dot — trunk merkeziyle hizalı (sol kenardan
-                                              23px = trunk merkezi 26.75px ± 0.25px). Statü
-                                              renginde halka, içi beyaz — durum hızlıca okunsun. */}
+                                          {/* Per-row trunk segment — birden fazla aksiyon varsa.
+                                              isFirst: nokta merkezinden (top:17) başla.
+                                              isLast: nokta merkezinde bit (bottom:calc(100%-17px)).
+                                              Aralardaki satırlar tüm yüksekliği kaplar. */}
+                                          {ha.length > 1 && (
+                                            <span
+                                              className="absolute w-[1.5px] bg-tyro-navy/20 print:bg-slate-400"
+                                              style={{
+                                                left: -10,
+                                                top: isFirst ? 17 : 0,
+                                                bottom: isLast ? "calc(100% - 17px)" : 0,
+                                              }}
+                                              aria-hidden
+                                            />
+                                          )}
+                                          {/* Connector dot — trunk merkeziyle hizalı. Statü
+                                              renginde halka, içi beyaz. data-connector-dot:
+                                              tek-sayfa PDF onclone'unda pill TABLE-CELL
+                                              rewrite'ından muaf kalsın (içeriği yok, rewrite
+                                              edilirse halka kayboluyor). */}
                                           <span
+                                            data-connector-dot
                                             className="absolute w-2 h-2 rounded-full border-[1.5px] bg-white print:bg-white"
                                             style={{
                                               left: -13,
