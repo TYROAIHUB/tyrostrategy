@@ -10,6 +10,7 @@ import { usePermissions } from "@/hooks/usePermissions";
 import { useUIStore } from "@/stores/uiStore";
 import { useDataStore } from "@/stores/dataStore";
 import { useSidebarTheme } from "@/hooks/useSidebarTheme";
+import { isReviewPending } from "@/lib/reviewUtils";
 import SlidingPanel from "@/components/shared/SlidingPanel";
 // Lazy load heavy components
 const MyProjelerList = lazy(() => import("@/components/workspace/MyProjectsList"));
@@ -160,14 +161,9 @@ export default function WorkspacePage() {
     const myProjeIds = new Set(ws.myProjeler.map((p) => p.id));
     const pendingAks = aksiyonlar.filter((a) => myProjeIds.has(a.projeId) && a.status !== "Achieved").length;
 
-    // Kontrol tarihi güncel olmayan
-    const now = new Date();
-    const oneMonthAgo = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
-    const overdueReview = ws.myProjeler.filter((h) => {
-      if (!h.reviewDate) return true;
-      if (h.status === "Achieved" || h.status === "Cancelled") return false;
-      return new Date(h.reviewDate) <= oneMonthAgo;
-    }).length;
+    // Kontrol tarihi güncel olmayan — takvim ayı bazlı (kullanıcı isteği
+    // 2026-05-10). On Hold da hariç. Mantık tek kaynaktan: reviewUtils.
+    const overdueReview = ws.myProjeler.filter((h) => isReviewPending(h)).length;
 
     items.push({ text: t("workspace.activeProjectsTracked", { count: activeProje }) });
     if (pendingAks > 0) items.push({ text: t("workspace.actionsAwaitingCompletion", { count: pendingAks }) });

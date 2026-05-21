@@ -6,6 +6,7 @@ import GlassCard from "@/components/ui/GlassCard";
 import { useMyWorkspace } from "@/hooks/useMyWorkspace";
 import type { EntityStatus } from "@/types";
 import { getStatusLabel } from "@/lib/constants";
+import { isReviewPending } from "@/lib/reviewUtils";
 
 const STATUS_COLORS: Record<string, string> = {
   "On Track": "#10b981",
@@ -24,15 +25,14 @@ export default function BentoKPI() {
   const navigate = useNavigate();
   const ws = useMyWorkspace();
 
-  const overdueCount = useMemo(() => {
-    const now = new Date();
-    const oneMonthAgo = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
-    return ws.myProjeler.filter((h) => {
-      if (!h.reviewDate) return true;
-      if (h.status === "Achieved" || h.status === "Cancelled") return false;
-      return new Date(h.reviewDate) <= oneMonthAgo;
-    }).length;
-  }, [ws.myProjeler]);
+  // 2026-05-10: takvim ayı bazlı, On Hold da dahil hariç tutulanlar.
+  // Tek kaynak: src/lib/reviewUtils.isReviewPending — WorkspacePage özet
+  // metni ve KokpitPage URL filtresi ile aynı mantığı kullanır, sayı
+  // ile tıklama sonrası filtrelenmiş liste daima eşleşir.
+  const overdueCount = useMemo(
+    () => ws.myProjeler.filter((h) => isReviewPending(h)).length,
+    [ws.myProjeler],
+  );
 
   const statusCounts = useMemo(() => {
     const counts = new Map<string, number>();

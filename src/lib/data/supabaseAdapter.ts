@@ -155,6 +155,7 @@ interface DbUser {
   is_active: boolean;
   created_at: string;
   updated_at: string;
+  last_login_at: string | null;
 }
 
 interface DbAppSetting {
@@ -235,6 +236,8 @@ export interface AppReportTemplate {
   sourceFilter: string;
   statusFilters: string[];
   deptFilter: string;
+  /** null = tüm projeler seçili (varsayılan); string[] = belirli proje ID'leri */
+  selectedProjeIds: string[] | null;
   sections: Record<string, boolean>;
   datePreset: string;
   dateFrom: string;
@@ -246,6 +249,12 @@ export type ReportTemplateInput = Omit<AppReportTemplate, "id" | "updatedAt">;
 
 function dbToTemplate(row: DbReportTemplate): AppReportTemplate {
   const c = (row.config ?? {}) as Record<string, unknown>;
+  // selectedProjeIds backward-compat: eski şablonlarda alan yok → null (tümü)
+  const rawIds = c.selectedProjeIds;
+  const selectedProjeIds =
+    rawIds === null ? null
+    : Array.isArray(rawIds) ? (rawIds as string[])
+    : null;
   return {
     id: row.id,
     name: row.name,
@@ -253,6 +262,7 @@ function dbToTemplate(row: DbReportTemplate): AppReportTemplate {
     sourceFilter: (c.sourceFilter as string) ?? "all",
     statusFilters: (c.statusFilters as string[]) ?? [],
     deptFilter: (c.deptFilter as string) ?? "all",
+    selectedProjeIds,
     sections: (c.sections as Record<string, boolean>) ?? {},
     datePreset: (c.datePreset as string) ?? "all",
     dateFrom: (c.dateFrom as string) ?? "",
@@ -515,6 +525,7 @@ export const supabaseAdapter: DataService = {
       isActive: row.is_active ?? true,
       createdAt: row.created_at,
       updatedAt: row.updated_at,
+      lastLoginAt: row.last_login_at ?? null,
     }));
   },
 
@@ -567,6 +578,21 @@ export const supabaseAdapter: DataService = {
     const { error } = await supabase.from("users").delete().eq("id", id);
     if (error) { console.error("[Supabase] deleteUser:", error); throw error; }
     return true;
+  },
+
+  /** Sunucu tarafı audit: caller'ın last_login_at'ini NOW()'a set eder.
+   *  Migration 028'deki public.touch_last_login() RPC'sini çağırır. RPC
+   *  X-User-Email header'ından kimliği okur (caller email pass etmez),
+   *  SECURITY DEFINER ile self-update trigger'ını bypass eder. Login
+   *  akışında fire-and-forget — hata UX'i bozmaz. */
+  async touchLastLogin(): Promise<void> {
+    if (!supabase) return;
+    try {
+      const { error } = await supabase.rpc("touch_last_login");
+      if (error) console.warn("[Supabase] touch_last_login:", error.message);
+    } catch (e) {
+      console.warn("[Supabase] touch_last_login threw:", e);
+    }
   },
 
   // ── App Settings ──

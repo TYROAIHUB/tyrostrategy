@@ -1,5 +1,6 @@
 import { useMemo, useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
 import { Building2, UserCircle2, Briefcase, ChevronDown, ChevronUp } from "lucide-react";
 import GlassCard from "@/components/ui/GlassCard";
 import { useSidebarTheme } from "@/hooks/useSidebarTheme";
@@ -22,6 +23,7 @@ interface Props {
  */
 export default function BreakdownMatrixCard({ projeler }: Props) {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const sidebarTheme = useSidebarTheme();
   const accentColor = sidebarTheme.accentColor ?? "#c8922a";
   const [dim, setDim] = useState<Dim>("dept");
@@ -48,27 +50,42 @@ export default function BreakdownMatrixCard({ projeler }: Props) {
     return h.source || "-";
   };
 
+  // Raw değer çıkartıcı — dim'e göre proje üzerinden temel alanı döner.
+  // deptLabel alias mapping yapıldığı için bir satır birden fazla raw
+  // değerden oluşabilir (örn. raw "İnsan Kaynakları" + canonical
+  // "insan-kaynaklari" aynı label'a düşer). Bu raw'ları satır başına
+  // toplamak gerekiyor ki tıklayınca kokpit doğru filtrelesin.
+  const extractRaw = (h: Proje): string => {
+    if (dim === "dept") return h.department || "";
+    if (dim === "leader") return h.owner || "";
+    return h.source || "";
+  };
+
   // Build { rowKey → Record<EntityStatus, number> }. Single pass,
   // zero cells initialized so the matrix is rectangular — no holes.
   // Column totals + grand total are computed across the FULL matrix
   // (not just visible rows) so collapsing/expanding never changes the
   // numbers in the "Toplam" footer — what you see is the real total.
+  // Her satır kendi raw değerlerini (Set) tutar — hücre tıklamasında bu
+  // set'i URL'e koyup kokpit'in filterlemesine veriyoruz.
   const { matrix, columnTotals, grandTotal } = useMemo(() => {
-    const bucket = new Map<string, Record<EntityStatus, number>>();
+    const bucket = new Map<string, { counts: Record<EntityStatus, number>; rawValues: Set<string> }>();
     const blank = (): Record<EntityStatus, number> =>
       STATUS_ORDER.reduce((acc, s) => ({ ...acc, [s]: 0 }), {} as Record<EntityStatus, number>);
 
     for (const h of projeler) {
       const key = extract(h);
-      if (!bucket.has(key)) bucket.set(key, blank());
-      const row = bucket.get(key)!;
-      row[h.status] = (row[h.status] ?? 0) + 1;
+      const raw = extractRaw(h);
+      if (!bucket.has(key)) bucket.set(key, { counts: blank(), rawValues: new Set<string>() });
+      const entry = bucket.get(key)!;
+      entry.counts[h.status] = (entry.counts[h.status] ?? 0) + 1;
+      if (raw) entry.rawValues.add(raw);
     }
 
     const rows = Array.from(bucket.entries())
-      .map(([key, counts]) => {
+      .map(([key, { counts, rawValues }]) => {
         const total = STATUS_ORDER.reduce((s, st) => s + (counts[st] ?? 0), 0);
-        return { key, counts, total };
+        return { key, counts, total, rawValues };
       })
       .sort((a, b) => b.total - a.total);
 
@@ -82,6 +99,21 @@ export default function BreakdownMatrixCard({ projeler }: Props) {
     return { matrix: rows, columnTotals: colTotals, grandTotal: grand };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [projeler, dim]);
+
+  // Hücre tıklaması → kokpit'e ilgili filtrelerle yönlendir.
+  // rowRawValues null → tüm dim değerleri (sadece status filter)
+  // status null → tüm statüler (sadece dim filter)
+  // İkisi de null → tüm projeler (filter yok)
+  const navigateToCell = (rowRawValues: Set<string> | null, status: EntityStatus | null) => {
+    const params = new URLSearchParams();
+    if (rowRawValues && rowRawValues.size > 0) {
+      const paramName = dim === "dept" ? "dept" : dim === "leader" ? "owner" : "source";
+      params.set(paramName, Array.from(rowRawValues).join(","));
+    }
+    if (status) params.set("status", status);
+    const qs = params.toString();
+    navigate(qs ? `/stratejik-kokpit?${qs}` : "/stratejik-kokpit");
+  };
 
   return (
     <GlassCard className="p-5 flex-1 flex flex-col w-full">
@@ -153,7 +185,7 @@ export default function BreakdownMatrixCard({ projeler }: Props) {
                 </td>
               </tr>
             )}
-            {(expanded ? matrix : matrix.slice(0, INITIAL_ROWS)).map(({ key, counts, total }) => (
+            {(expanded ? matrix : matrix.slice(0, INITIAL_ROWS)).map(({ key, counts, total, rawValues }) => (
               <tr key={key}>
                 <td className="text-[12px] font-medium text-tyro-text-primary px-2 py-1.5 truncate max-w-[200px] sticky left-0 bg-tyro-surface z-10">
                   {key}
@@ -163,9 +195,14 @@ export default function BreakdownMatrixCard({ projeler }: Props) {
                   const color = STATUS_HEX[s];
                   const darkColor = STATUS_HEX_DARK[s];
                   return (
-                    <td key={s} className="px-1 py-1">
+                    <td
+                      key={s}
+                      className="px-1 py-1 cursor-pointer"
+                      onClick={() => navigateToCell(rawValues, s)}
+                      title={`${key} × ${getStatusLabel(s, t)} → ${n} ${t("dashboard.project").toLowerCase()}`}
+                    >
                       <div
-                        className="h-10 flex items-center justify-center rounded-lg tabular-nums text-[13px] font-bold"
+                        className="h-10 flex items-center justify-center rounded-lg tabular-nums text-[13px] font-bold transition-all hover:brightness-95 hover:scale-[1.03]"
                         style={
                           n > 0
                             ? {
@@ -192,10 +229,15 @@ export default function BreakdownMatrixCard({ projeler }: Props) {
                     Önceden ${accentColor}1f tint'ti ama navy temada gri'ye
                     yakın çıkıp Cancelled/Not Started hücreleriyle karışıyordu.
                     Beyaz arkaplan ayrımı kesinleştiriyor; numara + ince border
-                    yine accent rengiyle "toplam" sinyalini koruyor. */}
-                <td className="px-1 py-1 border-l-2 border-tyro-border/60">
+                    yine accent rengiyle "toplam" sinyalini koruyor.
+                    Tıklama: o satırın tüm projeleri (status filter yok). */}
+                <td
+                  className="px-1 py-1 border-l-2 border-tyro-border/60 cursor-pointer"
+                  onClick={() => navigateToCell(rawValues, null)}
+                  title={`${key} → ${total} ${t("dashboard.project").toLowerCase()}`}
+                >
                   <div
-                    className="h-10 flex items-center justify-center rounded-lg tabular-nums text-[13px] font-bold"
+                    className="h-10 flex items-center justify-center rounded-lg tabular-nums text-[13px] font-bold transition-all hover:brightness-95 hover:scale-[1.03]"
                     style={{
                       backgroundColor: "#ffffff",
                       color: accentColor,
@@ -217,9 +259,14 @@ export default function BreakdownMatrixCard({ projeler }: Props) {
                 {STATUS_ORDER.map((s) => {
                   const n = columnTotals[s] ?? 0;
                   return (
-                    <td key={s} className="px-1 py-1 border-t-2 border-tyro-border/60">
+                    <td
+                      key={s}
+                      className="px-1 py-1 border-t-2 border-tyro-border/60 cursor-pointer"
+                      onClick={() => navigateToCell(null, s)}
+                      title={`${getStatusLabel(s, t)} → ${n} ${t("dashboard.project").toLowerCase()}`}
+                    >
                       <div
-                        className="h-10 flex items-center justify-center rounded-lg tabular-nums text-[13px] font-bold"
+                        className="h-10 flex items-center justify-center rounded-lg tabular-nums text-[13px] font-bold transition-all hover:brightness-95 hover:scale-[1.03]"
                         style={{
                           backgroundColor: "#ffffff",
                           color: accentColor,
@@ -231,10 +278,14 @@ export default function BreakdownMatrixCard({ projeler }: Props) {
                     </td>
                   );
                 })}
-                {/* Grand total — strongest emphasis */}
-                <td className="px-1 py-1 border-t-2 border-l-2 border-tyro-border/60">
+                {/* Grand total — strongest emphasis. Tıklama: filtresiz kokpit. */}
+                <td
+                  className="px-1 py-1 border-t-2 border-l-2 border-tyro-border/60 cursor-pointer"
+                  onClick={() => navigateToCell(null, null)}
+                  title={`${t("dashboard.total")} → ${grandTotal} ${t("dashboard.project").toLowerCase()}`}
+                >
                   <div
-                    className="h-10 flex items-center justify-center rounded-lg tabular-nums text-[14px] font-extrabold text-white"
+                    className="h-10 flex items-center justify-center rounded-lg tabular-nums text-[14px] font-extrabold text-white transition-all hover:brightness-110 hover:scale-[1.03]"
                     style={{
                       backgroundColor: accentColor,
                       border: `1px solid ${accentColor}`,

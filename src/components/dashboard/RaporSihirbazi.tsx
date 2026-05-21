@@ -140,6 +140,8 @@ export default function RaporSihirbazi() {
     sourceFilter: Source | "all";
     statusFilters: string[];
     deptFilter: string;
+    /** null = tüm projeler seçili (varsayılan); string[] = belirli ID'ler */
+    selectedProjeIds: string[] | null;
     sections: Record<string, boolean>;
     datePreset: string;
     dateFrom: string;
@@ -164,10 +166,18 @@ export default function RaporSihirbazi() {
   const saveLocalTemplates = (t: ReportTemplate[]) => localStorage.setItem(TEMPLATES_KEY, JSON.stringify(t));
   const [localTemplates, setLocalTemplates] = useState<ReportTemplate[]>(loadLocalTemplates);
 
-  // Unified template list — Supabase in production, localStorage in mock
+  // Unified template list — Supabase in production, localStorage in mock.
+  // Eski localStorage şablonları `selectedProjeIds` field'i içermeyebilir;
+  // backward-compat için undefined → null'a (= tümü) çeviriyoruz.
   const templates: ReportTemplate[] = isSupabaseMode
-    ? (dbTemplates ?? []).map((t) => ({ ...t, sourceFilter: t.sourceFilter as Source | "all", statusFilters: t.statusFilters, sections: t.sections }))
-    : localTemplates;
+    ? (dbTemplates ?? []).map((t) => ({
+        ...t,
+        sourceFilter: t.sourceFilter as Source | "all",
+        statusFilters: t.statusFilters,
+        sections: t.sections,
+        selectedProjeIds: t.selectedProjeIds ?? null,
+      }))
+    : localTemplates.map((t) => ({ ...t, selectedProjeIds: t.selectedProjeIds ?? null }));
 
   // State
   const [reportGenerated, setReportGenerated] = useState(false);
@@ -204,7 +214,11 @@ export default function RaporSihirbazi() {
   const [insightOverrides, setInsightOverrides] = useState<Partial<Record<InsightKey, InsightOverride>>>({});
   const [insightEditOpen, setInsightEditOpen] = useState(false);
 
-  // Load template into filters
+  // Load template into filters — kullanıcı raporu 2026-05-10: önceden
+  // selectedProjeIds her zaman null'a set ediliyordu (yani şablon yüklenince
+  // tüm projeler seçili oluyordu, kaydedilmiş proje seçimi unutuluyordu).
+  // Düzeltildi: şablonda saklı string[] varsa Set olarak geri yüklenir,
+  // null/undefined ise "tümü" davranışı korunur.
   const loadTemplate = (tmpl: ReportTemplate) => {
     setSourceFilter(tmpl.sourceFilter);
     setStatusFilters(new Set(tmpl.statusFilters as EntityStatus[]));
@@ -213,15 +227,21 @@ export default function RaporSihirbazi() {
     setDatePreset(tmpl.datePreset);
     setDateFrom(tmpl.dateFrom);
     setDateTo(tmpl.dateTo);
-    setSelectedProjeIds(null);
+    setSelectedProjeIds(
+      tmpl.selectedProjeIds === null || tmpl.selectedProjeIds === undefined
+        ? null
+        : new Set(tmpl.selectedProjeIds)
+    );
     setActiveTemplateId(tmpl.id);
   };
 
-  // Current filter snapshot — shared between save and update
+  // Current filter snapshot — shared between save and update. selectedProjeIds
+  // null → tümü; Set → array'e çevirip JSON-uyumlu kaydederiz.
   const currentConfig = () => ({
     sourceFilter: sourceFilter as string,
     statusFilters: Array.from(statusFilters),
     deptFilter,
+    selectedProjeIds: selectedProjeIds === null ? null : Array.from(selectedProjeIds),
     sections,
     datePreset,
     dateFrom,
@@ -356,6 +376,21 @@ export default function RaporSihirbazi() {
     Object.values(m).forEach((v) => { v.avgProg = v.total > 0 ? Math.round(v.avgProg / v.total) : 0; });
     return Object.entries(m).sort((a, b) => b[1].total - a[1].total);
   }, [reportProjeler, aksiyonlar]);
+
+  // Görünür bölümlerin sıralı listesi — kullanıcı isteği 2026-05-10:
+  // Rapor başlıkları (1, 2, 3, 4...) gizlenen bölümleri atlamadan ARDIŞIK
+  // numaralandırılmalı. Eskiden Section'lara hard-coded num={1..4} geçiyordu,
+  // statusPie kapalıyken "1, 3, 4" gibi atlamalar oluyordu. Şimdi
+  // numOf(key) her bölüm için görünür listedeki pozisyonu (+1) döner.
+  const visibleSectionOrder = useMemo(() => {
+    const order: string[] = [];
+    if (sections.summary) order.push("summary");
+    if (sections.statusPie) order.push("statusPie");
+    if (sections.deptTable && deptBreakdown.length > 0) order.push("deptTable");
+    if (sections.details) order.push("details");
+    return order;
+  }, [sections.summary, sections.statusPie, sections.deptTable, sections.details, deptBreakdown.length]);
+  const numOf = (key: string): number => visibleSectionOrder.indexOf(key) + 1;
 
   // attentionItems useMemo removed — the former "Dikkat Gerektiren"
   // standalone section is gone, and the AI Insights panel computes its
@@ -1515,7 +1550,7 @@ ${clone.outerHTML}
             //  `insights` + `hasInsightEdits` üst kapsamdan geliyor.)
 
             return (
-              <Section num={1} title={t("dashboard.executiveSummary")}>
+              <Section num={numOf("summary")} title={t("dashboard.executiveSummary")}>
                 {/* AI Insights — başlık + bullet list yapısı.
                     Önceden tek satırda comma-join isim akışı okunaksızdı,
                     şimdi başlık üstte (ikonlu), proje isimleri alt alta
@@ -1615,7 +1650,7 @@ ${clone.outerHTML}
             });
 
             return (
-              <Section num={2} title={t("dashboard.statusDistributionTitle")}>
+              <Section num={numOf("statusPie")} title={t("dashboard.statusDistributionTitle")}>
                 <div className="glass-card rounded-xl p-5">
                   <div className="flex items-center gap-8">
                     {/* SVG Pie */}
@@ -1648,7 +1683,7 @@ ${clone.outerHTML}
 
           {/* 3. DEPARTMAN TABLOSU */}
           {sections.deptTable && deptBreakdown.length > 0 && (
-            <Section num={3} title={t("dashboard.departmentStatus")}>
+            <Section num={numOf("deptTable")} title={t("dashboard.departmentStatus")}>
               <div className="glass-card rounded-xl overflow-hidden">
                 <table className="w-full text-[12px]">
                   <thead>
@@ -1689,7 +1724,7 @@ ${clone.outerHTML}
                 folded into the AI Insights panel at the top of the
                 Executive Summary — see that block for the list.) */}
           {sections.details && (
-            <Section num={4} title={t("dashboard.projectDetails")}>
+            <Section num={numOf("details")} title={t("dashboard.projectDetails")}>
               <div className="space-y-3">
                 {[...reportProjeler].sort((a, b) => calcProjeProgress(b, aksiyonlar) - calcProjeProgress(a, aksiyonlar)).map((h) => {
                   const ha = aksiyonlar.filter((a) => a.projeId === h.id);
@@ -1754,11 +1789,8 @@ ${clone.outerHTML}
                           )}
                           <span className="ml-auto text-tyro-text-secondary font-medium">{ha.length} {t("dashboard.action")}</span>
                         </div>
-                        {h.participants && h.participants.length > 0 && (
-                          <div className="text-tyro-text-secondary">
-                            <span className="font-medium">{t("common.participants")}:</span> {h.participants.join(", ")}
-                          </div>
-                        )}
+                        {/* Proje Üyeleri satırı kaldırıldı (kullanıcı isteği 2026-05-10):
+                            raporda gizli kalsın. Veride mevcut, sadece bu görünümde gösterilmiyor. */}
                       </div>
 
                       {/* Actions (collapse) */}

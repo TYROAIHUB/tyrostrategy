@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -11,7 +11,7 @@ import { toCalendarDate, fromCalendarDate } from "@/lib/utils";
 import { toast } from "@/stores/toastStore";
 import { useUIStore } from "@/stores/uiStore";
 import { getStatusOptions, getSourceOptions } from "@/lib/constants";
-import { PROJECT_DEPARTMENT_KEYS, deptLabel } from "@/config/departments";
+import { deptLabel, canonicalDeptKey } from "@/config/departments";
 import { DEFAULT_TAG_COLOR } from "@/config/tagColors";
 import TagChip from "@/components/ui/TagChip";
 import StatusBadge from "@/components/ui/StatusBadge";
@@ -55,6 +55,45 @@ export default function ProjeForm({ proje, onSuccess, onClose }: ProjeFormProps)
   const updateProje = useDataStore((s) => s.updateProje);
   const projeler = useDataStore((s) => s.projeler);
   const dbUsers = useDataStore((s) => s.users);
+
+  // Departman dropdown — kullanıcı isteği 2026-05-10:
+  // Dropdown SADECE projelerde gerçekten kullanılan departmanları göstersin.
+  // Hardcoded enum'daki kullanılmayan değerler (tarim, is-guvenligi, ticaret,
+  // turkiye-operasyonlari) otomatik olarak düşer. Hiçbir projede olmayan
+  // ekstra departman yok — projede kullanılan her şey dropdown'da var.
+  //
+  // Dedupe: aynı kavramı temsil eden raw + canonical çiftleri ("İnsan
+  // Kaynakları" + "insan-kaynaklari") tek girişe indirilir; canonical key
+  // tercih edilir + i18n label kullanılır. Mevcut veride iki form da varsa
+  // option olarak sadece bir kez gözükür.
+  //
+  // Mevcut veri güvenliği: form'a yüklenen proje.department RAW olarak
+  // korunur (normalize edilmez). Select'in selectedKeys'i `canonicalDeptKey`
+  // ile maplenir → legacy "İnsan Kaynakları" değerli proje editlenirken
+  // "İnsan Kaynakları" option'u "seçili" görünür. User kaydet'e bastığında
+  // departman alanı dokunulmadıysa DB'de RAW değer kalır. User kasıtla
+  // dropdown'dan yeniden seçim yapınca canonical key kaydedilir — bu da
+  // kullanıcı niyetiyle olan bir normalize, otomatik veri değişimi değil.
+  const departmentOptions = useMemo(() => {
+    const seenCanonical = new Set<string>();
+    const seenRaw = new Set<string>();
+    const opts: { key: string; label: string }[] = [];
+    for (const h of projeler) {
+      const d = h.department?.trim();
+      if (!d) continue;
+      const canonical = canonicalDeptKey(d);
+      if (canonical) {
+        if (seenCanonical.has(canonical)) continue;
+        seenCanonical.add(canonical);
+        opts.push({ key: canonical, label: t(`projectDepartments.${canonical}`) });
+      } else {
+        if (seenRaw.has(d)) continue;
+        seenRaw.add(d);
+        opts.push({ key: d, label: d });
+      }
+    }
+    return opts.sort((a, b) => a.label.localeCompare(b.label, "tr"));
+  }, [projeler, t]);
   const allUsers = dbUsers.map((u) => u.displayName);
   const currentUserName = useUIStore((s) => s.mockUserName);
   const [isLoading, setIsLoading] = useState(false);
@@ -335,7 +374,7 @@ export default function ProjeForm({ proje, onSuccess, onClose }: ProjeFormProps)
               {t("forms.objective.department")}
             </label>
             <Select
-              selectedKeys={field.value ? [field.value] : []}
+              selectedKeys={field.value ? [canonicalDeptKey(field.value) ?? field.value] : []}
               onSelectionChange={(keys) => {
                 const val = Array.from(keys)[0] as string;
                 field.onChange(val ?? "");
@@ -345,8 +384,8 @@ export default function ProjeForm({ proje, onSuccess, onClose }: ProjeFormProps)
               classNames={{ trigger: "border-tyro-border", value: "font-semibold text-tyro-text-primary" }}
               placeholder={t("forms.objective.departmentPlaceholder")}
             >
-              {PROJECT_DEPARTMENT_KEYS.map((key) => (
-                <SelectItem key={key}>{t(`projectDepartments.${key}`)}</SelectItem>
+              {departmentOptions.map((opt) => (
+                <SelectItem key={opt.key}>{opt.label}</SelectItem>
               ))}
             </Select>
           </div>

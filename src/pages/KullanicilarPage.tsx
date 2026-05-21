@@ -32,6 +32,8 @@ interface UserRow {
   projeCount: number;
   aksiyonCount: number;
   achievedCount: number;
+  /** ISO timestamp veya null = hiç giriş yapmamış (migration 028). */
+  lastLoginAt: string | null;
 }
 
 function assignRole(projeCount: number): YetkiRol {
@@ -47,12 +49,12 @@ function nameToEmail(name: string): string {
   return `${clean(parts[0])}@tiryaki.com.tr`;
 }
 
-const COLUMN_UIDS = ["name", "role", "status", "email", "department", "locale", "projeCount", "actions"] as const;
+const COLUMN_UIDS = ["name", "role", "status", "email", "department", "locale", "projeCount", "lastLoginAt", "actions"] as const;
 
-const INITIAL_VISIBLE = new Set(["name", "role", "status", "email", "department", "locale", "projeCount", "actions"]);
+const INITIAL_VISIBLE = new Set(["name", "role", "status", "email", "department", "locale", "projeCount", "lastLoginAt", "actions"]);
 
 export default function KullanicilarPage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   const columns = useMemo(() => [
     { uid: "name", name: t("users.fullName") },
@@ -62,6 +64,7 @@ export default function KullanicilarPage() {
     { uid: "department", name: t("users.department") },
     { uid: "locale", name: t("users.language") },
     { uid: "projeCount", name: t("users.projects") },
+    { uid: "lastLoginAt", name: t("users.lastLogin") },
     { uid: "actions", name: t("users.actions") },
   ], [t]);
   const projeler = useDataStore((s) => s.projeler);
@@ -148,6 +151,7 @@ export default function KullanicilarPage() {
           projeCount: s.projeCount,
           aksiyonCount: s.aksiyonCount,
           achievedCount: s.achievedCount,
+          lastLoginAt: u.lastLoginAt ?? null,
         };
       });
     }
@@ -166,6 +170,7 @@ export default function KullanicilarPage() {
       projeCount: s.projeCount,
       aksiyonCount: s.aksiyonCount,
       achievedCount: s.achievedCount,
+      lastLoginAt: null,
     }));
   }, [projeler, aksiyonlar, dbUsers]);
 
@@ -186,6 +191,17 @@ export default function KullanicilarPage() {
   const sorted = useMemo(() => {
     return [...filtered].sort((a, b) => {
       const col = sortDescriptor.column as keyof UserRow;
+      // lastLoginAt: null değerler (hiç giriş yapmamış) her zaman en sona —
+      // sort yönünden bağımsız. Asc/Desc sadece dolu timestamp'ler arasında.
+      if (col === "lastLoginAt") {
+        const va = a.lastLoginAt;
+        const vb = b.lastLoginAt;
+        if (va == null && vb == null) return 0;
+        if (va == null) return 1;
+        if (vb == null) return -1;
+        const cmp = va.localeCompare(vb);
+        return sortDescriptor.direction === "ascending" ? cmp : -cmp;
+      }
       const va = a[col] ?? "";
       const vb = b[col] ?? "";
       let cmp = 0;
@@ -252,6 +268,19 @@ export default function KullanicilarPage() {
         return <span className="text-[13px] text-tyro-text-secondary">{user.locale === "en" ? t("profile.english") : t("profile.turkish")}</span>;
       case "projeCount":
         return <span className="text-[13px] font-bold" style={{ color: sidebarTheme.accentColor }}>{user.projeCount}</span>;
+      case "lastLoginAt": {
+        // ISO timestamp → "12.05.2026 14:32" formatı (kullanıcı isteği 2026-05-10).
+        // Null → "—". i18n.language'a göre locale (tr-TR / en-US).
+        if (!user.lastLoginAt) {
+          return <span className="text-[13px] text-tyro-text-muted">{t("users.neverLoggedIn")}</span>;
+        }
+        const d = new Date(user.lastLoginAt);
+        const formatted = d.toLocaleString(
+          i18n.language === "en" ? "en-US" : "tr-TR",
+          { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" },
+        );
+        return <span className="text-[12px] text-tyro-text-secondary tabular-nums whitespace-nowrap">{formatted}</span>;
+      }
       case "actions":
         return (
           <div className="relative flex items-center gap-2 justify-center">

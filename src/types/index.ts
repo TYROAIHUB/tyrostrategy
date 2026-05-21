@@ -119,6 +119,10 @@ export interface AppUser {
   isActive?: boolean;
   createdAt?: string;
   updatedAt?: string;
+  /** Audit alanı (migration 028): kullanıcının en son başarılı login zamanı.
+   *  Server-side public.touch_last_login() RPC tarafından NOW() ile set edilir;
+   *  client clock'a bağlı değil. Null = hiç giriş yapmamış. */
+  lastLoginAt?: string | null;
 }
 
 // ===== App Settings (key-value) =====

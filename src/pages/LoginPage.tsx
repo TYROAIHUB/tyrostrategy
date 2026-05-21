@@ -9,6 +9,8 @@ import { useIsAuthenticated, useMsal } from "@azure/msal-react";
 import { InteractionStatus } from "@azure/msal-browser";
 import { useNavigate } from "react-router-dom";
 import { useDataStore } from "@/stores/dataStore";
+import { supabaseAdapter } from "@/lib/data/supabaseAdapter";
+import { isSupabaseMode } from "@/lib/supabaseMode";
 import CinematicOverlays from "@/components/ui/login/CinematicOverlays";
 // CheckmateReveal + ArchivedFeatureList kaldırıldı (kullanıcı isteği 2026-05-10):
 // "ŞAH MAT" metin overlay'i + sol alttaki özellik kart listesi artık görünmüyor.
@@ -94,6 +96,12 @@ export default function LoginPage() {
     const user = resolveUser(email, users);
     if (user) {
       applyUser(user);
+      // Audit: MSAL cached session ile otomatik dönüş de bir "uygulama
+      // açılışı" sayılır → last_login_at güncellensin (migration 028).
+      // Fire-and-forget, mock modunda no-op.
+      if (isSupabaseMode) {
+        void supabaseAdapter.touchLastLogin();
+      }
       navigate("/workspace", { replace: true });
     }
   }, [isAuthenticated, mockLoggedIn, accounts, users, inProgress, navigate]);

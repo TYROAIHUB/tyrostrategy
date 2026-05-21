@@ -550,6 +550,25 @@ async function api(method, path, body) {
     return "204";
   });
 
+  // ── last_login_at + touch_last_login() RPC (migration 028) ──
+  // SECURITY DEFINER RPC, X-User-Email header'ından kimliği okur (admin
+  // burada). users.last_login_at NOW() ile güncellenmeli. Regression guard:
+  // RPC sessizce yok olursa veya kolon eksilirse smoke yakalar.
+  console.log("\nLAST_LOGIN RPC (migration 028):");
+  await step("POST /rpc/touch_last_login", async () => {
+    await api("POST", "/rpc/touch_last_login", {});
+    return "void";
+  });
+  await step("SELECT users.last_login_at (admin) — fresh", async () => {
+    const r = await api("GET", `/users?email=eq.${ADMIN_EMAIL}&select=last_login_at`);
+    if (r.length !== 1) throw new Error(`admin row missing`);
+    const ts = r[0].last_login_at;
+    if (!ts) throw new Error(`last_login_at null after RPC`);
+    const ageMs = Date.now() - new Date(ts).getTime();
+    if (ageMs > 60000) throw new Error(`last_login_at too old: ${ageMs}ms (RPC may not have updated)`);
+    return `age=${ageMs}ms`;
+  });
+
   // ── role_permissions (READ-ONLY — bu tabloyu yazmak gerçek izinleri bozar) ──
   console.log("\nROLE_PERMISSIONS (read-only):");
   await step("SELECT all roles exist", async () => {

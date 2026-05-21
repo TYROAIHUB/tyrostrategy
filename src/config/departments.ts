@@ -212,6 +212,16 @@ export function deptLabel(value: string | undefined | null, t: (key: string) => 
   return value;
 }
 
+/** If the value (raw enum key OR legacy Turkish name) maps to a canonical
+ *  PROJECT_DEPARTMENT_KEYS entry, return that key. Otherwise null.
+ *  Used by ProjeForm to detect when a stored project.department value is
+ *  an "extra" / out-of-enum dept that needs to be added to the dropdown. */
+export function canonicalDeptKey(value: string | undefined | null): string | null {
+  if (!value) return null;
+  if ((PROJECT_DEPARTMENT_KEYS as readonly string[]).includes(value)) return value;
+  return projeDeptNameToKey.get(value) ?? null;
+}
+
 /** Get department by user name */
 export function getDepartmentByUser(userName: string): Department | undefined {
   return departments.find((d) => d.users.some((u) => u.name === userName));

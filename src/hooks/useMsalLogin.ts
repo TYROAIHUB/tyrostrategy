@@ -6,6 +6,8 @@ import { loginRequest } from "@/lib/auth/msalConfig";
 import { useUIStore } from "@/stores/uiStore";
 import { useDataStore, fetchAllFromSupabase } from "@/stores/dataStore";
 import { setSupabaseUserContext } from "@/lib/supabase";
+import { supabaseAdapter } from "@/lib/data/supabaseAdapter";
+import { isSupabaseMode } from "@/lib/supabaseMode";
 
 /** Detect mobile / tablet browsers where popups are unreliable */
 function isMobile(): boolean {
@@ -128,6 +130,12 @@ export function useMsalLogin() {
       }
 
       applyUser(user);
+      // Audit: kullanıcının last_login_at'ini server NOW() ile güncelle
+      // (migration 028 RPC). Fire-and-forget — adapter hata olursa konsola
+      // warn yazar, login akışını ASLA bloklamaz. Mock modunda no-op.
+      if (isSupabaseMode) {
+        void supabaseAdapter.touchLastLogin();
+      }
       // Land on "/" — HomeRedirect picks the first Sidebar-ordered page
       // the role can open (Yönetim rolü sadece Görünümler'e yetkili ise
       // /dashboard'a düşer gibi). See src/lib/navOrder.ts.

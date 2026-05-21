@@ -128,18 +128,20 @@ export default function DashboardPage() {
     projeler.length > 0 ? Math.round((projeTamamlanan.length / projeler.length) * 100) : 0;
 
   // Single-pass status counts + avg progress.
-  // Avg intentionally excludes "On Hold" and "Cancelled" — an On Hold
-  // project's progress is frozen in limbo and a Cancelled one will
-  // never finish, so averaging them drags the KPI down in a way that
-  // hides how the ACTIVE portfolio is actually performing. The card's
-  // sub-label says "Devam eden N proje ortalaması" to reflect this.
+  // 2026-05-10 (kullanıcı geri bildirimi): avg progress yalnızca "Yolunda",
+  // "Riskte" ve "Yüksek Riskte" statülerini sayar. Eskiden On Hold + Cancelled
+  // dışında her şey ortalamaya giriyordu — bu da Achieved (100%) ve Not
+  // Started (0%) kayıtlarını dahil edip "şu an çalışılan portföy" ölçümünü
+  // bulanıklaştırıyordu. Yeni tanım: progress ortalaması SADECE in-flight
+  // (on-track / risky) projeler için anlamlı; tamamlananı katmaz (zaten
+  // %100), başlanmamışı katmaz (zaten %0), askıdaki/iptali katmaz.
   const { statusCounts, avgProgress, activeCount } = useMemo(() => {
     const counts: Record<string, number> = {};
     let activeTotal = 0;
     let activeN = 0;
     for (const h of projeler) {
       counts[h.status] = (counts[h.status] ?? 0) + 1;
-      if (h.status !== "On Hold" && h.status !== "Cancelled") {
+      if (h.status === "On Track" || h.status === "At Risk" || h.status === "High Risk") {
         activeTotal += h.progress;
         activeN += 1;
       }
@@ -154,7 +156,11 @@ export default function DashboardPage() {
   const onTrackCount = statusCounts["On Track"] ?? 0;
   const behindCount = statusCounts["High Risk"] ?? 0;
   const atRiskCount = statusCounts["At Risk"] ?? 0;
-  const aktivProjeler = projeler.filter((h) => h.status === "On Track" || h.status === "At Risk");
+  // Aktif = Yolunda + Riskte + Yüksek Riskte (kullanıcı isteği 2026-05-10):
+  // High Risk eskiden bu sayıma dahil değildi, Askıda (On Hold) ise
+  // navigate filtresine sızıyordu. Şimdi her ikisi de düzeltildi —
+  // tıklayınca açılan kokpit filtresi de aynı 3 statüyü gösterir.
+  const aktivProjeler = projeler.filter((h) => h.status === "On Track" || h.status === "At Risk" || h.status === "High Risk");
   const gecikenProjeler = projeler.filter((h) => h.status === "High Risk" || h.status === "At Risk");
 
   const kpiCards = [
@@ -176,7 +182,7 @@ export default function DashboardPage() {
       trend: onTrackCount,
       trendLabel: t("dashboard.onTrackTrend"),
       contextText: t("dashboard.totalProjects", { count: projeler.length }),
-      onClick: () => navigate("/stratejik-kokpit?status=On Track,At Risk,High Risk,On Hold"),
+      onClick: () => navigate("/stratejik-kokpit?status=On Track,At Risk,High Risk"),
     },
     {
       label: t("dashboard.delayedRisky"),

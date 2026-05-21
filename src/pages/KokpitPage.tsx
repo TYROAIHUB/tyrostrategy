@@ -31,6 +31,7 @@ import AksiyonDetail from "@/components/aksiyonlar/AksiyonDetail";
 import { useDataStore } from "@/stores/dataStore";
 import { toast } from "@/stores/toastStore";
 import { usePermissions } from "@/hooks/usePermissions";
+import { isReviewPending } from "@/lib/reviewUtils";
 import { useSidebarTheme } from "@/hooks/useSidebarTheme";
 import ConfirmDialog from "@/components/shared/ConfirmDialog";
 import ProjeAksiyonWizard from "@/components/wizard/ProjeAksiyonWizard";
@@ -109,9 +110,23 @@ export default function KokpitPage() {
   const [advFilterOpen, setAdvFilterOpen] = useState(false);
   const urlStatus = searchParams.get("status");
   const urlMember = searchParams.get("member");
-  const [advFilters, setAdvFilters] = useState<AdvancedFilters | null>(
-    urlStatus ? { statuses: urlStatus.includes(",") ? urlStatus.split(",").map((s) => s.trim()) : [urlStatus] } : null
-  );
+  // Yeni URL paramları (2026-05-10): Proje Dağılım Matrisi hücreleri
+  // kokpit'e dept/source/owner + status ile yönlendiriyor. Mevcut
+  // Gelişmiş Filtre (advFilters) state'ine pre-fill yapılıyor — yeni
+  // mekanizma yok, sadece URL'den bootstrap.
+  const urlDept = searchParams.get("dept");
+  const urlSource = searchParams.get("source");
+  const urlOwner = searchParams.get("owner");
+  const [advFilters, setAdvFilters] = useState<AdvancedFilters | null>(() => {
+    const f: AdvancedFilters = {};
+    if (urlStatus) {
+      f.statuses = urlStatus.includes(",") ? urlStatus.split(",").map((s) => s.trim()) : [urlStatus];
+    }
+    if (urlDept) f.departments = urlDept.split(",").map((s) => s.trim()).filter(Boolean);
+    if (urlSource) f.sources = urlSource.split(",").map((s) => s.trim()).filter(Boolean);
+    if (urlOwner) f.owners = urlOwner.split(",").map((s) => s.trim()).filter(Boolean);
+    return Object.keys(f).length > 0 ? f : null;
+  });
 
   // Apply reviewOverdue + member + advanced filters
   const projeler = useMemo(() => {
@@ -121,13 +136,10 @@ export default function KokpitPage() {
       list = list.filter((h) => h.owner === urlMember || h.participants.includes(urlMember));
     }
     if (reviewOverdue) {
-      const now = new Date();
-      const oneMonthAgo = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
-      list = list.filter((h) => {
-        if (h.status === "Achieved" || h.status === "Cancelled") return false;
-        if (!h.reviewDate) return true;
-        return new Date(h.reviewDate) <= oneMonthAgo;
-      });
+      // 2026-05-10: BentoKPI "Kontrol Bekleyen" kutusuyla bire-bir aynı
+      // mantık. Helper tek noktada (reviewUtils) → sayım ile filtre uyumsuz
+      // olamaz. On Hold da hariç tutuluyor.
+      list = list.filter((h) => isReviewPending(h));
     }
     if (advFilters) {
       if (advFilters.statuses?.length) list = list.filter((h) => advFilters.statuses!.includes(h.status));
