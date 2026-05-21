@@ -1,8 +1,10 @@
+import { useMemo } from "react";
 import { Controller, type Control, type FieldErrors } from "react-hook-form";
 import { Input, Textarea, Select, SelectItem } from "@heroui/react";
 import { useTranslation } from "react-i18next";
 import { getSourceOptions } from "@/lib/constants";
-import { PROJECT_DEPARTMENT_KEYS } from "@/config/departments";
+import { canonicalDeptKey } from "@/config/departments";
+import { useDataStore } from "@/stores/dataStore";
 interface Props {
   control: Control<any>;
   errors: FieldErrors<any>;
@@ -11,6 +13,34 @@ interface Props {
 export default function StepProjeBasics({ control, errors }: Props) {
   const { t } = useTranslation();
   const sourceOptions = getSourceOptions(t);
+  const projeler = useDataStore((s) => s.projeler);
+
+  // Departman dropdown — kullanıcı raporu 2026-05-10: wizard hardcoded 16
+  // enum kullanıyordu, edit form ise projelerden derive ediyordu → kullanıcı
+  // aynı projeyi düzenlerken farklı liste görüyordu. Şimdi ProjeForm ile
+  // BİREBİR AYNI mantık: sadece `projeler` tablosunda fiilen kullanılan
+  // departmanlar; canonical + raw alias çiftleri dedupe; TR alfabetik.
+  // Hiçbir projede yoksa o canonical enum entry dropdown'a düşmez.
+  const departmentOptions = useMemo(() => {
+    const seenCanonical = new Set<string>();
+    const seenRaw = new Set<string>();
+    const opts: { key: string; label: string }[] = [];
+    for (const h of projeler) {
+      const d = h.department?.trim();
+      if (!d) continue;
+      const canonical = canonicalDeptKey(d);
+      if (canonical) {
+        if (seenCanonical.has(canonical)) continue;
+        seenCanonical.add(canonical);
+        opts.push({ key: canonical, label: t(`projectDepartments.${canonical}`) });
+      } else {
+        if (seenRaw.has(d)) continue;
+        seenRaw.add(d);
+        opts.push({ key: d, label: d });
+      }
+    }
+    return opts.sort((a, b) => a.label.localeCompare(b.label, "tr"));
+  }, [projeler, t]);
 
   return (
     <div className="flex flex-col gap-5">
@@ -94,7 +124,7 @@ export default function StepProjeBasics({ control, errors }: Props) {
               {t("forms.objective.department")}
             </label>
             <Select
-              selectedKeys={field.value ? [field.value] : []}
+              selectedKeys={field.value ? [canonicalDeptKey(field.value) ?? field.value] : []}
               onSelectionChange={(keys) => {
                 const val = Array.from(keys)[0] as string;
                 field.onChange(val ?? "");
@@ -104,8 +134,8 @@ export default function StepProjeBasics({ control, errors }: Props) {
               classNames={{ trigger: "border-tyro-border", value: "font-semibold text-tyro-text-primary" }}
               placeholder={t("forms.objective.departmentPlaceholder")}
             >
-              {PROJECT_DEPARTMENT_KEYS.map((key) => (
-                <SelectItem key={key}>{t(`projectDepartments.${key}`)}</SelectItem>
+              {departmentOptions.map((opt) => (
+                <SelectItem key={opt.key}>{opt.label}</SelectItem>
               ))}
             </Select>
           </div>
