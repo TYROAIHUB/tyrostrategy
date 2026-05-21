@@ -1657,7 +1657,11 @@ ${clone.outerHTML}
                       <th className="text-center px-3 py-3 font-semibold text-tyro-text-secondary">{t("dashboard.total")}</th>
                       <th className="text-center px-3 py-3 font-semibold text-tyro-text-secondary">{t("dashboard.active")}</th>
                       <th className="text-center px-3 py-3 font-semibold text-tyro-text-secondary">{t("dashboard.completedLabel")}</th>
-                      <th className="text-center px-3 py-3 font-semibold text-tyro-text-secondary">{t("dashboard.delayed")}</th>
+                      {/* "Geciken" → "Riskte" — kullanıcı isteği 2026-05-10:
+                          Sütun zaten At Risk + High Risk statülü projeleri
+                          sayıyor (deptBreakdown'da `behind` field'i bu iki
+                          statüyü topluyor), label "Geciken" yanıltıcıydı. */}
+                      <th className="text-center px-3 py-3 font-semibold text-tyro-text-secondary">{t("dashboard.statusAtRisk")}</th>
                       <th className="text-center px-3 py-3 font-semibold text-tyro-text-secondary">{t("dashboard.avgProgressShort")}</th>
                     </tr>
                   </thead>
