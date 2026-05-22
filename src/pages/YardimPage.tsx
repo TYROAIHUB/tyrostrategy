@@ -4,7 +4,7 @@ import { Input } from "@heroui/react";
 import {
   Search, ChevronDown, ChevronRight,
   Zap, Compass, MessageCircleQuestion, BookOpenText,
-  Command, Gift, Headphones,
+  Command, Gift, Headphones, Lock,
   LogIn, LayoutDashboard, FolderPlus, TrendingUp,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -220,11 +220,27 @@ export default function YardimPage() {
     () => [
       { id: "gettingStarted", icon: Zap, label: t("help.gettingStarted.title") },
       { id: "howTo", icon: Compass, label: t("help.howTo.title") },
+      { id: "rules", icon: Lock, label: t("help.rules.title") },
       { id: "faq", icon: MessageCircleQuestion, label: t("help.faq.title") },
       { id: "glossary", icon: BookOpenText, label: t("help.glossary.title") },
       { id: "shortcuts", icon: Command, label: t("help.shortcuts.title") },
       { id: "whatsNew", icon: Gift, label: t("help.whatsNew.title") },
       { id: "contact", icon: Headphones, label: t("help.contact.title") },
+    ],
+    [t]
+  );
+
+  // TYRO Kuralları — bugün (2026-05-22) eklenen iş kuralları. Her kural
+  // başlık + açıklama. Arama bu listede de gezer.
+  const rulesItems = useMemo(
+    () => [
+      { id: "status", title: t("help.rules.statusTitle"), desc: t("help.rules.statusDesc") },
+      { id: "lifecycle", title: t("help.rules.lifecycleTitle"), desc: t("help.rules.lifecycleDesc") },
+      { id: "aksiyonRisk", title: t("help.rules.aksiyonRiskTitle"), desc: t("help.rules.aksiyonRiskDesc") },
+      { id: "lale", title: t("help.rules.laleTitle"), desc: t("help.rules.laleDesc") },
+      { id: "reviewPending", title: t("help.rules.reviewPendingTitle"), desc: t("help.rules.reviewPendingDesc") },
+      { id: "lastLogin", title: t("help.rules.lastLoginTitle"), desc: t("help.rules.lastLoginDesc") },
+      { id: "department", title: t("help.rules.departmentTitle"), desc: t("help.rules.departmentDesc") },
     ],
     [t]
   );
@@ -260,6 +276,10 @@ export default function YardimPage() {
     () => howToSections.map((s) => ({ ...s, items: s.items.filter((i) => match(i) || match(s.title)) })).filter((s) => s.items.length > 0),
     [q, howToSections, match]
   );
+  const filteredRules = useMemo(
+    () => rulesItems.filter((r) => match(r.title) || match(r.desc) || match(t("help.rules.title")) || match(t("help.rules.intro"))),
+    [q, rulesItems, match, t]
+  );
   const gettingStartedMatch = useMemo(
     () =>
       match(t("help.gettingStarted.title")) ||
@@ -273,7 +293,7 @@ export default function YardimPage() {
     () => match(t("help.contact.title")) || match(t("help.contact.description")),
     [q, t, match]
   );
-  const hasResults = !q || gettingStartedMatch || filteredHowTo.length > 0 || filteredFaq.length > 0 || filteredGlossary.length > 0 || shortcutsMatch || whatsNewMatch || contactMatch;
+  const hasResults = !q || gettingStartedMatch || filteredHowTo.length > 0 || filteredRules.length > 0 || filteredFaq.length > 0 || filteredGlossary.length > 0 || shortcutsMatch || whatsNewMatch || contactMatch;
 
   const scrollTo = useCallback((id: string) => {
     document.getElementById(`help-${id}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -379,7 +399,24 @@ export default function YardimPage() {
           </HelpCard>
         )}
 
-        {/* 3. FAQ */}
+        {/* 3. TYRO Kuralları — bugün (2026-05-22) eklenen iş kuralları */}
+        {(!q || filteredRules.length > 0) && (
+          <HelpCard id="rules" icon={Lock} title={t("help.rules.title")} count={filteredRules.length} forceOpen={q ? true : undefined}>
+            <p className="text-[12px] text-tyro-text-secondary mb-3 leading-relaxed">
+              {t("help.rules.intro")}
+            </p>
+            <dl className="space-y-3">
+              {(q ? filteredRules : rulesItems).map((rule) => (
+                <div key={rule.id} className="border-l-2 pl-3 py-1" style={{ borderColor: accent }}>
+                  <dt className="text-[13px] font-bold text-tyro-text-primary mb-0.5">{rule.title}</dt>
+                  <dd className="text-[12px] text-tyro-text-secondary leading-relaxed">{rule.desc}</dd>
+                </div>
+              ))}
+            </dl>
+          </HelpCard>
+        )}
+
+        {/* 4. FAQ */}
         {(!q || filteredFaq.length > 0) && (
           <HelpCard id="faq" icon={MessageCircleQuestion} title={t("help.faq.title")} count={filteredFaq.length} forceOpen={q ? true : undefined}>
             {filteredFaq.map((f, i) => (

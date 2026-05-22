@@ -1068,6 +1068,24 @@
       "v1_0_0": "v1.0.0 — Initial Release",
       "v1_0_0_desc": "Project and action management, KPI Dashboard, Gantt, T-Map, T-Align views, role-based access control, multi-language support, Report Configuration."
     },
+    "rules": {
+      "title": "TYRO Rules",
+      "intro": "System-wide business and view rules. Enforced at the database layer (RLS) or in the application logic — cannot be bypassed from the UI.",
+      "statusTitle": "Project status calculation (escalation)",
+      "statusDesc": "A project's status is now derived from the statuses of its actions: (1) if at least one action is \"High Risk\" → project is \"High Risk\". (2) Otherwise, if at least one action is \"At Risk\" → project is \"At Risk\". (3) Otherwise, if all actions are \"Achieved\" → project is \"Achieved\". (4) Otherwise → project is \"On Track\". This rule triggers automatically after every action add/update/delete and on direct project edits.",
+      "lifecycleTitle": "Manual statuses preserved",
+      "lifecycleDesc": "\"On Hold\" and \"Cancelled\" are lifecycle statuses — set manually by the user. Action escalation does not touch these two. To leave them, the user must edit the project and change the status manually.",
+      "aksiyonRiskTitle": "Action risk calculation (time-based)",
+      "aksiyonRiskDesc": "An action's status is computed from its own progress and dates: the difference between expected progress (time elapsed ratio) and actual progress, when above thresholds, yields \"At Risk\" or \"High Risk\". Thresholds are managed in Settings.",
+      "laleTitle": "LALE business line restriction",
+      "laleDesc": "Projects with business line 'LALE' are visible only to Admin users. Other roles do not see them in dashboard counts, cockpit lists, reports or exports; API calls return empty. Enforced at the database layer (RLS).",
+      "reviewPendingTitle": "Review Pending calculation",
+      "reviewPendingDesc": "The \"Review Pending\" tile counts projects whose review date is not within the current calendar month. Achieved, Cancelled and On Hold projects are excluded. Clicking the tile opens Cockpit filtered with the same rule.",
+      "lastLoginTitle": "Last login audit",
+      "lastLoginDesc": "Every successful app login is timestamped in the database. Visible in the \"Last Login\" column on the Users page. Server-side time is authoritative — not affected by client clock changes.",
+      "departmentTitle": "Department options",
+      "departmentDesc": "The department dropdown in project create and edit forms is derived from departments actually used by existing projects. Definitions that no project uses do not appear in the list. The wizard and the edit form always show the exact same list."
+    },
     "contact": {
       "title": "Contact & Support",
       "description": "For technical support or feedback, you can reach us through the following channels.",

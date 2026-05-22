@@ -1077,6 +1077,24 @@
       "developerValue": "TTECH Business Solutions",
       "organization": "Kuruluş",
       "organizationValue": "Tiryaki Agro"
+    },
+    "rules": {
+      "title": "TYRO Kuralları",
+      "intro": "Sistem genelinde uygulanan iş ve görünüm kuralları. Bu kurallar veritabanı katmanında (RLS) ya da uygulama mantığında garanti edilir — kullanıcı arayüzünden değiştirilemez.",
+      "statusTitle": "Proje statüsü hesaplaması (escalation)",
+      "statusDesc": "Bir projenin statüsü artık aksiyonlarının statüsünden türetilir: (1) en az 1 aksiyon \"Yüksek Riskte\" ise → proje \"Yüksek Riskte\". (2) Aksi halde en az 1 aksiyon \"Riskte\" ise → proje \"Riskte\". (3) Aksi halde tüm aksiyonlar \"Tamamlandı\" ise → proje \"Tamamlandı\". (4) Aksi halde → proje \"Yolunda\". Bu kural her aksiyon ekleme/güncelleme/silme sonrası ve proje doğrudan düzenlenince otomatik tetiklenir.",
+      "lifecycleTitle": "Manuel statüler korunur",
+      "lifecycleDesc": "\"Askıda\" ve \"İptal\" lifecycle statüleridir — kullanıcı manuel olarak işaretler. Aksiyonlardan gelen escalation bu iki statüye dokunmaz. Manuel kontrol için projeyi düzenleyip statüyü değiştirmek gerekir.",
+      "aksiyonRiskTitle": "Aksiyon risk hesaplaması (zaman bazlı)",
+      "aksiyonRiskDesc": "Aksiyonun statüsü kendi ilerlemesi ve tarihinden hesaplanır: bugüne kadar geçmesi beklenen ilerleme yüzdesi (zaman oranı) ile gerçek ilerleme yüzdesi arasındaki fark eşikleri aşarsa \"Riskte\" veya \"Yüksek Riskte\" olur. Eşikler Ayarlar'dan yönetilir.",
+      "laleTitle": "LALE iş kolu kısıtlaması",
+      "laleDesc": "İş kolu 'LALE' olan projeler sadece Admin rolündeki kullanıcılara görünür. Diğer roller bu projeleri dashboard sayılarında, kokpit listesinde, raporlarda ve dışa aktarımlarda göremez; API çağrılarında da boş döner. Güvenlik veritabanı seviyesinde (RLS) uygulanır.",
+      "reviewPendingTitle": "Kontrol Bekleyen hesaplaması",
+      "reviewPendingDesc": "\"Kontrol Bekleyen\" kutusu mevcut takvim ayı içinde kontrol tarihi olmayan projeleri sayar. Tamamlanan, İptal ve Askıda statülü projeler hariç tutulur. Tıklayınca aynı kuralla filtrelenmiş Kokpit listesi açılır.",
+      "lastLoginTitle": "Son giriş kaydı (audit)",
+      "lastLoginDesc": "Her başarılı uygulamaya giriş veritabanına timestamp olarak kaydedilir. Kullanıcılar sayfasındaki \"Son Giriş\" kolonunda görünür. Server saatine göre tutulur, client clock manipülasyonu etkilemez.",
+      "departmentTitle": "Departman seçenekleri",
+      "departmentDesc": "Proje oluşturma ve düzenleme ekranlarındaki departman dropdown'ı, mevcut projelerde fiilen kullanılan departmanlardan otomatik türetilir. Hiçbir projede kullanılmayan tanımlar listede görünmez. Bu hem yeni proje sihirbazında hem de düzenleme formunda birebir aynı listeyi sağlar."
     }
   }
 }
