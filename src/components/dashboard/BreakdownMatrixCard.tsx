@@ -1,13 +1,13 @@
 import { useMemo, useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
-import { Crown, Building2, UserCircle2, Briefcase, ChevronDown, ChevronUp } from "lucide-react";
+import { Crown, Building2, UserCircle2, Briefcase, ChevronDown, ChevronUp, ChevronRight } from "lucide-react";
 import GlassCard from "@/components/ui/GlassCard";
 import { useSidebarTheme } from "@/hooks/useSidebarTheme";
 import { STATUS_HEX, STATUS_HEX_DARK, STATUS_ORDER } from "@/lib/statusColors";
 import { getStatusLabel } from "@/lib/constants";
 import { deptLabel } from "@/config/departments";
-import { findExecutiveByOwner } from "@/config/executiveBoard";
+import { EXECUTIVE_BOARD, findExecutiveByOwner } from "@/config/executiveBoard";
 import type { Proje, EntityStatus } from "@/types";
 
 type Dim = "exec" | "dept" | "leader" | "source";
@@ -29,10 +29,74 @@ export default function BreakdownMatrixCard({ projeler }: Props) {
   const accentColor = sidebarTheme.accentColor ?? "#c8922a";
   const [dim, setDim] = useState<Dim>("exec");
   const [expanded, setExpanded] = useState(false);
+  // Üst Yönetim sekmesi için her satıra ait alt-kırılım (departman bazlı)
+  // açık/kapalı state'i. Tab değişince hepsi kapanır.
+  const [expandedExecs, setExpandedExecs] = useState<Set<string>>(new Set());
 
   // Tab değişince collapsed duruma dön — farklı boyutta kullanıcı en yoğun
   // ilk 5'i görsün, gerekirse tekrar açsın.
-  useEffect(() => { setExpanded(false); }, [dim]);
+  useEffect(() => {
+    setExpanded(false);
+    setExpandedExecs(new Set());
+  }, [dim]);
+
+  const toggleExecExpand = (execName: string) => {
+    setExpandedExecs((prev) => {
+      const next = new Set(prev);
+      if (next.has(execName)) next.delete(execName);
+      else next.add(execName);
+      return next;
+    });
+  };
+
+  // Üst Yönetim sub-row hesabı (kullanıcı isteği 2026-05-22): bir İcra
+  // Kurulu üyesi genişlediğinde, ona bağlı projelerin departman bazlı
+  // statü dağılımı alt satır olarak gösterilir. Memoize edilir; sadece
+  // ilgili üyeler için çalışır.
+  const subRowsByExec = useMemo(() => {
+    if (dim !== "exec") return new Map<string, Array<{ key: string; counts: Record<EntityStatus, number>; total: number; rawOwners: Set<string>; rawDepts: Set<string> }>>();
+    const result = new Map<string, Array<{ key: string; counts: Record<EntityStatus, number>; total: number; rawOwners: Set<string>; rawDepts: Set<string> }>>();
+    for (const exec of EXECUTIVE_BOARD) {
+      if (!expandedExecs.has(exec.name)) continue;
+      const subs = new Set(exec.subordinates);
+      const execProjeler = projeler.filter((p) => subs.has(p.owner ?? ""));
+      if (execProjeler.length === 0) continue;
+      const deptBucket = new Map<string, { counts: Record<EntityStatus, number>; rawOwners: Set<string>; rawDepts: Set<string> }>();
+      const blank = (): Record<EntityStatus, number> =>
+        STATUS_ORDER.reduce((acc, s) => ({ ...acc, [s]: 0 }), {} as Record<EntityStatus, number>);
+      for (const p of execProjeler) {
+        const deptKey = deptLabel(p.department, t) || t("dashboard.other");
+        if (!deptBucket.has(deptKey)) deptBucket.set(deptKey, { counts: blank(), rawOwners: new Set(), rawDepts: new Set() });
+        const entry = deptBucket.get(deptKey)!;
+        entry.counts[p.status] = (entry.counts[p.status] ?? 0) + 1;
+        if (p.owner) entry.rawOwners.add(p.owner);
+        if (p.department) entry.rawDepts.add(p.department);
+      }
+      const rows = Array.from(deptBucket.entries())
+        .map(([key, { counts, rawOwners, rawDepts }]) => ({
+          key,
+          counts,
+          total: STATUS_ORDER.reduce((s, st) => s + (counts[st] ?? 0), 0),
+          rawOwners,
+          rawDepts,
+        }))
+        .sort((a, b) => b.total - a.total);
+      result.set(exec.name, rows);
+    }
+    return result;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dim, expandedExecs, projeler, t]);
+
+  // Sub-row tıklaması: hem owner (üyenin alt çalışanları o departmanda olan)
+  // hem dept hem status filtrelenir. Kokpit URL paramlarını birleştirir.
+  const navigateToSubCell = (rawOwners: Set<string>, rawDepts: Set<string>, status: EntityStatus | null) => {
+    const params = new URLSearchParams();
+    if (rawOwners.size > 0) params.set("owner", Array.from(rawOwners).join(","));
+    if (rawDepts.size > 0) params.set("dept", Array.from(rawDepts).join(","));
+    if (status) params.set("status", status);
+    const qs = params.toString();
+    navigate(qs ? `/stratejik-kokpit?${qs}` : "/stratejik-kokpit");
+  };
 
   // Tab metadata — kullanıcı isteği 2026-05-22: "İcra Kurulu" sekmesi
   // departmandan ÖNCE eklendi. config/executiveBoard.ts statik liste.
@@ -199,70 +263,143 @@ export default function BreakdownMatrixCard({ projeler }: Props) {
                 </td>
               </tr>
             )}
-            {(expanded ? matrix : matrix.slice(0, INITIAL_ROWS)).map(({ key, counts, total, rawValues }) => (
-              <tr key={key}>
-                <td className="text-[12px] font-medium text-tyro-text-primary px-2 py-1.5 truncate max-w-[200px] sticky left-0 bg-tyro-surface z-10">
-                  {key}
-                </td>
-                {STATUS_ORDER.map((s) => {
-                  const n = counts[s] ?? 0;
-                  const color = STATUS_HEX[s];
-                  const darkColor = STATUS_HEX_DARK[s];
-                  return (
-                    <td
-                      key={s}
-                      className="px-1 py-1 cursor-pointer"
-                      onClick={() => navigateToCell(rawValues, s)}
-                      title={`${key} × ${getStatusLabel(s, t)} → ${n} ${t("dashboard.project").toLowerCase()}`}
-                    >
-                      <div
-                        className="h-10 flex items-center justify-center rounded-lg tabular-nums text-[13px] font-bold transition-all hover:brightness-95 hover:scale-[1.03]"
-                        style={
-                          n > 0
-                            ? {
-                                // Dolu hücreler — soft tint bg + same-hue deep text
-                                // (Tailwind 700 varyantı). Sayı arka plana bulanmaz,
-                                // rengiyle çerçevelenir ve canlı okunur.
-                                backgroundColor: `${color}33`, // ~20% alpha
-                                color: darkColor,               // deep 700 variant
-                                border: `1px solid ${color}66`, // ~40% alpha outline
-                              }
-                            : {
-                                backgroundColor: "var(--tyro-bg)",
-                                color: "var(--tyro-text-muted)",
-                                opacity: 0.5,
-                              }
-                        }
+            {(expanded ? matrix : matrix.slice(0, INITIAL_ROWS)).flatMap(({ key, counts, total, rawValues }) => {
+              const isExecRow = dim === "exec";
+              const isOpen = isExecRow && expandedExecs.has(key);
+              const subRows = isOpen ? subRowsByExec.get(key) ?? [] : [];
+              return [
+                <tr key={key}>
+                  <td className="text-[12px] font-medium text-tyro-text-primary px-2 py-1.5 truncate max-w-[200px] sticky left-0 bg-tyro-surface z-10">
+                    {isExecRow ? (
+                      <button
+                        type="button"
+                        onClick={() => toggleExecExpand(key)}
+                        className="flex items-center gap-1.5 w-full text-left hover:text-tyro-navy transition-colors cursor-pointer"
+                        title={isOpen ? t("common.showLess") : t("dashboard.expandDeptBreakdown")}
                       >
-                        {n}
+                        {isOpen ? (
+                          <ChevronDown size={13} className="shrink-0 text-tyro-text-muted" />
+                        ) : (
+                          <ChevronRight size={13} className="shrink-0 text-tyro-text-muted" />
+                        )}
+                        <span className="truncate">{key}</span>
+                      </button>
+                    ) : (
+                      <span>{key}</span>
+                    )}
+                  </td>
+                  {STATUS_ORDER.map((s) => {
+                    const n = counts[s] ?? 0;
+                    const color = STATUS_HEX[s];
+                    const darkColor = STATUS_HEX_DARK[s];
+                    return (
+                      <td
+                        key={s}
+                        className="px-1 py-1 cursor-pointer"
+                        onClick={() => navigateToCell(rawValues, s)}
+                        title={`${key} × ${getStatusLabel(s, t)} → ${n} ${t("dashboard.project").toLowerCase()}`}
+                      >
+                        <div
+                          className="h-10 flex items-center justify-center rounded-lg tabular-nums text-[13px] font-bold transition-all hover:brightness-95 hover:scale-[1.03]"
+                          style={
+                            n > 0
+                              ? {
+                                  backgroundColor: `${color}33`,
+                                  color: darkColor,
+                                  border: `1px solid ${color}66`,
+                                }
+                              : {
+                                  backgroundColor: "var(--tyro-bg)",
+                                  color: "var(--tyro-text-muted)",
+                                  opacity: 0.5,
+                                }
+                          }
+                        >
+                          {n}
+                        </div>
+                      </td>
+                    );
+                  })}
+                  <td
+                    className="px-1 py-1 border-l-2 border-tyro-border/60 cursor-pointer"
+                    onClick={() => navigateToCell(rawValues, null)}
+                    title={`${key} → ${total} ${t("dashboard.project").toLowerCase()}`}
+                  >
+                    <div
+                      className="h-10 flex items-center justify-center rounded-lg tabular-nums text-[13px] font-bold transition-all hover:brightness-95 hover:scale-[1.03]"
+                      style={{
+                        backgroundColor: "#ffffff",
+                        color: accentColor,
+                        border: `1px solid ${accentColor}55`,
+                      }}
+                    >
+                      {total}
+                    </div>
+                  </td>
+                </tr>,
+                // Sub-rows — departman bazlı alt kırılım, sadece exec dim'inde
+                // ve satır expand edildiğinde. Görsel olarak hafif gri arkaplan
+                // + soldan girinti ile parent'tan ayrılır.
+                ...subRows.map((sr) => (
+                  <tr key={`${key}__${sr.key}`} className="bg-slate-50/60 dark:bg-white/[0.03]">
+                    <td className="text-[11px] font-medium text-tyro-text-secondary px-2 py-1 sticky left-0 bg-slate-50/60 dark:bg-white/[0.03] z-10">
+                      <div className="flex items-center gap-1.5 pl-6 truncate max-w-[200px]">
+                        <span className="text-tyro-border">└</span>
+                        <span className="truncate">{sr.key}</span>
                       </div>
                     </td>
-                  );
-                })}
-                {/* Row total — beyaz arkaplan, accent-renkli sayı + border.
-                    Önceden ${accentColor}1f tint'ti ama navy temada gri'ye
-                    yakın çıkıp Cancelled/Not Started hücreleriyle karışıyordu.
-                    Beyaz arkaplan ayrımı kesinleştiriyor; numara + ince border
-                    yine accent rengiyle "toplam" sinyalini koruyor.
-                    Tıklama: o satırın tüm projeleri (status filter yok). */}
-                <td
-                  className="px-1 py-1 border-l-2 border-tyro-border/60 cursor-pointer"
-                  onClick={() => navigateToCell(rawValues, null)}
-                  title={`${key} → ${total} ${t("dashboard.project").toLowerCase()}`}
-                >
-                  <div
-                    className="h-10 flex items-center justify-center rounded-lg tabular-nums text-[13px] font-bold transition-all hover:brightness-95 hover:scale-[1.03]"
-                    style={{
-                      backgroundColor: "#ffffff",
-                      color: accentColor,
-                      border: `1px solid ${accentColor}55`,
-                    }}
-                  >
-                    {total}
-                  </div>
-                </td>
-              </tr>
-            ))}
+                    {STATUS_ORDER.map((s) => {
+                      const n = sr.counts[s] ?? 0;
+                      const color = STATUS_HEX[s];
+                      const darkColor = STATUS_HEX_DARK[s];
+                      return (
+                        <td
+                          key={s}
+                          className="px-1 py-0.5 cursor-pointer"
+                          onClick={() => navigateToSubCell(sr.rawOwners, sr.rawDepts, s)}
+                          title={`${key} → ${sr.key} × ${getStatusLabel(s, t)} → ${n} ${t("dashboard.project").toLowerCase()}`}
+                        >
+                          <div
+                            className="h-8 flex items-center justify-center rounded-md tabular-nums text-[12px] font-semibold transition-all hover:brightness-95"
+                            style={
+                              n > 0
+                                ? {
+                                    backgroundColor: `${color}22`,
+                                    color: darkColor,
+                                    border: `1px solid ${color}44`,
+                                  }
+                                : {
+                                    backgroundColor: "transparent",
+                                    color: "var(--tyro-text-muted)",
+                                    opacity: 0.4,
+                                  }
+                            }
+                          >
+                            {n}
+                          </div>
+                        </td>
+                      );
+                    })}
+                    <td
+                      className="px-1 py-0.5 border-l-2 border-tyro-border/60 cursor-pointer"
+                      onClick={() => navigateToSubCell(sr.rawOwners, sr.rawDepts, null)}
+                      title={`${key} → ${sr.key} → ${sr.total} ${t("dashboard.project").toLowerCase()}`}
+                    >
+                      <div
+                        className="h-8 flex items-center justify-center rounded-md tabular-nums text-[12px] font-semibold transition-all hover:brightness-95"
+                        style={{
+                          backgroundColor: "transparent",
+                          color: accentColor,
+                          border: `1px solid ${accentColor}33`,
+                        }}
+                      >
+                        {sr.total}
+                      </div>
+                    </td>
+                  </tr>
+                )),
+              ];
+            })}
           </tbody>
           {matrix.length > 0 && (
             <tfoot>

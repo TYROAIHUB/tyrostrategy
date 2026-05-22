@@ -427,11 +427,12 @@
     "leaderDistributionDesc": "Proje liderlerine göre proje statüleri",
     "breakdownMatrixTitle": "Proje Dağılım Matrisi",
     "breakdownTabs": {
-      "exec": "İcra Kurulu",
+      "exec": "Üst Yönetim",
       "dept": "Departman",
       "leader": "Proje Lideri",
       "source": "İş Kolu"
     },
+    "expandDeptBreakdown": "Departman kırılımını göster",
     "tagDistribution": "Olgunlaşma Seviyesi Dağılımı",
     "tagDistributionDesc": "Projelerin olgunlaşma seviyesi etiketlerine göre dağılımı",
     "advancedFilter": "Gelişmiş Filtre",
