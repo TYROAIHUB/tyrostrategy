@@ -859,6 +859,16 @@
     "objectiveInfo": "Project Details",
     "actionsCount": "Actions ({{count}})",
     "expectedNow": "Expected level today: {{pct}}%",
+    "statusExplain": {
+      "highRisk": "{{count}}/{{total}} actions are at \"High Risk\", so the project status is High Risk. The system tracks the highest risk level.",
+      "atRisk": "{{count}}/{{total}} actions are \"At Risk\". No High Risk actions, so the project appears as At Risk.",
+      "achieved": "All {{total}} actions are completed. The project status is automatically Achieved.",
+      "onTrack": "{{achieved}}/{{total}} actions completed. No At Risk or High Risk actions — the project is on track.",
+      "notStarted": "None of the actions have started yet.",
+      "onHold": "This project is manually paused. Action changes do not affect the project status; to reactivate, edit the project and change the status.",
+      "cancelled": "This project is cancelled. Action changes do not affect the project status.",
+      "noActions": "This project has no actions yet. The status is manually set."
+    },
     "addAction": "Add Action",
     "actionsCompleted": "{{completed}}/{{total}} actions completed",
     "noObjectivesFound": "No projects match these filters",

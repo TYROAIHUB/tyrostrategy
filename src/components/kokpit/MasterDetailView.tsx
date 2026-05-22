@@ -49,6 +49,28 @@ const STATUS_HEX: Record<string, string> = {
   "On Hold": "#8b5cf6",
 };
 
+// Proje statüsünün NEDEN o değer olduğunu kullanıcı diliyle açıklayan
+// metin — kullanıcı isteği 2026-05-22. Tooltip'te gösterilir. Statü-uyumlu
+// escalation kuralının (migration 030) görünür hali.
+function getStatusExplanation(
+  status: EntityStatus,
+  aksiyonlar: Aksiyon[],
+  t: (key: string, opts?: Record<string, unknown>) => string,
+): string {
+  if (status === "On Hold") return t("kokpit.statusExplain.onHold");
+  if (status === "Cancelled") return t("kokpit.statusExplain.cancelled");
+  if (aksiyonlar.length === 0) return t("kokpit.statusExplain.noActions");
+  const total = aksiyonlar.length;
+  const highRisk = aksiyonlar.filter((a) => a.status === "High Risk").length;
+  const atRisk = aksiyonlar.filter((a) => a.status === "At Risk").length;
+  const achieved = aksiyonlar.filter((a) => a.status === "Achieved").length;
+  if (status === "High Risk") return t("kokpit.statusExplain.highRisk", { count: highRisk, total });
+  if (status === "At Risk") return t("kokpit.statusExplain.atRisk", { count: atRisk, total });
+  if (status === "Achieved") return t("kokpit.statusExplain.achieved", { total });
+  if (status === "Not Started") return t("kokpit.statusExplain.notStarted");
+  return t("kokpit.statusExplain.onTrack", { achieved, total });
+}
+
 interface AksiyonFilters {
   statuses?: string[];
   owners?: string[];
@@ -327,9 +349,19 @@ function DetailPanel({
                   {proje.id}{proje.description ? ` · ${proje.description}` : ""}
                 </p>
               </div>
-              {/* Status + tags */}
+              {/* Status + tags — statü pill'i hover'da neden bu statüde
+                  olduğunu kullanıcı diliyle açıklayan tooltip gösterir
+                  (kullanıcı isteği 2026-05-22, migration 030 escalation
+                  kuralının görünür yansıması). */}
               <div className="flex items-center flex-wrap gap-1.5">
-                <StatusBadge status={proje.status} />
+                <Tooltip
+                  content={getStatusExplanation(proje.status, aksiyonlar, t)}
+                  placement="top"
+                  size="sm"
+                  classNames={{ content: "max-w-xs text-[12px] leading-relaxed" }}
+                >
+                  <span className="cursor-help inline-flex"><StatusBadge status={proje.status} /></span>
+                </Tooltip>
                 {proje.tags && proje.tags.length > 0 && proje.tags.map((tag) => (
                   <TagChip key={tag} name={tag} size="sm" />
                 ))}
@@ -362,7 +394,14 @@ function DetailPanel({
                   )}
                 </div>
                 <div className="flex items-center flex-wrap gap-2 mt-1.5">
-                  <StatusBadge status={proje.status} />
+                  <Tooltip
+                    content={getStatusExplanation(proje.status, aksiyonlar, t)}
+                    placement="top"
+                    size="sm"
+                    classNames={{ content: "max-w-xs text-[12px] leading-relaxed" }}
+                  >
+                    <span className="cursor-help inline-flex"><StatusBadge status={proje.status} /></span>
+                  </Tooltip>
                   {proje.tags && proje.tags.length > 0 && (
                     <>
                       <span className="w-px h-4 bg-tyro-border/40 rounded-full" />

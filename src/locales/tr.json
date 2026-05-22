@@ -859,6 +859,16 @@
     "objectiveInfo": "Proje Bilgileri",
     "actionsCount": "Aksiyonlar ({{count}})",
     "expectedNow": "Bugün için beklenen seviye: %{{pct}}",
+    "statusExplain": {
+      "highRisk": "{{count}}/{{total}} aksiyon \"Yüksek Riskte\" olduğu için proje statüsü Yüksek Riskte. Sistem en yüksek risk seviyesini takip eder.",
+      "atRisk": "{{count}}/{{total}} aksiyon \"Riskte\" durumunda. Yüksek Riskte aksiyon yok, bu yüzden proje Riskte olarak görünüyor.",
+      "achieved": "Tüm {{total}} aksiyon tamamlandı. Proje statüsü otomatik olarak Tamamlandı.",
+      "onTrack": "{{achieved}}/{{total}} aksiyon tamamlandı. Riskte veya Yüksek Riskte aksiyon yok — proje yolunda gidiyor.",
+      "notStarted": "Aksiyonların hiçbiri henüz başlamadı.",
+      "onHold": "Bu proje manuel olarak askıya alınmış. Aksiyon değişiklikleri proje statüsünü etkilemez; aktif etmek için projeyi düzenleyip statüyü değiştirin.",
+      "cancelled": "Bu proje iptal edilmiş. Aksiyon değişiklikleri proje statüsünü etkilemez.",
+      "noActions": "Bu projenin henüz aksiyonu yok. Statü manuel ayarlanmıştır."
+    },
     "addAction": "Aksiyon Ekle",
     "actionsCompleted": "{{completed}}/{{total}} aksiyon tamamlandı",
     "noObjectivesFound": "Bu filtrelere uygun proje bulunamadı",
