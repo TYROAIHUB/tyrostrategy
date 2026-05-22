@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Button, Switch, Tooltip } from "@heroui/react";
-import { Shield, RotateCcw, Save, Crown, Briefcase, User, Info, BarChart2 } from "lucide-react";
+import { Shield, RotateCcw, Save, Crown, Briefcase, User, Info, BarChart2, Lock } from "lucide-react";
 import { motion } from "framer-motion";
 import { useRoleStore, DEFAULT_PERMISSIONS } from "@/stores/roleStore";
 import { useSidebarTheme } from "@/hooks/useSidebarTheme";
@@ -287,6 +287,29 @@ export default function GuvenlikPage() {
             <ul className="text-[11px] text-tyro-text-secondary space-y-1 list-disc list-inside">
               <li>{t("security.deleteRuleObjective")}</li>
               <li>{t("security.deleteRulesNote")}</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      {/* TYRO Kuralları — system-level rules (DB-enforced, not role-toggleable).
+          Bu kurallar Security page'deki rol toggle'larından bağımsız çalışır;
+          veritabanı katmanında garanti edilir (RLS). Kullanıcı isteği 2026-05-22. */}
+      <div className="mt-3 sm:mt-4 glass-card rounded-card p-3 sm:p-4 border border-amber-500/30 bg-amber-500/[0.03]">
+        <div className="flex items-start gap-3">
+          <Lock size={16} className="text-amber-600 shrink-0 mt-0.5" />
+          <div className="flex-1">
+            <p className="text-[12px] font-semibold text-tyro-text-primary mb-1">
+              {t("security.tyroRulesTitle")}
+            </p>
+            <p className="text-[11px] text-tyro-text-secondary mb-2">
+              {t("security.tyroRulesDesc")}
+            </p>
+            <ul className="text-[11px] text-tyro-text-secondary space-y-1.5 list-disc list-inside">
+              <li>
+                <span className="font-semibold text-tyro-text-primary">{t("security.laleRuleTitle")}:</span>{" "}
+                {t("security.laleRuleDesc")}
+              </li>
             </ul>
           </div>
         </div>

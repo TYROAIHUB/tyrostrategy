@@ -570,7 +570,11 @@
     "assignedActionsOnly": "Assigned actions only",
     "editOwnRecords": "User can only edit their own records",
     "viewOwnData": "User can only view their own data",
-    "managementReadOnly": "View-only access to strategic dashboards"
+    "managementReadOnly": "View-only access to strategic dashboards",
+    "tyroRulesTitle": "TYRO Rules",
+    "tyroRulesDesc": "System-wide rules applied independently of role assignments. Enforced at the database layer (RLS) — UI cannot bypass.",
+    "laleRuleTitle": "LALE business line restriction",
+    "laleRuleDesc": "Projects with the 'LALE' business line are visible only to Admin users. For other roles they do not appear in any view — dashboard counts, cockpit lists, reports, exports or API calls."
   },
   "profile": {
     "title": "Profile",

@@ -570,7 +570,11 @@
     "assignedActionsOnly": "Sadece atanmış aksiyonlar",
     "editOwnRecords": "Kullanıcı sadece kendine ait kayıtları düzenleyebilir",
     "viewOwnData": "Kullanıcı sadece kendine ait verileri görebilir",
-    "managementReadOnly": "Stratejik panolara salt okunur erişim"
+    "managementReadOnly": "Stratejik panolara salt okunur erişim",
+    "tyroRulesTitle": "TYRO Kuralları",
+    "tyroRulesDesc": "Sistem genelinde uygulanan, role atamasından bağımsız kurallar. Veritabanı katmanında (RLS) garanti edilir — UI bypass edilemez.",
+    "laleRuleTitle": "LALE iş kolu kısıtlaması",
+    "laleRuleDesc": "İş kolu 'LALE' olan projeler sadece Admin rolündeki kullanıcılara görünür. Diğer roller için dashboard sayıları, kokpit listeleri, raporlar, dışa aktarımlar ve API çağrıları dahil hiçbir görünümde gözükmez."
   },
   "profile": {
     "title": "Profil",

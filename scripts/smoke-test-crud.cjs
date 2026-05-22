@@ -550,6 +550,45 @@ async function api(method, path, body) {
     return "204";
   });
 
+  // ── LALE iş kolu RLS — migration 029 ──
+  // source='LALE' projeleri sadece Admin role'üne görünür. Non-admin
+  // direkt API çağrısı yapsa bile boş array dönmeli (RLS DB seviyesinde
+  // bloklar). Regression guard: bir gün biri "projeler_select" policy'sini
+  // sadeleştirip LALE koşulunu düşürürse smoke yakalar.
+  console.log("\nLALE RLS (migration 029):");
+  const LALE_TEST_EMAIL = "smoke.lale.test.delete.me@tiryaki.com.tr";
+  // Pre-cleanup
+  await fetch(URL + `/users?email=eq.${LALE_TEST_EMAIL}`, { method: "DELETE", headers });
+  await step("setup non-admin user (Proje Lideri)", async () => {
+    await api("POST", "/users", {
+      email: LALE_TEST_EMAIL,
+      display_name: "Smoke LALE Test User",
+      department: "BT",
+      role: "Proje Lideri",
+      locale: "tr",
+      is_active: true,
+    });
+    return "created";
+  });
+  await step("Admin sees LALE projects", async () => {
+    const r = await api("GET", "/projeler?source=eq.LALE&select=id&limit=1");
+    if (r.length === 0) throw new Error("admin cannot see LALE (expected to)");
+    return `${r.length}+ visible`;
+  });
+  await step("Non-admin (Proje Lideri) blocked from LALE", async () => {
+    const res = await fetch(URL + "/projeler?source=eq.LALE&select=id&limit=5", {
+      headers: { ...headers, "X-User-Email": LALE_TEST_EMAIL },
+    });
+    if (!res.ok) throw new Error(`${res.status} ${await res.text()}`);
+    const data = await res.json();
+    if (data.length > 0) throw new Error(`non-admin saw ${data.length} LALE rows (expected 0)`);
+    return "blocked (0 rows)";
+  });
+  await step("cleanup non-admin user", async () => {
+    await api("DELETE", `/users?email=eq.${LALE_TEST_EMAIL}`);
+    return "204";
+  });
+
   // ── last_login_at + touch_last_login() RPC (migration 028) ──
   // SECURITY DEFINER RPC, X-User-Email header'ından kimliği okur (admin
   // burada). users.last_login_at NOW() ile güncellenmeli. Regression guard:
