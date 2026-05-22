@@ -372,10 +372,7 @@ export default function DashboardPage() {
       {/* Row 1: 4 KPI Cards — equal height */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 items-stretch">
         <motion.div key={kpiCards[0].label} variants={fadeUp} className="flex">
-          <ActiveBentoCard
-            kpi={kpiCards[0]}
-            completedProjeler={projeTamamlanan.map((h) => ({ id: h.id, name: h.name }))}
-          />
+          <ActiveBentoCard kpi={kpiCards[0]} />
         </motion.div>
         {kpiCards.slice(1).map((kpi) => (
           <motion.div key={kpi.label} variants={fadeUp} className="flex">
@@ -414,22 +411,18 @@ interface ActiveBentoCardProps {
     trendLabel?: string;
     contextText?: string;
   };
-  completedProjeler: { id: string; name: string }[];
 }
 
-function ActiveBentoCard({ kpi, completedProjeler }: ActiveBentoCardProps) {
-  const { t } = useTranslation();
-  const [hovered, setHovered] = useState(false);
+function ActiveBentoCard({ kpi }: ActiveBentoCardProps) {
   const navigate = useNavigate();
   const trendIsPositive = kpi.trend !== undefined && kpi.trend >= 0;
   const trendColor = trendIsPositive ? "text-tyro-success" : "text-tyro-danger";
 
+  // Hover-detay paneli kaldırıldı (kullanıcı isteği 2026-05-22): kart zaten
+  // tıklayınca filtreli Kokpit'e gidiyor, üzerine gelince ek bilgi panelinin
+  // anlamı kalmamış.
   return (
-    <div
-      className="flex-1 flex flex-col"
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-    >
+    <div className="flex-1 flex flex-col">
       <GlassCard className="p-6 overflow-hidden flex-1 flex flex-col cursor-pointer" onClick={() => navigate("/stratejik-kokpit?status=Achieved")}>
         <div className="flex items-center justify-between mb-4">
           <span className="text-[13px] font-semibold text-tyro-text-secondary">{kpi.label}</span>
@@ -471,46 +464,6 @@ function ActiveBentoCard({ kpi, completedProjeler }: ActiveBentoCardProps) {
           )}
         </div>
 
-        <AnimatePresence>
-          {hovered && (
-            <motion.div
-              initial={{ maxHeight: 0, opacity: 0 }}
-              animate={{ maxHeight: 200, opacity: 1 }}
-              exit={{ maxHeight: 0, opacity: 0 }}
-              transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
-              className="overflow-hidden hidden sm:block"
-            >
-              <div className="mt-4 pt-3 border-t border-tyro-border">
-                <p className="text-[11px] font-bold uppercase tracking-wider text-tyro-text-muted mb-2">
-                  {t("dashboard.completedGoals")}
-                </p>
-                {completedProjeler.length === 0 ? (
-                  <p className="text-xs text-tyro-text-muted">{t("dashboard.noCompletedProjects")}</p>
-                ) : (
-                  <ul className="space-y-1">
-                    {completedProjeler.slice(0, 3).map((h) => (
-                      <li
-                        key={h.id}
-                        className="text-xs text-tyro-text-secondary truncate cursor-pointer hover:text-tyro-navy transition-colors"
-                        onClick={(e) => { e.stopPropagation(); navigate(`/projeler?selected=${h.id}`); }}
-                      >
-                        <span className="text-tyro-success mr-1.5">●</span>{h.name}
-                      </li>
-                    ))}
-                  </ul>
-                )}
-                <button
-                  type="button"
-                  className="mt-3 w-full flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-tyro-navy/[0.07] text-xs font-semibold text-tyro-navy hover:bg-tyro-navy/[0.14] transition-colors cursor-pointer"
-                  onClick={(e) => { e.stopPropagation(); navigate("/kokpit"); }}
-                >
-                  {t("dashboard.viewAllProjects")}
-                  <ArrowRight size={12} />
-                </button>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
       </GlassCard>
     </div>
   );

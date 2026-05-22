@@ -360,7 +360,7 @@ function DetailPanel({
                   size="sm"
                   classNames={{ content: "max-w-xs text-[12px] leading-relaxed" }}
                 >
-                  <span className="cursor-help inline-flex"><StatusBadge status={proje.status} /></span>
+                  <span className="cursor-help inline-flex"><StatusBadge status={proje.status} showTooltip={false} /></span>
                 </Tooltip>
                 {proje.tags && proje.tags.length > 0 && proje.tags.map((tag) => (
                   <TagChip key={tag} name={tag} size="sm" />
@@ -400,7 +400,7 @@ function DetailPanel({
                     size="sm"
                     classNames={{ content: "max-w-xs text-[12px] leading-relaxed" }}
                   >
-                    <span className="cursor-help inline-flex"><StatusBadge status={proje.status} /></span>
+                    <span className="cursor-help inline-flex"><StatusBadge status={proje.status} showTooltip={false} /></span>
                   </Tooltip>
                   {proje.tags && proje.tags.length > 0 && (
                     <>
