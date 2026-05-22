@@ -240,10 +240,16 @@ function suggestStatusFromProgress(progress: number, startDate: string, endDate:
  * projeyi otomatik aktif" hale getiremez. Sadece kullanıcı manuel olarak
  * statüyü başka bir şeye değiştirirse askı/iptal'den çıkar.
  *
- * Auto-recalc kuralları:
- *   - status = On Hold veya Cancelled → DOKUNMA (sadece progress güncelle)
- *   - tüm aksiyonlar Achieved → status = Achieved
- *   - diğer durumlarda → suggestStatusFromProgress (progress + tarih)
+ * Auto-recalc kuralları (kullanıcı isteği 2026-05-22):
+ *   - status = On Hold veya Cancelled → DOKUNMA (manuel kararlar)
+ *   - bir aksiyon bile "High Risk" → proje "High Risk"
+ *   - hiç High Risk yok ama "At Risk" var → proje "At Risk"
+ *   - hiç risk yok + tüm aksiyonlar Achieved → proje "Achieved"
+ *   - aksi halde → proje "On Track"
+ *
+ * Eski tarih bazlı (suggestStatusFromProgress) hesap PROJE statüsünden
+ * çıkarıldı. Aksiyon statüsü hâlâ kendi tarih+progress'inden gelir;
+ * proje sadece aksiyonların risk durumunu yansıtır → escalation pattern.
  */
 function recalcProjeProgress(
   projeler: Proje[],
@@ -255,6 +261,8 @@ function recalcProjeProgress(
   const avg = Math.round(
     related.reduce((sum, a) => sum + a.progress, 0) / related.length
   );
+  const hasHighRisk = related.some((a) => a.status === "High Risk");
+  const hasAtRisk = related.some((a) => a.status === "At Risk");
   const allAchieved = related.every((a) => a.status === "Achieved");
   return projeler.map((h) => {
     if (h.id !== projeId) return h;
@@ -263,12 +271,17 @@ function recalcProjeProgress(
     if (h.status === "On Hold" || h.status === "Cancelled") {
       return { ...h, ...updated };
     }
-    if (allAchieved) {
+    if (hasHighRisk) {
+      updated.status = "High Risk";
+      updated.completedAt = undefined;
+    } else if (hasAtRisk) {
+      updated.status = "At Risk";
+      updated.completedAt = undefined;
+    } else if (allAchieved) {
       updated.status = "Achieved";
       if (h.status !== "Achieved") updated.completedAt = new Date().toISOString();
     } else {
-      // Tarih bazlı statü hesapla (aksiyon ile aynı mantık)
-      updated.status = suggestStatusFromProgress(avg, h.startDate, h.endDate);
+      updated.status = "On Track";
       updated.completedAt = undefined;
     }
     return { ...h, ...updated };
@@ -370,24 +383,36 @@ export const useDataStore = create<DataState>()(
             } else if (data.status && data.status !== "Achieved" && before.status === "Achieved") {
               syncData.completedAt = undefined;
             }
-            // Otomatik risk hesaplaması (kullanıcı geri bildirimi 2026-05-08):
-            // proje doğrudan güncellendiğinde progress + dates üzerinden
-            // suggestStatusFromProgress ile statü tetiklensin. Lifecycle
-            // statüleri (On Hold, Cancelled, Achieved) korunuyor; bunların
-            // dışında "Not Started" / "On Track" / "At Risk" / "High Risk"
-            // arasında geçişler otomatik. Aksiyon CRUD'ları da
-            // recalcProjeProgress üzerinden aynı fonksiyona düşer.
+            // Otomatik risk hesaplaması — kullanıcı isteği 2026-05-22:
+            // proje statüsü artık tarih bazlı değil, AKSIYON statülerinden
+            // escalation ile gelir. Bir aksiyon High Risk ise proje High Risk;
+            // yoksa At Risk varsa At Risk; yoksa tümü Achieved ise Achieved;
+            // aksi halde On Track. Lifecycle (On Hold / Cancelled) korunur.
+            // Aksiyon CRUD'ları zaten recalcProjeProgress'e düşer; bu blok
+            // sadece kullanıcı doğrudan projeyi (örn. tarih) güncellediğinde
+            // proje statüsünü tutarlı tutmak için.
             const merged = { ...before, ...syncData };
             const finalStatus = merged.status as EntityStatus | undefined;
-            const isLifecycle = finalStatus === "On Hold" || finalStatus === "Cancelled" || finalStatus === "Achieved";
+            const isLifecycle = finalStatus === "On Hold" || finalStatus === "Cancelled";
             if (!isLifecycle) {
-              const suggested = suggestStatusFromProgress(
-                merged.progress ?? 0,
-                merged.startDate,
-                merged.endDate
-              );
-              if (suggested !== finalStatus) {
-                syncData.status = suggested;
+              const related = s.aksiyonlar.filter((a) => a.projeId === id);
+              if (related.length > 0) {
+                const hasHighRisk = related.some((a) => a.status === "High Risk");
+                const hasAtRisk = related.some((a) => a.status === "At Risk");
+                const allAchieved = related.every((a) => a.status === "Achieved");
+                let suggested: EntityStatus;
+                if (hasHighRisk) suggested = "High Risk";
+                else if (hasAtRisk) suggested = "At Risk";
+                else if (allAchieved) suggested = "Achieved";
+                else suggested = "On Track";
+                if (suggested !== finalStatus) {
+                  syncData.status = suggested;
+                  if (suggested === "Achieved" && before.status !== "Achieved") {
+                    syncData.completedAt = new Date().toISOString();
+                  } else if (suggested !== "Achieved" && before.status === "Achieved") {
+                    syncData.completedAt = undefined;
+                  }
+                }
               }
             }
           }
