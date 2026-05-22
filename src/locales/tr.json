@@ -427,6 +427,7 @@
     "leaderDistributionDesc": "Proje liderlerine göre proje statüleri",
     "breakdownMatrixTitle": "Proje Dağılım Matrisi",
     "breakdownTabs": {
+      "exec": "İcra Kurulu",
       "dept": "Departman",
       "leader": "Proje Lideri",
       "source": "İş Kolu"

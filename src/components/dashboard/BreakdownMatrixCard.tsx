@@ -1,15 +1,16 @@
 import { useMemo, useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
-import { Building2, UserCircle2, Briefcase, ChevronDown, ChevronUp } from "lucide-react";
+import { Crown, Building2, UserCircle2, Briefcase, ChevronDown, ChevronUp } from "lucide-react";
 import GlassCard from "@/components/ui/GlassCard";
 import { useSidebarTheme } from "@/hooks/useSidebarTheme";
 import { STATUS_HEX, STATUS_HEX_DARK, STATUS_ORDER } from "@/lib/statusColors";
 import { getStatusLabel } from "@/lib/constants";
 import { deptLabel } from "@/config/departments";
+import { findExecutiveByOwner } from "@/config/executiveBoard";
 import type { Proje, EntityStatus } from "@/types";
 
-type Dim = "dept" | "leader" | "source";
+type Dim = "exec" | "dept" | "leader" | "source";
 const INITIAL_ROWS = 5;
 
 interface Props {
@@ -26,16 +27,17 @@ export default function BreakdownMatrixCard({ projeler }: Props) {
   const navigate = useNavigate();
   const sidebarTheme = useSidebarTheme();
   const accentColor = sidebarTheme.accentColor ?? "#c8922a";
-  const [dim, setDim] = useState<Dim>("dept");
+  const [dim, setDim] = useState<Dim>("exec");
   const [expanded, setExpanded] = useState(false);
 
   // Tab değişince collapsed duruma dön — farklı boyutta kullanıcı en yoğun
   // ilk 5'i görsün, gerekirse tekrar açsın.
   useEffect(() => { setExpanded(false); }, [dim]);
 
-  // Tab metadata — label comes from i18n; icon lifts visual distinction
-  // between the three dimensions.
+  // Tab metadata — kullanıcı isteği 2026-05-22: "İcra Kurulu" sekmesi
+  // departmandan ÖNCE eklendi. config/executiveBoard.ts statik liste.
   const tabs: { id: Dim; label: string; icon: typeof Building2 }[] = [
+    { id: "exec",   label: t("dashboard.breakdownTabs.exec"),   icon: Crown },
     { id: "dept",   label: t("dashboard.breakdownTabs.dept"),   icon: Building2 },
     { id: "leader", label: t("dashboard.breakdownTabs.leader"), icon: UserCircle2 },
     { id: "source", label: t("dashboard.breakdownTabs.source"), icon: Briefcase },
@@ -45,6 +47,10 @@ export default function BreakdownMatrixCard({ projeler }: Props) {
   // department labels are passed through deptLabel() to resolve tr/en
   // aliases (same helper the other widgets use).
   const extract = (h: Proje): string => {
+    if (dim === "exec") {
+      const exec = findExecutiveByOwner(h.owner);
+      return exec ? exec.name : t("dashboard.other");
+    }
     if (dim === "dept") return deptLabel(h.department, t) || t("dashboard.other");
     if (dim === "leader") return h.owner || "-";
     return h.source || "-";
@@ -55,7 +61,11 @@ export default function BreakdownMatrixCard({ projeler }: Props) {
   // değerden oluşabilir (örn. raw "İnsan Kaynakları" + canonical
   // "insan-kaynaklari" aynı label'a düşer). Bu raw'ları satır başına
   // toplamak gerekiyor ki tıklayınca kokpit doğru filtrelesin.
+  // exec dim: key = İcra Kurulu üyesi adı, raw = proje.owner (alt çalışan).
+  // Tıklayınca o satırın tüm subordinate owner'ları virgülle ?owner=...
+  // şeklinde URL'e yansır → Kokpit owner-filter ile eşleşmiş projeleri gösterir.
   const extractRaw = (h: Proje): string => {
+    if (dim === "exec") return h.owner || "";
     if (dim === "dept") return h.department || "";
     if (dim === "leader") return h.owner || "";
     return h.source || "";
@@ -107,7 +117,11 @@ export default function BreakdownMatrixCard({ projeler }: Props) {
   const navigateToCell = (rowRawValues: Set<string> | null, status: EntityStatus | null) => {
     const params = new URLSearchParams();
     if (rowRawValues && rowRawValues.size > 0) {
-      const paramName = dim === "dept" ? "dept" : dim === "leader" ? "owner" : "source";
+      // exec dim → owner filter (subordinate display_name'leri virgülle)
+      const paramName =
+        dim === "dept" ? "dept" :
+        dim === "leader" || dim === "exec" ? "owner" :
+        "source";
       params.set(paramName, Array.from(rowRawValues).join(","));
     }
     if (status) params.set("status", status);

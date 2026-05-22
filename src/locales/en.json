@@ -427,6 +427,7 @@
     "leaderDistributionDesc": "Project statuses by project leader",
     "breakdownMatrixTitle": "Project Breakdown Matrix",
     "breakdownTabs": {
+      "exec": "Executive Board",
       "dept": "Department",
       "leader": "Project Leader",
       "source": "Business Line"
