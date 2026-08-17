@@ -22,14 +22,17 @@ import TAtlasPinPopup from "./TAtlasPinPopup";
  * etiketler — tyrofreight/tyrotrader haritalarındaki görünüm). Erişilemezse
  * gömülü Natural Earth altlığına düşer, harita boş kalmaz.
  *
- * Yedeğe geçiş iki sinyalle tetiklenir:
- *   • MapLibre style/sprite/glyph/tile yükleme hatası bildirirse → hemen
- *   • Stil BASEMAP_LOAD_TIMEOUT_MS içinde hiç yüklenmezse → zaman aşımı
- * İkinci sinyal sağlayıcıdan bağımsız: CSP bloğu, proxy, DNS, servis
- * kesintisi — hepsini yakalar. (İlk sürümde yalnızca hata mesajı regex'ine
- * bakıyordum; iyi huylu maplibre hataları da fallback'i tetikliyordu.)
+ * Yedeğe geçiş kararı TEK ve KESİN bir sinyale dayanır: style.json'a gerçek
+ * bir fetch atıyoruz. Başarılıysa CARTO kalır, başarısızsa yedeğe geçilir.
+ *
+ * Neden böyle: önceki iki sürüm MapLibre'ın `error` olaylarının mesajına
+ * regex uyguluyordu. MapLibre pek çok İYİ HUYLU durum için de error yayıyor —
+ * eksik bir glyph aralığı, bulunamayan tek bir sprite ikonu, iptal edilen
+ * tile isteği. Mesajda "glyph"/"style" geçtiği için harita düzgün çalışırken
+ * bile yedeğe düşüyordu (kullanıcı raporu: "hâlâ sade altlık diyor" —
+ * kardeş uygulamada aynı altlık aynı tarayıcıda sorunsuz açılıyordu).
+ * Fetch probe'u gerçek koşulu ölçer: altlığa erişebiliyor muyuz?
  */
-const BASEMAP_LOAD_TIMEOUT_MS = 6000;
 const WORLD_CENTER = { longitude: 32, latitude: 39, zoom: 2.4 };
 const FIT_PADDING = 72;
 const FIT_MAX_ZOOM = 6.5;
@@ -114,7 +117,6 @@ export default function TAtlasMap({ points, onOpenProje }: Props) {
 
   // Altlık: CARTO birincil, gömülü Natural Earth yedek.
   const [useOfflineBasemap, setUseOfflineBasemap] = useState(false);
-  const [styleReady, setStyleReady] = useState(false);
   // Harita hiç ayağa kalkmazsa (WebGL yok, worker bloklandı vb.) sessiz boş
   // kutu bırakmayalım — kullanıcıya söyleyelim.
   const [mapError, setMapError] = useState<string | null>(null);
@@ -124,17 +126,29 @@ export default function TAtlasMap({ points, onOpenProje }: Props) {
     [useOfflineBasemap, isDark]
   );
 
-  // Stil değişince "yüklendi" bayrağını sıfırla (tema değişimi de dahil)
+  // Uzak altlığa gerçekten erişilebiliyor mu? Tek karar noktası bu.
+  // CSP bloğu / proxy / DNS / servis kesintisi → fetch reject veya !ok.
+  // İyi huylu MapLibre hataları buraya hiç dokunmuyor.
   useEffect(() => {
-    setStyleReady(false);
-  }, [mapStyle]);
-
-  // Zaman aşımı: uzak stil gelmiyorsa yedeğe geç
-  useEffect(() => {
-    if (useOfflineBasemap || styleReady) return;
-    const id = window.setTimeout(() => setUseOfflineBasemap(true), BASEMAP_LOAD_TIMEOUT_MS);
-    return () => window.clearTimeout(id);
-  }, [useOfflineBasemap, styleReady]);
+    let cancelled = false;
+    const url = cartoStyleUrl(isDark);
+    fetch(url, { cache: "force-cache" })
+      .then((res) => {
+        if (cancelled) return;
+        if (!res.ok) {
+          console.warn(`[T-Atlas] altlık stili ${res.status} döndü, yedeğe geçiliyor`);
+          setUseOfflineBasemap(true);
+        }
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        console.warn("[T-Atlas] altlık stiline erişilemedi, yedeğe geçiliyor:", err);
+        setUseOfflineBasemap(true);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [isDark]);
 
   // ── Açılış görünümü: koordinatı olan tüm projeleri kapsa (doküman §5) ──
   const fitToPoints = useCallback(() => {
@@ -215,20 +229,17 @@ export default function TAtlasMap({ points, onOpenProje }: Props) {
         touchPitch={false}
         maxZoom={14}
         minZoom={1.2}
-        onLoad={() => setStyleReady(true)}
         onError={(e) => {
           const msg = String((e as unknown as { error?: { message?: string } })?.error?.message ?? "");
-          // Haritayı tamamen çalışmaz kılan hatalar → kullanıcıya göster
-          if (/webgl|context lost|worker/i.test(msg)) {
+          // SADECE haritayı tamamen çalışmaz kılan hatalar yüzeye çıkar.
+          // Eksik glyph / sprite / iptal edilen tile gibi iyi huylu hatalar
+          // yalnızca konsola gider ve altlık DEĞİŞTİRMEZ — bunlar yüzünden
+          // yedeğe düşmek önceki sürümün hatasıydı.
+          if (/webgl|context lost/i.test(msg)) {
             setMapError(msg);
             return;
           }
-          // Uzak altlık yüklenemiyorsa yedeğe geç
-          if (!useOfflineBasemap && /cartocdn|style|sprite|glyph|fetch|network/i.test(msg)) {
-            setUseOfflineBasemap(true);
-            return;
-          }
-          console.warn("[T-Atlas] map error:", msg);
+          console.warn("[T-Atlas] map error (yok sayıldı):", msg);
         }}
         style={{ width: "100%", height: "100%" }}
       >
