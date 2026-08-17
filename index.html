@@ -7,8 +7,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 
     <!-- SEO & App Meta -->
-    <!-- Content Security Policy -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https://login.microsoftonline.com https://*.microsoft.com https://*.supabase.co; worker-src 'self'; frame-src 'none';" />
+    <!-- Content Security Policy
+         worker-src'de `blob:` gerekiyor: T-Atlas haritası maplibre-gl
+         kullanıyor, o da worker'ını kendi bundle'ından blob URL olarak
+         oluşturuyor (new Worker(URL.createObjectURL(...))). CSP'de `'self'`
+         blob: şemasını KAPSAMAZ, dolayısıyla worker bloklanıyor ve harita
+         çizilmiyordu. maplibre/mapbox dokümanları da bu izni şart koşuyor.
+
+         Uzak host EKLENMEDİ — altlık haritası gömülü Natural Earth verisinden
+         çiziliyor (src/config/basemapStyle.ts), harici tile/style isteği yok.
+         connect-src ve img-src bilinçli olarak sıkı kaldı. -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https://login.microsoftonline.com https://*.microsoft.com https://*.supabase.co; worker-src 'self' blob:; frame-src 'none';" />
 
     <meta name="description" content="tyrostrategy — Kurumsal stratejik proje ve aksiyon yönetim platformu. Projelerinizi planlayın, aksiyonlarınızı takip edin, ekibinizle birlikte stratejik kararlar alın." />
     <meta name="keywords" content="stratejik planlama, hedef yönetimi, aksiyon takibi, KPI, kurumsal yönetim, Tiryaki, TYRO" />

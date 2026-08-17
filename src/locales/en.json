@@ -1167,9 +1167,9 @@
       "zoomOut": "Zoom out",
       "resetView": "Reset view",
       "groupTooltip": "{{city}} · {{count}} projects",
-      "basemapFallback": "Base map could not load, using fallback",
       "emptyTitle": "No projects to show on the map",
-      "emptyDesc": "Loosen the filters or assign locations to projects."
+      "emptyDesc": "Loosen the filters or assign locations to projects.",
+      "renderFailed": "Map could not be rendered — your browser may not support WebGL"
     },
     "legend": {
       "title": "Legend",

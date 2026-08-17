@@ -3,11 +3,11 @@ import { useTranslation } from "react-i18next";
 // `Map` olarak import etmek global Map yapıcısını gölgeliyor (groupByCoordinate
 // içinde new Map() kullanıyoruz) — MapGL takma adıyla alıyoruz.
 import { Map as MapGL, Marker, AttributionControl, type MapRef } from "react-map-gl/maplibre";
-import type { StyleSpecification } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { Plus, Minus, Crosshair, Maximize2, Minimize2, AlertTriangle } from "lucide-react";
 import { Tooltip } from "@heroui/react";
 import { statusColor } from "@/lib/colorUtils";
+import { buildBasemapStyle, BASEMAP_ATTRIBUTION } from "@/config/basemapStyle";
 import { assetClassIcon } from "@/config/assetClassIcons";
 import { useSidebarTheme } from "@/hooks/useSidebarTheme";
 import type { AtlasPoint } from "@/lib/investmentPortfolio";
@@ -18,39 +18,13 @@ import TAtlasPinPopup from "./TAtlasPinPopup";
 /**
  * T-Atlas haritası.
  *
- * Basemap seçimi: CARTO'nun ücretsiz (atıf-yeterli) vector style'ları.
- * Kurumsal proxy / TLS kesici basemaps.cartocdn.com'u bloklarsa MapLibre
- * çizecek katman bulamaz ve harita BEYAZ kalır — pin'ler üstte durduğu için
- * "bozuk" görünür. tyrotrader'daki çözümü taşıyoruz: style.json'a hiç
- * gitmeyen, inline raster OSM fallback'i. İkisi de başarısızsa kullanıcıya
- * sessiz beyaz ekran değil açık bir uyarı gösteriyoruz.
+ * ALTLIK ÇEVRİMDIŞI: uygulamanın CSP'si harici tile/style host'una izin
+ * vermiyor (connect-src / img-src bilinçli olarak sıkı). İlk sürümde CARTO
+ * vector style ve OSM raster fallback'i denedik, ikisi de CSP tarafından
+ * bloklandı ve harita boş kaldı. Artık altlık gömülü Natural Earth ülke
+ * sınırlarından çiziliyor — bkz. config/basemapStyle.ts. Harici istek yok,
+ * kurumsal proxy ardında ve çevrimdışı da çalışır.
  */
-const CARTO_LIGHT = "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json";
-const CARTO_DARK = "https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json";
-
-/** style.json round-trip'i gerektirmeyen yedek basemap. */
-const RASTER_FALLBACK: StyleSpecification = {
-  version: 8,
-  sources: {
-    osm: {
-      type: "raster",
-      tiles: ["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],
-      tileSize: 256,
-      attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-    },
-  },
-  layers: [
-    {
-      id: "osm",
-      type: "raster",
-      source: "osm",
-      // Pin'ler baskın kalsın diye doygunluk düşürülüyor — vector style'ın
-      // overlay altında okunma biçimine yaklaşıyor.
-      paint: { "raster-saturation": -0.5, "raster-brightness-min": 0.06 },
-    },
-  ],
-};
-
 const WORLD_CENTER = { longitude: 32, latitude: 39, zoom: 2.4 };
 const FIT_PADDING = 72;
 const FIT_MAX_ZOOM = 6.5;
@@ -128,17 +102,19 @@ export default function TAtlasMap({ points, onOpenProje }: Props) {
   const mapRef = useRef<MapRef | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
 
-  const [styleFailed, setStyleFailed] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [selectedGroup, setSelectedGroup] = useState<PinGroup | null>(null);
 
   const groups = useMemo(() => groupByCoordinate(points), [points]);
 
-  // Basemap: tema değişince style de değişsin. Vector başarısızsa raster'a düş.
-  const mapStyle = useMemo<string | StyleSpecification>(
-    () => (styleFailed ? RASTER_FALLBACK : isDark ? CARTO_DARK : CARTO_LIGHT),
-    [styleFailed, isDark]
-  );
+  // Altlık tema ile birlikte değişsin. Veri gömülü olduğu için stil üretimi
+  // ucuz ama yine de memo'luyoruz — her render'da yeni style objesi vermek
+  // MapLibre'ı gereksiz setStyle'a zorlar.
+  const mapStyle = useMemo(() => buildBasemapStyle(isDark), [isDark]);
+
+  // Harita hiç ayağa kalkmazsa (WebGL yok, worker bloklandı vb.) sessiz boş
+  // kutu bırakmayalım — kullanıcıya söyleyelim.
+  const [mapError, setMapError] = useState<string | null>(null);
 
   // ── Açılış görünümü: koordinatı olan tüm projeleri kapsa (doküman §5) ──
   const fitToPoints = useCallback(() => {
@@ -220,13 +196,16 @@ export default function TAtlasMap({ points, onOpenProje }: Props) {
         maxZoom={14}
         minZoom={1.2}
         onError={(e) => {
-          // Style fetch'i bloklandıysa raster fallback'e geç (bir kez)
+          // MapLibre pek çok iyi huylu olay için de error yayıyor (eksik
+          // glyph, iptal edilen istek). Sadece haritayı gerçekten çalışmaz
+          // hale getiren durumları yüzeye çıkarıyoruz.
           const msg = String((e as unknown as { error?: { message?: string } })?.error?.message ?? "");
-          if (!styleFailed && /style|fetch|Failed|NetworkError/i.test(msg)) setStyleFailed(true);
+          if (/webgl|context|worker/i.test(msg)) setMapError(msg);
+          else console.warn("[T-Atlas] map error:", msg);
         }}
         style={{ width: "100%", height: "100%" }}
       >
-        <AttributionControl compact position="bottom-right" />
+        <AttributionControl compact position="bottom-right" customAttribution={BASEMAP_ATTRIBUTION} />
 
         {groups.map((group) => {
           const status = dominantStatus(group.points);
@@ -320,12 +299,12 @@ export default function TAtlasMap({ points, onOpenProje }: Props) {
         <TAtlasLegend />
       </div>
 
-      {/* ── Basemap yüklenemedi uyarısı ── */}
-      {styleFailed && (
+      {/* ── Harita hiç çizilemediyse ── */}
+      {mapError && (
         <div className="absolute left-1/2 top-3 z-10 -translate-x-1/2">
           <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-3 py-1 text-[11px] font-semibold text-amber-700 shadow-sm">
             <AlertTriangle size={12} />
-            {t("tatlas.map.basemapFallback")}
+            {t("tatlas.map.renderFailed")}
           </span>
         </div>
       )}

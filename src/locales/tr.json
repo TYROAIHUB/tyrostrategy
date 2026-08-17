@@ -1167,9 +1167,9 @@
       "zoomOut": "Uzaklaştır",
       "resetView": "Görünümü sıfırla",
       "groupTooltip": "{{city}} · {{count}} proje",
-      "basemapFallback": "Harita altlığı yüklenemedi, yedek altlık kullanılıyor",
       "emptyTitle": "Haritada gösterilecek proje yok",
-      "emptyDesc": "Filtreleri gevşetin ya da projelere lokasyon tanımlayın."
+      "emptyDesc": "Filtreleri gevşetin ya da projelere lokasyon tanımlayın.",
+      "renderFailed": "Harita çizilemedi — tarayıcınız WebGL desteklemiyor olabilir"
     },
     "legend": {
       "title": "Lejant",
