@@ -47,6 +47,8 @@ export interface PagePermissions {
   stratejikKokpit: boolean;
   tMap: boolean;
   tAlignment: boolean;
+  /** T-Atlas — yatırım haritası ve portföy metrikleri (görüntüleme sayfası) */
+  tAtlas: boolean;
   kullanicilar: boolean;
   ayarlar: boolean;
   guvenlik: boolean;

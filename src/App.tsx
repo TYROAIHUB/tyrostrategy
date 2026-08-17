@@ -92,11 +92,10 @@ export default function App() {
             {/* WBS/Tree page removed */}
             <Route path="/strategy-map" element={<ProtectedRoute pageKey="tMap"><PageSuspense><StrategyMapPage /></PageSuspense></ProtectedRoute>} />
             <Route path="/t-alignment" element={<ProtectedRoute pageKey="tAlignment"><PageSuspense><TAlignmentPage /></PageSuspense></ProtectedRoute>} />
-            {/* T-Atlas yetkisi mevcut pages.kpi anahtarını kullanıyor:
-                Admin + Management true, Proje Lideri false — dokümanın
-                "Admin ve yönetim rolü" şartıyla birebir aynı. Yeni pageKey
-                eklemek role_permissions yazması demekti. */}
-            <Route path="/t-atlas" element={<ProtectedRoute pageKey="kpi"><PageSuspense><TAtlasPage /></PageSuspense></ProtectedRoute>} />
+            {/* T-Atlas artık kendi yetki anahtarını kullanıyor (pages.tAtlas):
+                Güvenlik sayfasından rol bazında açılıp kapatılabiliyor.
+                Varsayılan: Admin + Management açık, Proje Lideri kapalı. */}
+            <Route path="/t-atlas" element={<ProtectedRoute pageKey="tAtlas"><PageSuspense><TAtlasPage /></PageSuspense></ProtectedRoute>} />
             <Route path="/kullanicilar" element={<ProtectedRoute pageKey="kullanicilar"><PageSuspense><KullanicilarPage /></PageSuspense></ProtectedRoute>} />
             <Route path="/veri-yonetimi" element={<ProtectedRoute pageKey="ayarlar"><PageSuspense><VeriYonetimiPage /></PageSuspense></ProtectedRoute>} />
             <Route path="/ayarlar" element={<ProtectedRoute pageKey="ayarlar"><PageSuspense><AyarlarPage /></PageSuspense></ProtectedRoute>} />

@@ -197,4 +197,34 @@ describe("roleStore", () => {
       expect(localStorageMock.removeItem).toHaveBeenCalledWith("tyro-role-permissions-v2");
     });
   });
+
+  // T-Atlas yetkisi Raporlar (kpi) ile AYNI davranmalı: yalnızca Admin ve
+  // yönetim rolü görür. Güvenlik sayfasından değiştirilebilir olması bu
+  // varsayılanı bozmamalı.
+  describe("T-Atlas page permission", () => {
+    it("mirrors the Reports page for every role", () => {
+      const store = useRoleStore.getState();
+      for (const role of ["Admin", "Proje Lideri", "Management"] as const) {
+        const perms = store.getPermissions(role);
+        expect(perms.pages.tAtlas, `${role} tAtlas`).toBe(perms.pages.kpi);
+      }
+    });
+
+    it("is open for Admin and Management, closed for Proje Lideri", () => {
+      const store = useRoleStore.getState();
+      expect(store.getPermissions("Admin").pages.tAtlas).toBe(true);
+      expect(store.getPermissions("Management").pages.tAtlas).toBe(true);
+      expect(store.getPermissions("Proje Lideri").pages.tAtlas).toBe(false);
+    });
+
+    it("can be toggled per role like any other page", () => {
+      const store = useRoleStore.getState();
+      const base = store.getPermissions("Management");
+      store.updatePermissions("Management", {
+        ...base,
+        pages: { ...base.pages, tAtlas: false },
+      });
+      expect(useRoleStore.getState().getPermissions("Management").pages.tAtlas).toBe(false);
+    });
+  });
 });
