@@ -747,8 +747,69 @@ async function api(method, path, body) {
     return "204";
   });
 
+  // ── projeler.location_id (migration 032) ──
+  // Opsiyonel FK. Korunan davranışlar:
+  //   • proje location_id olmadan da açılabiliyor (zorunlu DEĞİL)
+  //   • geçerli location_id set edilebiliyor
+  //   • lokasyon silindiğinde proje SİLİNMİYOR, location_id NULL'a düşüyor
+  //     (ON DELETE SET NULL — CASCADE olsa proje uçardı)
+  const LOC_PROJE_ID = "P26-9992";
+  await fetch(URL + `/projeler?id=eq.${LOC_PROJE_ID}`, { method: "DELETE", headers });
+
+  await step("INSERT proje WITHOUT location (opsiyonel)", async () => {
+    const r = await api("POST", "/projeler", {
+      id: LOC_PROJE_ID,
+      name: "SMOKE_LOCATION_FK_DELETE_ME",
+      source: "Türkiye",
+      status: "Not Started",
+      owner: "Cenk Şayli",
+      department: "Stratejik Planlama",
+      progress: 0,
+      start_date: "2026-05-04",
+      end_date: "2026-05-05",
+    });
+    if (r[0].location_id !== null) throw new Error(`location_id should be null, got ${r[0].location_id}`);
+    return "location_id=null";
+  });
+
+  await step("PATCH proje.location_id → geçerli lokasyon", async () => {
+    const r = await api("PATCH", `/projeler?id=eq.${LOC_PROJE_ID}`, { location_id: locationId });
+    if (r[0].location_id !== locationId) throw new Error(`not set: ${r[0].location_id}`);
+    return "linked";
+  });
+
+  await step("PATCH proje.location_id → geçersiz UUID reddedilir (FK)", async () => {
+    let rejected = false;
+    try {
+      await api("PATCH", `/projeler?id=eq.${LOC_PROJE_ID}`, {
+        location_id: "00000000-0000-0000-0000-000000000000",
+      });
+    } catch (e) {
+      // 23503 = foreign_key_violation
+      if (e.message.includes("violates foreign key") || e.message.includes("23503")) {
+        rejected = true;
+      } else {
+        throw new Error(`wrong error: ${e.message}`);
+      }
+    }
+    if (!rejected) throw new Error("bogus location_id ACCEPTED (FK missing?)");
+    return "rejected (23503 fk_violation)";
+  });
+
   await step("DELETE location", async () => {
     await api("DELETE", `/locations?id=eq.${locationId}`);
+    return "204";
+  });
+
+  await step("ON DELETE SET NULL — proje yaşıyor, location_id null", async () => {
+    const r = await api("GET", `/projeler?id=eq.${LOC_PROJE_ID}&select=id,location_id`);
+    if (r.length !== 1) throw new Error("proje silindi! (CASCADE olmamalı)");
+    if (r[0].location_id !== null) throw new Error(`location_id=${r[0].location_id} (null olmalı)`);
+    return "proje korundu, referans boşaldı";
+  });
+
+  await step("cleanup location test proje", async () => {
+    await api("DELETE", `/projeler?id=eq.${LOC_PROJE_ID}`);
     return "204";
   });
 

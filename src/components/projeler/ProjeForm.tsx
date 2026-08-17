@@ -12,6 +12,7 @@ import { toast } from "@/stores/toastStore";
 import { useUIStore } from "@/stores/uiStore";
 import { getStatusOptions, getSourceOptions } from "@/lib/constants";
 import { deptLabel, canonicalDeptKey } from "@/config/departments";
+import { formatLocationLabel, resolveLocationLabel } from "@/lib/locations";
 import { DEFAULT_TAG_COLOR } from "@/config/tagColors";
 import TagChip from "@/components/ui/TagChip";
 import StatusBadge from "@/components/ui/StatusBadge";
@@ -30,6 +31,8 @@ const createProjeSchema = (t: TFunction) =>
     status: z.enum(["On Track", "At Risk", "High Risk", "Achieved", "Not Started", "Cancelled", "On Hold"]),
     progress: z.number().min(0).max(100),
     tags: z.array(z.string()).default([]),
+    // Lokasyon opsiyonel — "" = seçim yok. Submit'te undefined'a çevrilir.
+    locationId: z.string().optional().default(""),
     parentObjectiveId: z.string().optional(),
     startDate: z.string().min(1, t("validation.startDateRequired")),
     endDate: z.string().min(1, t("validation.endDateRequired")),
@@ -55,6 +58,9 @@ export default function ProjeForm({ proje, onSuccess, onClose }: ProjeFormProps)
   const updateProje = useDataStore((s) => s.updateProje);
   const projeler = useDataStore((s) => s.projeler);
   const dbUsers = useDataStore((s) => s.users);
+  // Lokasyon seçenekleri — Ayarlar > Lokasyon'da tanımlananlar. Store zaten
+  // ülke → şehir sıralı tutuyor, ek sort gerekmiyor.
+  const locations = useDataStore((s) => s.locations);
 
   // Departman dropdown — kullanıcı isteği 2026-05-10:
   // Dropdown SADECE projelerde gerçekten kullanılan departmanları göstersin.
@@ -127,6 +133,7 @@ export default function ProjeForm({ proje, onSuccess, onClose }: ProjeFormProps)
       status: proje?.status ?? "Not Started",
       progress: proje?.progress ?? 0,
       tags: proje?.tags ?? [],
+      locationId: proje?.locationId ?? "",
       parentObjectiveId: proje?.parentObjectiveId ?? "",
       startDate: proje?.startDate ?? "",
       endDate: proje?.endDate ?? "",
@@ -143,6 +150,8 @@ export default function ProjeForm({ proje, onSuccess, onClose }: ProjeFormProps)
       const payload = {
         ...data,
         tags: data.tags.length > 0 ? data.tags : undefined,
+        // "" → undefined: lokasyon zorunlu değil, boş seçim NULL olarak gitmeli
+        locationId: data.locationId || undefined,
         parentObjectiveId: data.parentObjectiveId || undefined,
       };
       if (proje) {
@@ -154,6 +163,12 @@ export default function ProjeForm({ proje, onSuccess, onClose }: ProjeFormProps)
         if (data.owner !== proje.owner) details.push({ label: t("common.owner"), value: data.owner });
         if (data.source !== proje.source) details.push({ label: t("common.source"), value: data.source });
         if (data.department !== proje.department) details.push({ label: t("common.department"), value: deptLabel(data.department, t) });
+        if ((data.locationId || "") !== (proje.locationId || "")) {
+          details.push({
+            label: t("common.location"),
+            value: resolveLocationLabel(data.locationId, locations) || "—",
+          });
+        }
         if (data.startDate !== proje.startDate) details.push({ label: t("common.startDate"), value: data.startDate });
         if (data.endDate !== proje.endDate) details.push({ label: t("common.endDate"), value: data.endDate });
         // Tags ve participants — array karşılaştırması (sıralamayı önemsiz say)
@@ -177,12 +192,15 @@ export default function ProjeForm({ proje, onSuccess, onClose }: ProjeFormProps)
         // Detaylı success toast — aksiyon create ile simetrik. Kullanıcı
         // hangi proje, lider, kaynak, departman, tarih aralığını gördüğünü
         // anında bilsin.
+        const createdLocation = resolveLocationLabel(data.locationId, locations);
         toast.success(t("toast.objectiveCreated"), {
           message: data.name,
           details: [
             { label: t("common.owner"), value: data.owner },
             { label: t("common.source"), value: data.source },
             { label: t("common.department"), value: deptLabel(data.department, t) },
+            // Lokasyon opsiyonel — seçilmediyse toast'ı boş satırla şişirmiyoruz
+            ...(createdLocation ? [{ label: t("common.location"), value: createdLocation }] : []),
             { label: t("common.dateRange", "Tarih"), value: `${data.startDate} → ${data.endDate}` },
           ],
         });
@@ -388,6 +406,49 @@ export default function ProjeForm({ proje, onSuccess, onClose }: ProjeFormProps)
                 <SelectItem key={opt.key}>{opt.label}</SelectItem>
               ))}
             </Select>
+          </div>
+        )}
+      />
+
+      {/* Lokasyon — opsiyonel. Seçenekler Ayarlar > Lokasyon'dan gelir. */}
+      <Controller
+        name="locationId"
+        control={control}
+        render={({ field }) => (
+          <div>
+            <label className="block text-[11px] font-semibold text-tyro-text-secondary mb-1">
+              {t("common.location")}
+            </label>
+            <Select
+              selectedKeys={field.value ? [field.value] : []}
+              onSelectionChange={(keys) => {
+                const val = Array.from(keys)[0] as string | undefined;
+                field.onChange(val ?? "");
+              }}
+              variant="bordered"
+              size="sm"
+              // Zorunlu olmadığı için temizlenebilir olmalı
+              isDisabled={locations.length === 0}
+              classNames={{ trigger: "border-tyro-border", value: "font-semibold text-tyro-text-primary" }}
+              placeholder={
+                locations.length === 0
+                  ? t("forms.objective.locationEmpty")
+                  : t("forms.objective.locationPlaceholder")
+              }
+            >
+              {locations.map((loc) => (
+                <SelectItem key={loc.id}>{formatLocationLabel(loc)}</SelectItem>
+              ))}
+            </Select>
+            {field.value && (
+              <button
+                type="button"
+                onClick={() => field.onChange("")}
+                className="mt-1 text-[11px] font-semibold text-tyro-text-muted hover:text-tyro-danger cursor-pointer"
+              >
+                {t("forms.objective.locationClear")}
+              </button>
+            )}
           </div>
         )}
       />

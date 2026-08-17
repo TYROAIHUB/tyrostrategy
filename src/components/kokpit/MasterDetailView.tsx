@@ -4,7 +4,7 @@ import { Input, Button, Tooltip, Popover, PopoverTrigger, PopoverContent, DatePi
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Search, Filter, X, ChevronDown, ArrowLeft, ArrowUpDown, Plus, Pencil, Trash2, Wand2, MoreVertical,
-  Target, Crosshair, CircleCheckBig, Calendar, CalendarCheck, Users, Building2, Globe, Clock, Check,
+  Target, Crosshair, CircleCheckBig, Calendar, CalendarCheck, Users, Building2, Globe, Clock, Check, MapPin,
 } from "lucide-react";
 import { useDataStore } from "@/stores/dataStore";
 import { usePermissions } from "@/hooks/usePermissions";
@@ -19,6 +19,7 @@ import AksiyonDetail from "@/components/aksiyonlar/AksiyonDetail";
 import { progressColor } from "@/lib/colorUtils";
 import { formatDate } from "@/lib/dateUtils";
 import { deptLabel } from "@/config/departments";
+import { resolveLocationLabel } from "@/lib/locations";
 import { toCalendarDate, fromCalendarDate } from "@/lib/utils";
 import { STATUS_DOT_COLOR, getStatusLabel } from "@/lib/constants";
 import { toast } from "@/stores/toastStore";
@@ -268,6 +269,8 @@ function DetailPanel({
 }) {
   const { t } = useTranslation();
   const { canEditAksiyon } = usePermissions();
+  const locations = useDataStore((s) => s.locations);
+  const locationLabel = resolveLocationLabel(proje.locationId, locations);
   const [reviewPopoverOpen, setReviewPopoverOpen] = useState(false);
   const todayStr = new Date().toISOString().slice(0, 10);
   const [reviewDateDraft, setReviewDateDraft] = useState(todayStr);
@@ -457,6 +460,16 @@ function DetailPanel({
                 <InfoCell icon={<Building2 size={12} />} label={t("common.department")} value={deptLabel(proje.department, t)} />
                 <InfoCell icon={<Calendar size={12} />} label={t("common.createdAt")} value={proje.createdAt ? formatDate(proje.createdAt) : "—"} className="border-t sm:border-t-0 border-tyro-border/40" />
                 <InfoCell label={t("common.participants")} value={proje.participants?.join(", ") || "—"} className="border-t sm:border-t-0 border-tyro-border/40" />
+              </div>
+              {/* Row 2b: Lokasyon — opsiyonel alan, tanımlı değilse "—" */}
+              <div className="border-t border-tyro-border/15 px-3 py-2.5 flex items-center gap-1.5">
+                <MapPin size={12} className="text-tyro-text-muted shrink-0" />
+                <span className="text-[11px] font-medium uppercase tracking-wider text-tyro-text-muted shrink-0">
+                  {t("common.location")}
+                </span>
+                <span className="text-[11px] font-medium text-tyro-text-primary truncate">
+                  {locationLabel || "—"}
+                </span>
               </div>
               {/* Row 3: Proje ID + Açıklama
                    Empty descriptions fall back to an italic placeholder

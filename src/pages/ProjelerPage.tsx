@@ -6,7 +6,7 @@ import {
   Pagination, Input, Button, Tooltip,
   Dropdown, DropdownTrigger, DropdownMenu, DropdownItem,
 } from "@heroui/react";
-import { Search, Target, ChevronDown, Trash2, LayoutList, Kanban, CircleDot, Columns3, Eye, Pencil, Tag } from "lucide-react";
+import { Search, Target, ChevronDown, Trash2, LayoutList, Kanban, CircleDot, Columns3, Eye, Pencil, Tag, MapPin } from "lucide-react";
 import TagChip from "@/components/ui/TagChip";
 import { useDataStore as useDataStoreTag } from "@/stores/dataStore";
 import { useProjeler } from "@/hooks/useProjeler";
@@ -24,6 +24,7 @@ import ConfirmDialog from "@/components/shared/ConfirmDialog";
 import EmptyState from "@/components/shared/EmptyState";
 import { toast } from "@/stores/toastStore";
 import { STATUS_DOT_COLOR, getStatusLabel } from "@/lib/constants";
+import { resolveLocationLabel } from "@/lib/locations";
 import type { Proje } from "@/types";
 
 type ViewTab = "list" | "kanban";
@@ -37,7 +38,7 @@ function formatDate(dateStr: string): string {
   }
 }
 
-const INITIAL_VISIBLE = new Set(["name", "owner", "source", "tags", "status", "startDate", "endDate", "reviewDate", "aksiyonCount", "actions"]);
+const INITIAL_VISIBLE = new Set(["name", "owner", "source", "location", "tags", "status", "startDate", "endDate", "reviewDate", "aksiyonCount", "actions"]);
 
 export default function ProjelerPage() {
   const { t } = useTranslation();
@@ -48,6 +49,7 @@ export default function ProjelerPage() {
     { uid: "description", name: t("common.description") },
     { uid: "owner", name: t("common.owner") },
     { uid: "source", name: t("common.source") },
+    { uid: "location", name: t("common.location") },
     { uid: "tags", name: t("forms.objective.tags", "Etiketler") },
     { uid: "status", name: t("common.status") },
     { uid: "startDate", name: t("common.startDate") },
@@ -59,6 +61,7 @@ export default function ProjelerPage() {
   const { canCreateProje, canEditProje, canDeleteProje, getProjeDeleteReason, filterProjeler } = usePermissions();
   const { data: projeler } = useProjeler();
   const aksiyonlar = useDataStore((s) => s.aksiyonlar);
+  const locations = useDataStore((s) => s.locations);
   const deleteProje = useDataStore((s) => s.deleteProje);
 
   const tagDefs = useDataStoreTag((s) => s.tagDefinitions);
@@ -106,7 +109,7 @@ export default function ProjelerPage() {
     if (search.trim()) {
       const q = search.toLocaleLowerCase("tr");
       result = result.filter((h) => {
-        const searchStr = [h.name, h.description, h.source, h.status, h.owner, h.department, formatDate(h.startDate), formatDate(h.endDate), ...(h.tags ?? []), ...(h.participants ?? []), String(aksiyonCountMap.get(h.id) ?? 0)].join(" ").toLocaleLowerCase("tr");
+        const searchStr = [h.name, h.description, h.source, h.status, h.owner, h.department, resolveLocationLabel(h.locationId, locations), formatDate(h.startDate), formatDate(h.endDate), ...(h.tags ?? []), ...(h.participants ?? []), String(aksiyonCountMap.get(h.id) ?? 0)].join(" ").toLocaleLowerCase("tr");
         return searchStr.includes(q);
       });
     }
@@ -117,7 +120,7 @@ export default function ProjelerPage() {
       result = result.filter((h) => (h.tags ?? []).includes(tagFilter));
     }
     return result;
-  }, [projeler, search, statusFilter, tagFilter, aksiyonCountMap, filterProjeler]);
+  }, [projeler, search, statusFilter, tagFilter, aksiyonCountMap, filterProjeler, locations]);
 
   // Sort
   const sorted = useMemo(() => {
@@ -176,6 +179,12 @@ export default function ProjelerPage() {
         return <span className="text-[13px] text-tyro-text-primary">{proje.owner || "-"}</span>;
       case "source":
         return <span className="text-[13px] text-tyro-text-secondary">{proje.source}</span>;
+      case "location":
+        return (
+          <span className="text-[13px] text-tyro-text-secondary whitespace-nowrap">
+            {resolveLocationLabel(proje.locationId, locations) || "—"}
+          </span>
+        );
       case "tags":
         return (
           <div className="flex flex-wrap gap-1 max-w-[200px]">
@@ -242,7 +251,7 @@ export default function ProjelerPage() {
       default:
         return null;
     }
-  }, [aksiyonCountMap, deleteProje, canEditProje, canDeleteProje, getProjeDeleteReason, t]);
+  }, [aksiyonCountMap, deleteProje, canEditProje, canDeleteProje, getProjeDeleteReason, locations, t]);
 
   // Top content (only selection info + rows per page)
   const topContent = useMemo(() => (
@@ -437,10 +446,19 @@ export default function ProjelerPage() {
                 {proje.description && (
                   <p className="text-xs text-tyro-text-secondary line-clamp-2 mb-1.5">{proje.description}</p>
                 )}
-                <div className="flex items-center gap-3 text-xs text-tyro-text-muted mb-2">
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-tyro-text-muted mb-2">
                   <span>{proje.source}</span>
                   <span>·</span>
-                  <span>{proje.leader}</span>
+                  <span>{proje.owner}</span>
+                  {resolveLocationLabel(proje.locationId, locations) && (
+                    <>
+                      <span>·</span>
+                      <span className="inline-flex items-center gap-1">
+                        <MapPin size={11} />
+                        {resolveLocationLabel(proje.locationId, locations)}
+                      </span>
+                    </>
+                  )}
                 </div>
                 <div className="flex items-center gap-2 pt-2 border-t border-tyro-border/20" onClick={(e) => e.stopPropagation()}>
                   {canEditProje(proje.id) && (
@@ -526,13 +544,19 @@ export default function ProjelerPage() {
               className="glass-card cursor-pointer rounded-card p-3 transition-colors hover:bg-tyro-surface/30"
             >
               <p className="text-sm font-semibold text-tyro-text-primary truncate">{h.name}</p>
-              <div className="mt-1.5 flex items-center gap-2">
+              <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
                 <span className="inline-flex items-center rounded-full bg-tyro-surface px-2 py-0.5 text-[11px] font-medium text-tyro-text-secondary">
                   {h.source}
                 </span>
+                {resolveLocationLabel(h.locationId, locations) && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-tyro-surface px-2 py-0.5 text-[11px] font-medium text-tyro-text-secondary">
+                    <MapPin size={10} />
+                    {resolveLocationLabel(h.locationId, locations)}
+                  </span>
+                )}
               </div>
               <div className="mt-1.5 flex items-center justify-between text-xs text-tyro-text-muted">
-                <span>{h.leader}</span>
+                <span>{h.owner}</span>
                 <span>{aksiyonCountMap.get(h.id) ?? 0} aksiyon</span>
               </div>
             </div>

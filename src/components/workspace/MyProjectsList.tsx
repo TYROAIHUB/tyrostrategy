@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { Crosshair, CircleCheckBig, BarChart3, ListChecks, ChevronRight, Eye } from "lucide-react";
+import { Crosshair, CircleCheckBig, BarChart3, ListChecks, ChevronRight, Eye, MapPin } from "lucide-react";
 import SlidingPanel from "@/components/shared/SlidingPanel";
 import ProjeDetail from "@/components/projeler/ProjeDetail";
 import type { Proje } from "@/types";
@@ -13,6 +13,7 @@ import { useMyWorkspace } from "@/hooks/useMyWorkspace";
 import { useDataStore } from "@/stores/dataStore";
 import TagChip from "@/components/ui/TagChip";
 import { statusColor } from "@/lib/colorUtils";
+import { resolveLocationLabel } from "@/lib/locations";
 import { getStatusLabel } from "@/lib/constants";
 import { formatDate } from "@/lib/dateUtils";
 import type { EntityStatus } from "@/types";
@@ -60,11 +61,14 @@ function StackedStatusBar({ items, getStatus }: { items: { status: string }[]; g
 
 /* ── Progress Card (compact) ── */
 function ProgressCard({ item, onClick, showParent }: {
-  item: { id: string; name: string; progress: number; status: EntityStatus; endDate: string; owner?: string; parentName?: string; aksiyonCount?: number };
+  item: { id: string; name: string; progress: number; status: EntityStatus; endDate: string; owner?: string; parentName?: string; aksiyonCount?: number; locationId?: string };
   onClick: () => void;
   showParent?: boolean;
 }) {
   const { t } = useTranslation();
+  // Lokasyon opsiyonel — tanımlı değilse satırı hiç basmıyoruz, kart dar
+  const locations = useDataStore((s) => s.locations);
+  const locationLabel = resolveLocationLabel(item.locationId, locations);
   // Halka + yüzde yazısı statüye göre renklensin — "Yüksek Riskte" bir proje %63
   // ilerlemiş olsa bile kullanıcıya kırmızı görünsün. (progressColor hâlâ başka
   // yerlerde kullanılıyor — örn. aksiyon detayında gradient.)
@@ -111,6 +115,12 @@ function ProgressCard({ item, onClick, showParent }: {
           )}
           {item.aksiyonCount !== undefined && (
             <span className="text-[11px] text-tyro-text-muted">{t("workspace.actionsShort", { count: item.aksiyonCount })}</span>
+          )}
+          {locationLabel && (
+            <span className="inline-flex items-center gap-0.5 text-[11px] text-tyro-text-muted truncate max-w-[120px]">
+              <MapPin size={10} className="shrink-0" />
+              {locationLabel}
+            </span>
           )}
         </div>
       </div>

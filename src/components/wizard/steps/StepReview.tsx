@@ -1,10 +1,11 @@
 import { useWatch, type Control } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import { Target, User, Calendar, Users, MapPin, FolderTree } from "lucide-react";
+import { Target, User, Calendar, Users, MapPin, MapPinned, FolderTree } from "lucide-react";
 import { useDataStore } from "@/stores/dataStore";
 import { useSidebarTheme } from "@/hooks/useSidebarTheme";
 import type { WizardFormData } from "../ProjeAksiyonWizard";
 import { deptLabel } from "@/config/departments";
+import { resolveLocationLabel } from "@/lib/locations";
 
 interface AksiyonEntry {
   name: string;
@@ -30,9 +31,11 @@ export default function StepReview({ control }: Props) {
   const sidebarTheme = useSidebarTheme();
   const data = useWatch({ control });
   const projeler = useDataStore((s) => s.projeler);
+  const locations = useDataStore((s) => s.locations);
   const parentName = data.parentObjectiveId
     ? projeler.find((h) => h.id === data.parentObjectiveId)?.name
     : null;
+  const locationLabel = resolveLocationLabel(data.locationId, locations);
 
   return (
     <div className="flex flex-col gap-5">
@@ -78,6 +81,11 @@ export default function StepReview({ control }: Props) {
             <div className="flex items-center gap-1.5 text-tyro-text-secondary">
               <Calendar size={12} />
               <span>{formatDate(data.endDate ?? "")}</span>
+            </div>
+            {/* Lokasyon — opsiyonel olduğu için grid'in son hücresi */}
+            <div className="flex items-center gap-1.5 text-tyro-text-secondary">
+              <MapPinned size={12} />
+              <span>{locationLabel || "—"}</span>
             </div>
           </div>
 

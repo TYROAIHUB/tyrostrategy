@@ -54,6 +54,10 @@ export interface Proje {
   endDate: string;
   reviewDate?: string;
   tags?: string[];             // Etiketler — filtreleme & kategorizasyon
+  /** Opsiyonel lokasyon referansı → LocationDefinition.id (migration 032).
+   *  Zorunlu değil: undefined = lokasyon girilmemiş. Ayarlar > Lokasyon'da
+   *  tanımlı ülke/şehir çiftlerinden seçilir. */
+  locationId?: string;
   parentObjectiveId?: string;  // Ana proje ID — null ise bağımsız/ana proje
   createdBy?: string;
   createdAt?: string;

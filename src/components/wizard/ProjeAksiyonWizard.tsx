@@ -26,6 +26,8 @@ const createWizardSchema = (t: TFunction) =>
       message: t("validation.sourceRequired"),
     }),
     department: z.string().default(""),
+    // Lokasyon opsiyonel — "" = seçim yok, addProje'de undefined'a çevrilir
+    locationId: z.string().optional().default(""),
     owner: z.string().min(1, t("validation.ownerRequired")),
     participants: z.array(z.string()).default([]),
     parentObjectiveId: z.string().optional().default(""),
@@ -118,6 +120,7 @@ export default function ProjeAksiyonWizard({ onClose }: Props) {
       description: "",
       source: "Türkiye",
       department: "",
+      locationId: "",
       owner: localStorage.getItem("tyro-mock-user") || "Demo User",
       participants: [],
       parentObjectiveId: "",
@@ -193,6 +196,8 @@ export default function ProjeAksiyonWizard({ onClose }: Props) {
           description: data.description || undefined,
           source: data.source,
           department: data.department,
+          // "" → undefined: lokasyon zorunlu değil, boşsa NULL gitmeli
+          locationId: data.locationId || undefined,
           owner: data.owner,
           participants: data.participants,
           parentObjectiveId: data.parentObjectiveId || undefined,

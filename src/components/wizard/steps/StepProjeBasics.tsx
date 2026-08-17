@@ -4,6 +4,7 @@ import { Input, Textarea, Select, SelectItem } from "@heroui/react";
 import { useTranslation } from "react-i18next";
 import { getSourceOptions } from "@/lib/constants";
 import { canonicalDeptKey } from "@/config/departments";
+import { formatLocationLabel } from "@/lib/locations";
 import { useDataStore } from "@/stores/dataStore";
 interface Props {
   control: Control<any>;
@@ -14,6 +15,8 @@ export default function StepProjeBasics({ control, errors }: Props) {
   const { t } = useTranslation();
   const sourceOptions = getSourceOptions(t);
   const projeler = useDataStore((s) => s.projeler);
+  // Lokasyon seçenekleri — Ayarlar > Lokasyon'da tanımlananlar (ülke → şehir sıralı)
+  const locations = useDataStore((s) => s.locations);
 
   // Departman dropdown — kullanıcı raporu 2026-05-10: wizard hardcoded 16
   // enum kullanıyordu, edit form ise projelerden derive ediyordu → kullanıcı
@@ -138,6 +141,48 @@ export default function StepProjeBasics({ control, errors }: Props) {
                 <SelectItem key={opt.key}>{opt.label}</SelectItem>
               ))}
             </Select>
+          </div>
+        )}
+      />
+
+      {/* Lokasyon — opsiyonel, Ayarlar > Lokasyon'daki tanımlardan seçilir */}
+      <Controller
+        name="locationId"
+        control={control}
+        render={({ field }) => (
+          <div>
+            <label className="block text-[12px] font-semibold text-tyro-text-secondary mb-1.5">
+              {t("common.location")}
+            </label>
+            <Select
+              selectedKeys={field.value ? [field.value] : []}
+              onSelectionChange={(keys) => {
+                const val = Array.from(keys)[0] as string | undefined;
+                field.onChange(val ?? "");
+              }}
+              variant="bordered"
+              size="sm"
+              isDisabled={locations.length === 0}
+              classNames={{ trigger: "border-tyro-border", value: "font-semibold text-tyro-text-primary" }}
+              placeholder={
+                locations.length === 0
+                  ? t("forms.objective.locationEmpty")
+                  : t("forms.objective.locationPlaceholder")
+              }
+            >
+              {locations.map((loc) => (
+                <SelectItem key={loc.id}>{formatLocationLabel(loc)}</SelectItem>
+              ))}
+            </Select>
+            {field.value && (
+              <button
+                type="button"
+                onClick={() => field.onChange("")}
+                className="mt-1 text-[11px] font-semibold text-tyro-text-muted hover:text-tyro-danger cursor-pointer"
+              >
+                {t("forms.objective.locationClear")}
+              </button>
+            )}
           </div>
         )}
       />

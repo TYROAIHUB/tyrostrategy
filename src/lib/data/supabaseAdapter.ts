@@ -21,6 +21,7 @@ interface DbProje {
   end_date: string;
   review_date: string | null;
   parent_proje_id: string | null;
+  location_id: string | null;
   created_by: string | null;
   created_at: string;
   updated_at: string;
@@ -74,6 +75,7 @@ function dbToProje(row: DbProje, tags: string[] = [], participants: string[] = [
     endDate: row.end_date,
     reviewDate: row.review_date ?? undefined,
     tags,
+    locationId: row.location_id ?? undefined,
     parentObjectiveId: row.parent_proje_id ?? undefined,
     createdBy: row.created_by ?? undefined,
     createdAt: row.created_at,
@@ -96,6 +98,10 @@ function projeToDb(data: Partial<Proje>): Record<string, unknown> {
   if (data.endDate !== undefined) map.end_date = data.endDate;
   if (data.reviewDate !== undefined) map.review_date = data.reviewDate;
   if (data.parentObjectiveId !== undefined) map.parent_proje_id = data.parentObjectiveId;
+  // Lokasyon opsiyonel: boş string → NULL. Form "seçim yok" durumunu "" ile
+  // temsil ediyor, ama location_id bir UUID FK — "" gönderilirse 22P02
+  // (invalid input syntax for uuid) alırız.
+  if (data.locationId !== undefined) map.location_id = data.locationId || null;
   if (data.completedAt !== undefined) map.completed_at = data.completedAt;
   // Audit columns — createdAt/updatedAt mirror local timestamps so a
   // fetch-after-write shows the same value the user has in memory.

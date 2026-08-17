@@ -14,6 +14,7 @@ import { progressColor, statusColor } from "@/lib/colorUtils";
 import { formatDate } from "@/lib/dateUtils";
 import type { Proje, Aksiyon } from "@/types";
 import { deptLabel } from "@/config/departments";
+import { resolveLocationLabel } from "@/lib/locations";
 
 type DetailMode = "detail" | "editing" | "addAksiyon" | "aksiyonDetail";
 
@@ -45,12 +46,14 @@ export default function ProjeDetail({
   const sidebarTheme = useSidebarTheme();
   const { canEditProje, canCreateAksiyon } = usePermissions();
   const projeler = useDataStore((s) => s.projeler);
+  const locations = useDataStore((s) => s.locations);
   const getAksiyonlarByProjeId = useDataStore((s) => s.getAksiyonlarByProjeId);
   const getProjeById = useDataStore((s) => s.getProjeById);
   const getAksiyonById = useDataStore((s) => s.getAksiyonById);
   const aksiyonlar = getAksiyonlarByProjeId(proje.id);
 
   const currentProje = getProjeById(proje.id) ?? proje;
+  const locationLabel = resolveLocationLabel(currentProje.locationId, locations);
 
   const parentProje = currentProje.parentObjectiveId
     ? getProjeById(currentProje.parentObjectiveId)
@@ -278,7 +281,11 @@ export default function ProjeDetail({
             <span className="text-[11px] font-medium uppercase tracking-wider text-tyro-text-muted block mb-0.5">{t("common.controlDate")}</span>
             <p className="text-[12px] font-medium text-tyro-text-primary">{currentProje.reviewDate ? formatDate(currentProje.reviewDate) : "-"}</p>
           </div>
-          <div className="px-3 py-2" />
+          {/* Lokasyon — opsiyonel; tanımlı değilse "-" */}
+          <div className="px-3 py-2">
+            <span className="text-[11px] font-medium uppercase tracking-wider text-tyro-text-muted block mb-0.5">{t("common.location")}</span>
+            <p className="text-[12px] font-medium text-tyro-text-primary truncate">{locationLabel || "-"}</p>
+          </div>
         </div>
         {/* Oluşturan + Oluşturulma */}
         <div className="grid grid-cols-2 divide-x divide-tyro-border/20">
