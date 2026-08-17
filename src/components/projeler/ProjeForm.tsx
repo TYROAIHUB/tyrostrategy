@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { useForm, Controller } from "react-hook-form";
+import type { Control, FieldValues, FieldErrors } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button, Input, Textarea, Select, SelectItem, DatePicker, Autocomplete, AutocompleteItem } from "@heroui/react";
@@ -13,6 +14,10 @@ import { useUIStore } from "@/stores/uiStore";
 import { getStatusOptions, getSourceOptions } from "@/lib/constants";
 import { deptLabel, canonicalDeptKey } from "@/config/departments";
 import { formatLocationLabel, resolveLocationLabel } from "@/lib/locations";
+import { parseCapexInput, formatCapex } from "@/lib/money";
+import { assetClassLabel, actionTypeLabel } from "@/config/projectTaxonomy";
+import ProjeInvestmentFields from "@/components/projeler/ProjeInvestmentFields";
+import type { AssetClass, ProjectActionType } from "@/types";
 import { DEFAULT_TAG_COLOR } from "@/config/tagColors";
 import TagChip from "@/components/ui/TagChip";
 import StatusBadge from "@/components/ui/StatusBadge";
@@ -33,6 +38,17 @@ const createProjeSchema = (t: TFunction) =>
     tags: z.array(z.string()).default([]),
     // Lokasyon opsiyonel — "" = seçim yok. Submit'te undefined'a çevrilir.
     locationId: z.string().optional().default(""),
+    // CAPEX string tutulur ("1.250.000" gibi ayırıcılı girdi kabul edilsin),
+    // submit'te parseCapexInput ile number'a çevrilir. Boş = girilmemiş.
+    capexUsd: z
+      .string()
+      .optional()
+      .default("")
+      .refine((v) => !v.trim() || parseCapexInput(v) !== null, {
+        message: t("forms.objective.capexInvalid"),
+      }),
+    assetClass: z.string().optional().default(""),
+    actionType: z.string().optional().default(""),
     parentObjectiveId: z.string().optional(),
     startDate: z.string().min(1, t("validation.startDateRequired")),
     endDate: z.string().min(1, t("validation.endDateRequired")),
@@ -53,7 +69,7 @@ interface ProjeFormProps {
 }
 
 export default function ProjeForm({ proje, onSuccess, onClose }: ProjeFormProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const addProje = useDataStore((s) => s.addProje);
   const updateProje = useDataStore((s) => s.updateProje);
   const projeler = useDataStore((s) => s.projeler);
@@ -134,6 +150,9 @@ export default function ProjeForm({ proje, onSuccess, onClose }: ProjeFormProps)
       progress: proje?.progress ?? 0,
       tags: proje?.tags ?? [],
       locationId: proje?.locationId ?? "",
+      capexUsd: proje?.capexUsd !== undefined && proje?.capexUsd !== null ? String(proje.capexUsd) : "",
+      assetClass: proje?.assetClass ?? "",
+      actionType: proje?.actionType ?? "",
       parentObjectiveId: proje?.parentObjectiveId ?? "",
       startDate: proje?.startDate ?? "",
       endDate: proje?.endDate ?? "",
@@ -152,6 +171,11 @@ export default function ProjeForm({ proje, onSuccess, onClose }: ProjeFormProps)
         tags: data.tags.length > 0 ? data.tags : undefined,
         // "" → undefined: lokasyon zorunlu değil, boş seçim NULL olarak gitmeli
         locationId: data.locationId || undefined,
+        // CAPEX: string → number. Boş/geçersiz → undefined (NULL).
+        // 0 geçerli bir tutar, `|| undefined` ile düşürmüyoruz.
+        capexUsd: parseCapexInput(data.capexUsd) ?? undefined,
+        assetClass: (data.assetClass || undefined) as AssetClass | undefined,
+        actionType: (data.actionType || undefined) as ProjectActionType | undefined,
         parentObjectiveId: data.parentObjectiveId || undefined,
       };
       if (proje) {
@@ -167,6 +191,24 @@ export default function ProjeForm({ proje, onSuccess, onClose }: ProjeFormProps)
           details.push({
             label: t("common.location"),
             value: resolveLocationLabel(data.locationId, locations) || "—",
+          });
+        }
+        if ((payload.capexUsd ?? null) !== (proje.capexUsd ?? null)) {
+          details.push({
+            label: t("common.capex"),
+            value: formatCapex(payload.capexUsd, i18n.language) || "—",
+          });
+        }
+        if ((data.assetClass || "") !== (proje.assetClass || "")) {
+          details.push({
+            label: t("common.assetClass"),
+            value: assetClassLabel(data.assetClass, t) || "—",
+          });
+        }
+        if ((data.actionType || "") !== (proje.actionType || "")) {
+          details.push({
+            label: t("common.actionType"),
+            value: actionTypeLabel(data.actionType, t) || "—",
           });
         }
         if (data.startDate !== proje.startDate) details.push({ label: t("common.startDate"), value: data.startDate });
@@ -199,8 +241,17 @@ export default function ProjeForm({ proje, onSuccess, onClose }: ProjeFormProps)
             { label: t("common.owner"), value: data.owner },
             { label: t("common.source"), value: data.source },
             { label: t("common.department"), value: deptLabel(data.department, t) },
-            // Lokasyon opsiyonel — seçilmediyse toast'ı boş satırla şişirmiyoruz
+            // Opsiyonel alanlar — girilmediyse toast'ı boş satırla şişirmiyoruz
             ...(createdLocation ? [{ label: t("common.location"), value: createdLocation }] : []),
+            ...(payload.capexUsd !== undefined
+              ? [{ label: t("common.capex"), value: formatCapex(payload.capexUsd, i18n.language) }]
+              : []),
+            ...(data.assetClass
+              ? [{ label: t("common.assetClass"), value: assetClassLabel(data.assetClass, t) }]
+              : []),
+            ...(data.actionType
+              ? [{ label: t("common.actionType"), value: actionTypeLabel(data.actionType, t) }]
+              : []),
             { label: t("common.dateRange", "Tarih"), value: `${data.startDate} → ${data.endDate}` },
           ],
         });
@@ -451,6 +502,14 @@ export default function ProjeForm({ proje, onSuccess, onClose }: ProjeFormProps)
             )}
           </div>
         )}
+      />
+
+      {/* Yatırım alanları — CAPEX + varlık sınıfı + yatırım tipi (hepsi opsiyonel) */}
+      {/* Control<T> invariant olduğu için açık cast — alan isimleri iki
+          şemada da aynı, runtime davranışı değişmiyor. */}
+      <ProjeInvestmentFields
+        control={control as unknown as Control<FieldValues>}
+        errors={errors as unknown as FieldErrors<FieldValues>}
       />
 
 

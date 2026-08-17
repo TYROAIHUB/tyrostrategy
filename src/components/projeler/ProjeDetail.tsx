@@ -15,6 +15,8 @@ import { formatDate } from "@/lib/dateUtils";
 import type { Proje, Aksiyon } from "@/types";
 import { deptLabel } from "@/config/departments";
 import { resolveLocationLabel } from "@/lib/locations";
+import { formatCapex } from "@/lib/money";
+import { assetClassLabel, actionTypeLabel } from "@/config/projectTaxonomy";
 
 type DetailMode = "detail" | "editing" | "addAksiyon" | "aksiyonDetail";
 
@@ -35,7 +37,7 @@ export default function ProjeDetail({
   onClose,
   initialMode = "detail",
 }: ProjeDetailProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [mode, _setMode] = useState<DetailMode>(initialMode);
   const [selectedAksiyon, setSelectedAksiyon] = useState<Aksiyon | null>(null);
   const [relationsOpen, setRelationsOpen] = useState(false);
@@ -54,6 +56,9 @@ export default function ProjeDetail({
 
   const currentProje = getProjeById(proje.id) ?? proje;
   const locationLabel = resolveLocationLabel(currentProje.locationId, locations);
+  const capexLabel = formatCapex(currentProje.capexUsd, i18n.language);
+  const assetLabel = assetClassLabel(currentProje.assetClass, t);
+  const actionLabel = actionTypeLabel(currentProje.actionType, t);
 
   const parentProje = currentProje.parentObjectiveId
     ? getProjeById(currentProje.parentObjectiveId)
@@ -286,6 +291,25 @@ export default function ProjeDetail({
             <span className="text-[11px] font-medium uppercase tracking-wider text-tyro-text-muted block mb-0.5">{t("common.location")}</span>
             <p className="text-[12px] font-medium text-tyro-text-primary truncate">{locationLabel || "-"}</p>
           </div>
+        </div>
+        {/* CAPEX + Varlık sınıfı — yatırım alanları, opsiyonel */}
+        <div className="grid grid-cols-2 divide-x divide-tyro-border/20">
+          <div className="px-3 py-2">
+            <span className="text-[11px] font-medium uppercase tracking-wider text-tyro-text-muted block mb-0.5">{t("common.capex")}</span>
+            <p className="text-[12px] font-medium text-tyro-text-primary tabular-nums">{capexLabel || "-"}</p>
+          </div>
+          <div className="px-3 py-2">
+            <span className="text-[11px] font-medium uppercase tracking-wider text-tyro-text-muted block mb-0.5">{t("common.assetClass")}</span>
+            <p className="text-[12px] font-medium text-tyro-text-primary truncate" title={assetLabel || undefined}>{assetLabel || "-"}</p>
+          </div>
+        </div>
+        {/* Yatırım tipi */}
+        <div className="grid grid-cols-2 divide-x divide-tyro-border/20">
+          <div className="px-3 py-2">
+            <span className="text-[11px] font-medium uppercase tracking-wider text-tyro-text-muted block mb-0.5">{t("common.actionType")}</span>
+            <p className="text-[12px] font-medium text-tyro-text-primary truncate" title={actionLabel || undefined}>{actionLabel || "-"}</p>
+          </div>
+          <div className="px-3 py-2" />
         </div>
         {/* Oluşturan + Oluşturulma */}
         <div className="grid grid-cols-2 divide-x divide-tyro-border/20">

@@ -11,6 +11,8 @@ import { useDataStore, waitForPendingSync } from "@/stores/dataStore";
 import { usePermissions } from "@/hooks/usePermissions";
 import { toast } from "@/stores/toastStore";
 import { useSidebarTheme } from "@/hooks/useSidebarTheme";
+import { parseCapexInput } from "@/lib/money";
+import type { AssetClass, ProjectActionType } from "@/types";
 import WizardStepper from "./WizardStepper";
 import WizardSuccess from "./WizardSuccess";
 import StepProjeBasics from "./steps/StepProjeBasics";
@@ -28,6 +30,16 @@ const createWizardSchema = (t: TFunction) =>
     department: z.string().default(""),
     // Lokasyon opsiyonel — "" = seçim yok, addProje'de undefined'a çevrilir
     locationId: z.string().optional().default(""),
+    // CAPEX string tutulur, addProje'de parseCapexInput ile number'a döner
+    capexUsd: z
+      .string()
+      .optional()
+      .default("")
+      .refine((v) => !v.trim() || parseCapexInput(v) !== null, {
+        message: t("forms.objective.capexInvalid"),
+      }),
+    assetClass: z.string().optional().default(""),
+    actionType: z.string().optional().default(""),
     owner: z.string().min(1, t("validation.ownerRequired")),
     participants: z.array(z.string()).default([]),
     parentObjectiveId: z.string().optional().default(""),
@@ -121,6 +133,9 @@ export default function ProjeAksiyonWizard({ onClose }: Props) {
       source: "Türkiye",
       department: "",
       locationId: "",
+      capexUsd: "",
+      assetClass: "",
+      actionType: "",
       owner: localStorage.getItem("tyro-mock-user") || "Demo User",
       participants: [],
       parentObjectiveId: "",
@@ -196,8 +211,11 @@ export default function ProjeAksiyonWizard({ onClose }: Props) {
           description: data.description || undefined,
           source: data.source,
           department: data.department,
-          // "" → undefined: lokasyon zorunlu değil, boşsa NULL gitmeli
+          // "" → undefined: opsiyonel alanlar, boşsa NULL gitmeli
           locationId: data.locationId || undefined,
+          capexUsd: parseCapexInput(data.capexUsd) ?? undefined,
+          assetClass: (data.assetClass || undefined) as AssetClass | undefined,
+          actionType: (data.actionType || undefined) as ProjectActionType | undefined,
           owner: data.owner,
           participants: data.participants,
           parentObjectiveId: data.parentObjectiveId || undefined,

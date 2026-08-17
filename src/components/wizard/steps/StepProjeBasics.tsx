@@ -1,10 +1,11 @@
 import { useMemo } from "react";
-import { Controller, type Control, type FieldErrors } from "react-hook-form";
+import { Controller, type Control, type FieldErrors, type FieldValues } from "react-hook-form";
 import { Input, Textarea, Select, SelectItem } from "@heroui/react";
 import { useTranslation } from "react-i18next";
 import { getSourceOptions } from "@/lib/constants";
 import { canonicalDeptKey } from "@/config/departments";
 import { formatLocationLabel } from "@/lib/locations";
+import ProjeInvestmentFields from "@/components/projeler/ProjeInvestmentFields";
 import { useDataStore } from "@/stores/dataStore";
 interface Props {
   control: Control<any>;
@@ -185,6 +186,13 @@ export default function StepProjeBasics({ control, errors }: Props) {
             )}
           </div>
         )}
+      />
+
+      {/* Yatırım alanları — ProjeForm ile aynı bileşen, aynı davranış */}
+      <ProjeInvestmentFields
+        control={control as unknown as Control<FieldValues>}
+        errors={errors as unknown as FieldErrors<FieldValues>}
+        labelClassName="block text-[12px] font-semibold text-tyro-text-secondary mb-1.5"
       />
     </div>
   );

@@ -4,7 +4,7 @@ import { Input, Button, Tooltip, Popover, PopoverTrigger, PopoverContent, DatePi
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Search, Filter, X, ChevronDown, ArrowLeft, ArrowUpDown, Plus, Pencil, Trash2, Wand2, MoreVertical,
-  Target, Crosshair, CircleCheckBig, Calendar, CalendarCheck, Users, Building2, Globe, Clock, Check, MapPin,
+  Target, Crosshair, CircleCheckBig, Calendar, CalendarCheck, Users, Building2, Globe, Clock, Check, MapPin, Banknote, Boxes, Hammer,
 } from "lucide-react";
 import { useDataStore } from "@/stores/dataStore";
 import { usePermissions } from "@/hooks/usePermissions";
@@ -20,6 +20,8 @@ import { progressColor } from "@/lib/colorUtils";
 import { formatDate } from "@/lib/dateUtils";
 import { deptLabel } from "@/config/departments";
 import { resolveLocationLabel } from "@/lib/locations";
+import { formatCapex } from "@/lib/money";
+import { assetClassLabel, actionTypeLabel } from "@/config/projectTaxonomy";
 import { toCalendarDate, fromCalendarDate } from "@/lib/utils";
 import { STATUS_DOT_COLOR, getStatusLabel } from "@/lib/constants";
 import { toast } from "@/stores/toastStore";
@@ -267,10 +269,13 @@ function DetailPanel({
   onDeleteProje?: () => void;
   parentProje?: Proje;
 }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { canEditAksiyon } = usePermissions();
   const locations = useDataStore((s) => s.locations);
   const locationLabel = resolveLocationLabel(proje.locationId, locations);
+  const capexLabel = formatCapex(proje.capexUsd, i18n.language);
+  const assetLabel = assetClassLabel(proje.assetClass, t);
+  const actionLabel = actionTypeLabel(proje.actionType, t);
   const [reviewPopoverOpen, setReviewPopoverOpen] = useState(false);
   const todayStr = new Date().toISOString().slice(0, 10);
   const [reviewDateDraft, setReviewDateDraft] = useState(todayStr);
@@ -470,6 +475,12 @@ function DetailPanel({
                 <span className="text-[11px] font-medium text-tyro-text-primary truncate">
                   {locationLabel || "—"}
                 </span>
+              </div>
+              {/* Row 2c: Yatırım alanları — CAPEX / varlık sınıfı / yatırım tipi */}
+              <div className="border-t border-tyro-border/15 grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-tyro-border/40">
+                <InfoCell icon={<Banknote size={12} />} label={t("common.capex")} value={capexLabel || "—"} />
+                <InfoCell icon={<Boxes size={12} />} label={t("common.assetClass")} value={assetLabel || "—"} />
+                <InfoCell icon={<Hammer size={12} />} label={t("common.actionType")} value={actionLabel || "—"} />
               </div>
               {/* Row 3: Proje ID + Açıklama
                    Empty descriptions fall back to an italic placeholder

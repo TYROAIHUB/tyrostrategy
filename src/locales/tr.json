@@ -105,7 +105,10 @@
     "closeFilters": "Filtreleri kapat",
     "searchLabel": "Ara",
     "noRecordsFound": "Kayıt bulunamadı",
-    "tryChangingCriteria": "Arama kriterlerinizi değiştirmeyi deneyiniz."
+    "tryChangingCriteria": "Arama kriterlerinizi değiştirmeyi deneyiniz.",
+    "capex": "CAPEX",
+    "assetClass": "Varlık sınıfı",
+    "actionType": "Yatırım tipi"
   },
   "roles": {
     "admin": "Admin",
@@ -213,7 +216,16 @@
       "editTitle": "Proje Düzenleme",
       "sectionTitle": "Proje Bilgileri",
       "tags": "Etiketler",
-      "tagsPlaceholder": "Etiket yazın veya seçin..."
+      "tagsPlaceholder": "Etiket yazın veya seçin...",
+      "capex": "CAPEX (USD)",
+      "capexPlaceholder": "USD tutarı giriniz",
+      "capexInvalid": "Geçerli bir tutar giriniz",
+      "assetClass": "Varlık sınıfı",
+      "assetClassPlaceholder": "Varlık sınıfı seçiniz",
+      "assetClassClear": "Varlık sınıfı seçimini temizle",
+      "actionType": "Yatırım tipi",
+      "actionTypePlaceholder": "Yatırım tipi seçiniz",
+      "actionTypeClear": "Yatırım tipi seçimini temizle"
     },
     "action": {
       "name": "Aksiyon Adı",
@@ -389,7 +401,7 @@
     "title": "KPI Dashboard",
     "overallProgress": "Genel İlerleme",
     "tagDistribution": "Olgunlaşma Seviyesi Dağılımı",
-    "tagDistributionDesc": "Olgunlaşma seviyesine göre proje dağılımı",
+    "tagDistributionDesc": "Projelerin olgunlaşma seviyesi etiketlerine göre dağılımı",
     "sourceDistribution": "İş Kolu Bazlı Aksiyon Dağılımı",
     "sourceSubtitle": "Türkiye, Kurumsal ve International operasyonları",
     "completed": "Tamamlanan",
@@ -437,8 +449,6 @@
       "source": "İş Kolu"
     },
     "expandDeptBreakdown": "Departman kırılımını göster",
-    "tagDistribution": "Olgunlaşma Seviyesi Dağılımı",
-    "tagDistributionDesc": "Projelerin olgunlaşma seviyesi etiketlerine göre dağılımı",
     "advancedFilter": "Gelişmiş Filtre",
     "dateRange": "Tarih Aralığı",
     "start": "Başlangıç",
@@ -1128,5 +1138,20 @@
       "departmentTitle": "Departman seçenekleri",
       "departmentDesc": "Proje oluşturma ve düzenleme ekranlarındaki departman dropdown'ı, mevcut projelerde fiilen kullanılan departmanlardan otomatik türetilir. Hiçbir projede kullanılmayan tanımlar listede görünmez. Bu hem yeni proje sihirbazında hem de düzenleme formunda birebir aynı listeyi sağlar."
     }
+  },
+  "assetClass": {
+    "AST-PROC": "Üretim ve İşleme Tesisleri",
+    "AST-PORT": "Liman ve Deniz Altyapısı",
+    "AST-STOR": "Depolama ve Lojistik Tesisleri",
+    "AST-ADMIN": "İdari ve Sosyal Yapılar",
+    "AST-UTIL": "Yardımcı Tesisler, HSE ve Teknik Sistemler",
+    "AST-CIVIL": "Saha ve İnşaat Altyapısı"
+  },
+  "actionType": {
+    "ACT-NEW": "Yeni Yapım / Yeni Kurulum",
+    "ACT-EXP": "Genişleme / Kapasite Artışı",
+    "ACT-UPG": "Modernizasyon / Entegrasyon",
+    "ACT-SUS": "İdame / Yenileme / Büyük Bakım",
+    "ACT-REL": "Taşıma / Yeniden Konumlandırma"
   }
 }

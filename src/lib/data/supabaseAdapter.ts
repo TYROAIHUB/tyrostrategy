@@ -22,6 +22,9 @@ interface DbProje {
   review_date: string | null;
   parent_proje_id: string | null;
   location_id: string | null;
+  capex_usd: string | number | null;
+  asset_class: string | null;
+  action_type: string | null;
   created_by: string | null;
   created_at: string;
   updated_at: string;
@@ -76,6 +79,13 @@ function dbToProje(row: DbProje, tags: string[] = [], participants: string[] = [
     reviewDate: row.review_date ?? undefined,
     tags,
     locationId: row.location_id ?? undefined,
+    // NUMERIC PostgREST'ten string olarak gelir ("1250000.00") — Number'a
+    // çeviriyoruz ki UI'da aritmetik (toplam CAPEX) yapılabilsin.
+    capexUsd: row.capex_usd === null || row.capex_usd === undefined
+      ? undefined
+      : Number(row.capex_usd),
+    assetClass: (row.asset_class as Proje["assetClass"]) ?? undefined,
+    actionType: (row.action_type as Proje["actionType"]) ?? undefined,
     parentObjectiveId: row.parent_proje_id ?? undefined,
     createdBy: row.created_by ?? undefined,
     createdAt: row.created_at,
@@ -102,6 +112,14 @@ function projeToDb(data: Partial<Proje>): Record<string, unknown> {
   // temsil ediyor, ama location_id bir UUID FK — "" gönderilirse 22P02
   // (invalid input syntax for uuid) alırız.
   if (data.locationId !== undefined) map.location_id = data.locationId || null;
+  // CAPEX opsiyonel: undefined/NaN → NULL. 0 geçerli bir tutar, düşürmüyoruz.
+  if (data.capexUsd !== undefined) {
+    map.capex_usd =
+      data.capexUsd === null || !Number.isFinite(data.capexUsd) ? null : data.capexUsd;
+  }
+  // Taksonomi opsiyonel: boş string → NULL (DB CHECK'i "" kabul etmez)
+  if (data.assetClass !== undefined) map.asset_class = data.assetClass || null;
+  if (data.actionType !== undefined) map.action_type = data.actionType || null;
   if (data.completedAt !== undefined) map.completed_at = data.completedAt;
   // Audit columns — createdAt/updatedAt mirror local timestamps so a
   // fetch-after-write shows the same value the user has in memory.

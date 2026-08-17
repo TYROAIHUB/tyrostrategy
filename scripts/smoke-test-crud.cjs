@@ -813,6 +813,97 @@ async function api(method, path, body) {
     return "204";
   });
 
+  // ── CAPEX + taksonomi (migration 033) ──
+  // Üçü de opsiyonel; asset_class / action_type CHECK ile sabit listeye
+  // kilitli (dropdown bypass edilse bile bozuk kod giremez).
+  console.log("\nCAPEX + TAXONOMY (migration 033):");
+  const TAX_PROJE_ID = "P26-9993";
+  await fetch(URL + `/projeler?id=eq.${TAX_PROJE_ID}`, { method: "DELETE", headers });
+
+  await step("INSERT proje with capex + asset_class + action_type", async () => {
+    const r = await api("POST", "/projeler", {
+      id: TAX_PROJE_ID,
+      name: "SMOKE_CAPEX_TAXONOMY_DELETE_ME",
+      source: "Türkiye",
+      status: "Not Started",
+      owner: "Cenk Şayli",
+      department: "Stratejik Planlama",
+      progress: 0,
+      start_date: "2026-05-04",
+      end_date: "2026-05-05",
+      capex_usd: 1250000.5,
+      asset_class: "AST-PROC",
+      action_type: "ACT-NEW",
+    });
+    if (Number(r[0].capex_usd) !== 1250000.5) throw new Error(`capex mismatch: ${r[0].capex_usd}`);
+    if (r[0].asset_class !== "AST-PROC") throw new Error(`asset mismatch: ${r[0].asset_class}`);
+    if (r[0].action_type !== "ACT-NEW") throw new Error(`action mismatch: ${r[0].action_type}`);
+    return `capex=${r[0].capex_usd} ${r[0].asset_class}/${r[0].action_type}`;
+  });
+
+  await step("capex/taxonomy NULL bırakılabilir (opsiyonel)", async () => {
+    const r = await api("PATCH", `/projeler?id=eq.${TAX_PROJE_ID}`, {
+      capex_usd: null, asset_class: null, action_type: null,
+    });
+    if (r[0].capex_usd !== null || r[0].asset_class !== null || r[0].action_type !== null) {
+      throw new Error("NULL'a çekilemedi");
+    }
+    return "hepsi null";
+  });
+
+  await step("negatif capex reddedilir (CHECK)", async () => {
+    let rejected = false;
+    try {
+      await api("PATCH", `/projeler?id=eq.${TAX_PROJE_ID}`, { capex_usd: -1 });
+    } catch (e) {
+      if (e.message.includes("violates check constraint") || e.message.includes("23514")) rejected = true;
+      else throw new Error(`wrong error: ${e.message}`);
+    }
+    if (!rejected) throw new Error("negatif capex ACCEPTED");
+    return "rejected (23514)";
+  });
+
+  await step("geçersiz asset_class reddedilir (CHECK)", async () => {
+    let rejected = false;
+    try {
+      await api("PATCH", `/projeler?id=eq.${TAX_PROJE_ID}`, { asset_class: "AST-BILINMEYEN" });
+    } catch (e) {
+      if (e.message.includes("violates check constraint") || e.message.includes("23514")) rejected = true;
+      else throw new Error(`wrong error: ${e.message}`);
+    }
+    if (!rejected) throw new Error("geçersiz asset_class ACCEPTED");
+    return "rejected (23514)";
+  });
+
+  await step("geçersiz action_type reddedilir (CHECK)", async () => {
+    let rejected = false;
+    try {
+      await api("PATCH", `/projeler?id=eq.${TAX_PROJE_ID}`, { action_type: "ACT-XYZ" });
+    } catch (e) {
+      if (e.message.includes("violates check constraint") || e.message.includes("23514")) rejected = true;
+      else throw new Error(`wrong error: ${e.message}`);
+    }
+    if (!rejected) throw new Error("geçersiz action_type ACCEPTED");
+    return "rejected (23514)";
+  });
+
+  await step("tüm 6 asset_class + 5 action_type kodu kabul edilir", async () => {
+    const assets = ["AST-PROC", "AST-PORT", "AST-STOR", "AST-ADMIN", "AST-UTIL", "AST-CIVIL"];
+    const actions = ["ACT-NEW", "ACT-EXP", "ACT-UPG", "ACT-SUS", "ACT-REL"];
+    for (const a of assets) {
+      await api("PATCH", `/projeler?id=eq.${TAX_PROJE_ID}`, { asset_class: a });
+    }
+    for (const a of actions) {
+      await api("PATCH", `/projeler?id=eq.${TAX_PROJE_ID}`, { action_type: a });
+    }
+    return `${assets.length} asset + ${actions.length} action OK`;
+  });
+
+  await step("cleanup capex/taxonomy test proje", async () => {
+    await api("DELETE", `/projeler?id=eq.${TAX_PROJE_ID}`);
+    return "204";
+  });
+
   // ── Verify cleanup ──
   console.log("\nVERIFY CLEANUP:");
   await step("location gone", async () => {

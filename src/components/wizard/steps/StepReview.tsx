@@ -1,11 +1,13 @@
 import { useWatch, type Control } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import { Target, User, Calendar, Users, MapPin, MapPinned, FolderTree } from "lucide-react";
+import { Target, User, Calendar, Users, MapPin, MapPinned, FolderTree, Banknote, Boxes, Hammer } from "lucide-react";
 import { useDataStore } from "@/stores/dataStore";
 import { useSidebarTheme } from "@/hooks/useSidebarTheme";
 import type { WizardFormData } from "../ProjeAksiyonWizard";
 import { deptLabel } from "@/config/departments";
 import { resolveLocationLabel } from "@/lib/locations";
+import { formatCapex, parseCapexInput } from "@/lib/money";
+import { assetClassLabel, actionTypeLabel } from "@/config/projectTaxonomy";
 
 interface AksiyonEntry {
   name: string;
@@ -27,7 +29,7 @@ function formatDate(d: string): string {
 }
 
 export default function StepReview({ control }: Props) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const sidebarTheme = useSidebarTheme();
   const data = useWatch({ control });
   const projeler = useDataStore((s) => s.projeler);
@@ -86,6 +88,21 @@ export default function StepReview({ control }: Props) {
             <div className="flex items-center gap-1.5 text-tyro-text-secondary">
               <MapPinned size={12} />
               <span>{locationLabel || "—"}</span>
+            </div>
+            {/* Yatırım alanları — opsiyonel */}
+            <div className="flex items-center gap-1.5 text-tyro-text-secondary">
+              <Banknote size={12} />
+              <span className="tabular-nums">
+                {formatCapex(parseCapexInput(data.capexUsd ?? ""), i18n.language) || "—"}
+              </span>
+            </div>
+            <div className="flex items-center gap-1.5 text-tyro-text-secondary">
+              <Boxes size={12} />
+              <span className="truncate">{assetClassLabel(data.assetClass, t) || "—"}</span>
+            </div>
+            <div className="flex items-center gap-1.5 text-tyro-text-secondary">
+              <Hammer size={12} />
+              <span className="truncate">{actionTypeLabel(data.actionType, t) || "—"}</span>
             </div>
           </div>
 

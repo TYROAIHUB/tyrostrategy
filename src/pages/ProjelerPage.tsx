@@ -25,6 +25,8 @@ import EmptyState from "@/components/shared/EmptyState";
 import { toast } from "@/stores/toastStore";
 import { STATUS_DOT_COLOR, getStatusLabel } from "@/lib/constants";
 import { resolveLocationLabel } from "@/lib/locations";
+import { formatCapex, formatCapexCompact } from "@/lib/money";
+import { assetClassLabel, actionTypeLabel } from "@/config/projectTaxonomy";
 import type { Proje } from "@/types";
 
 type ViewTab = "list" | "kanban";
@@ -38,10 +40,10 @@ function formatDate(dateStr: string): string {
   }
 }
 
-const INITIAL_VISIBLE = new Set(["name", "owner", "source", "location", "tags", "status", "startDate", "endDate", "reviewDate", "aksiyonCount", "actions"]);
+const INITIAL_VISIBLE = new Set(["name", "owner", "source", "location", "capex", "assetClass", "actionType", "tags", "status", "startDate", "endDate", "reviewDate", "aksiyonCount", "actions"]);
 
 export default function ProjelerPage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const sidebarTheme = useSidebarTheme();
 
   const columns = [
@@ -50,6 +52,9 @@ export default function ProjelerPage() {
     { uid: "owner", name: t("common.owner") },
     { uid: "source", name: t("common.source") },
     { uid: "location", name: t("common.location") },
+    { uid: "capex", name: t("common.capex") },
+    { uid: "assetClass", name: t("common.assetClass") },
+    { uid: "actionType", name: t("common.actionType") },
     { uid: "tags", name: t("forms.objective.tags", "Etiketler") },
     { uid: "status", name: t("common.status") },
     { uid: "startDate", name: t("common.startDate") },
@@ -109,7 +114,7 @@ export default function ProjelerPage() {
     if (search.trim()) {
       const q = search.toLocaleLowerCase("tr");
       result = result.filter((h) => {
-        const searchStr = [h.name, h.description, h.source, h.status, h.owner, h.department, resolveLocationLabel(h.locationId, locations), formatDate(h.startDate), formatDate(h.endDate), ...(h.tags ?? []), ...(h.participants ?? []), String(aksiyonCountMap.get(h.id) ?? 0)].join(" ").toLocaleLowerCase("tr");
+        const searchStr = [h.name, h.description, h.source, h.status, h.owner, h.department, resolveLocationLabel(h.locationId, locations), formatCapex(h.capexUsd, i18n.language), h.assetClass ?? "", assetClassLabel(h.assetClass, t), h.actionType ?? "", actionTypeLabel(h.actionType, t), formatDate(h.startDate), formatDate(h.endDate), ...(h.tags ?? []), ...(h.participants ?? []), String(aksiyonCountMap.get(h.id) ?? 0)].join(" ").toLocaleLowerCase("tr");
         return searchStr.includes(q);
       });
     }
@@ -120,7 +125,7 @@ export default function ProjelerPage() {
       result = result.filter((h) => (h.tags ?? []).includes(tagFilter));
     }
     return result;
-  }, [projeler, search, statusFilter, tagFilter, aksiyonCountMap, filterProjeler, locations]);
+  }, [projeler, search, statusFilter, tagFilter, aksiyonCountMap, filterProjeler, locations, t, i18n.language]);
 
   // Sort
   const sorted = useMemo(() => {
@@ -185,6 +190,37 @@ export default function ProjelerPage() {
             {resolveLocationLabel(proje.locationId, locations) || "—"}
           </span>
         );
+      case "capex":
+        return (
+          <span className="text-[13px] text-tyro-text-secondary whitespace-nowrap tabular-nums" title={formatCapex(proje.capexUsd, i18n.language) || undefined}>
+            {formatCapexCompact(proje.capexUsd, i18n.language) || "—"}
+          </span>
+        );
+      case "assetClass": {
+        // Dar kolon: kod göster, tam adı tooltip'te ver
+        const full = assetClassLabel(proje.assetClass, t);
+        return full ? (
+          <Tooltip content={full} size="sm">
+            <span className="text-[12px] font-semibold text-tyro-text-secondary whitespace-nowrap tabular-nums cursor-default">
+              {proje.assetClass}
+            </span>
+          </Tooltip>
+        ) : (
+          <span className="text-[13px] text-tyro-text-muted">—</span>
+        );
+      }
+      case "actionType": {
+        const full = actionTypeLabel(proje.actionType, t);
+        return full ? (
+          <Tooltip content={full} size="sm">
+            <span className="text-[12px] font-semibold text-tyro-text-secondary whitespace-nowrap tabular-nums cursor-default">
+              {proje.actionType}
+            </span>
+          </Tooltip>
+        ) : (
+          <span className="text-[13px] text-tyro-text-muted">—</span>
+        );
+      }
       case "tags":
         return (
           <div className="flex flex-wrap gap-1 max-w-[200px]">
@@ -251,7 +287,7 @@ export default function ProjelerPage() {
       default:
         return null;
     }
-  }, [aksiyonCountMap, deleteProje, canEditProje, canDeleteProje, getProjeDeleteReason, locations, t]);
+  }, [aksiyonCountMap, deleteProje, canEditProje, canDeleteProje, getProjeDeleteReason, locations, t, i18n.language]);
 
   // Top content (only selection info + rows per page)
   const topContent = useMemo(() => (
@@ -459,7 +495,27 @@ export default function ProjelerPage() {
                       </span>
                     </>
                   )}
+                  {proje.capexUsd !== undefined && (
+                    <>
+                      <span>·</span>
+                      <span className="tabular-nums font-semibold">{formatCapexCompact(proje.capexUsd, i18n.language)}</span>
+                    </>
+                  )}
                 </div>
+                {(proje.assetClass || proje.actionType) && (
+                  <div className="flex flex-wrap items-center gap-1 mb-2">
+                    {proje.assetClass && (
+                      <span className="inline-flex items-center rounded-full bg-tyro-surface px-2 py-0.5 text-[11px] font-semibold text-tyro-text-secondary" title={assetClassLabel(proje.assetClass, t)}>
+                        {proje.assetClass}
+                      </span>
+                    )}
+                    {proje.actionType && (
+                      <span className="inline-flex items-center rounded-full bg-tyro-surface px-2 py-0.5 text-[11px] font-semibold text-tyro-text-secondary" title={actionTypeLabel(proje.actionType, t)}>
+                        {proje.actionType}
+                      </span>
+                    )}
+                  </div>
+                )}
                 <div className="flex items-center gap-2 pt-2 border-t border-tyro-border/20" onClick={(e) => e.stopPropagation()}>
                   {canEditProje(proje.id) && (
                   <button aria-label={t("common.edit")} onClick={() => openEdit(proje)} className="flex items-center gap-1.5 px-3 h-9 min-w-[44px] rounded-lg text-xs font-medium text-tyro-text-secondary bg-tyro-bg hover:bg-tyro-border/30 transition-colors">
@@ -554,10 +610,25 @@ export default function ProjelerPage() {
                     {resolveLocationLabel(h.locationId, locations)}
                   </span>
                 )}
+                {h.assetClass && (
+                  <span className="inline-flex items-center rounded-full bg-tyro-surface px-2 py-0.5 text-[11px] font-semibold text-tyro-text-secondary" title={assetClassLabel(h.assetClass, t)}>
+                    {h.assetClass}
+                  </span>
+                )}
+                {h.actionType && (
+                  <span className="inline-flex items-center rounded-full bg-tyro-surface px-2 py-0.5 text-[11px] font-semibold text-tyro-text-secondary" title={actionTypeLabel(h.actionType, t)}>
+                    {h.actionType}
+                  </span>
+                )}
               </div>
               <div className="mt-1.5 flex items-center justify-between text-xs text-tyro-text-muted">
-                <span>{h.owner}</span>
-                <span>{aksiyonCountMap.get(h.id) ?? 0} aksiyon</span>
+                <span className="truncate">{h.owner}</span>
+                <span className="flex items-center gap-2 shrink-0">
+                  {h.capexUsd !== undefined && (
+                    <span className="tabular-nums font-semibold">{formatCapexCompact(h.capexUsd, i18n.language)}</span>
+                  )}
+                  <span>{aksiyonCountMap.get(h.id) ?? 0} aksiyon</span>
+                </span>
               </div>
             </div>
           )}

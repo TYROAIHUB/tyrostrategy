@@ -105,7 +105,10 @@
     "closeFilters": "Close filters",
     "searchLabel": "Search",
     "noRecordsFound": "No records found",
-    "tryChangingCriteria": "Try changing your search criteria."
+    "tryChangingCriteria": "Try changing your search criteria.",
+    "capex": "CAPEX",
+    "assetClass": "Asset class",
+    "actionType": "Investment type"
   },
   "roles": {
     "admin": "Admin",
@@ -213,7 +216,16 @@
       "editTitle": "Edit Project",
       "sectionTitle": "Project Details",
       "tags": "Tags",
-      "tagsPlaceholder": "Type or select a tag..."
+      "tagsPlaceholder": "Type or select a tag...",
+      "capex": "CAPEX (USD)",
+      "capexPlaceholder": "Enter USD amount",
+      "capexInvalid": "Enter a valid amount",
+      "assetClass": "Asset class",
+      "assetClassPlaceholder": "Select asset class",
+      "assetClassClear": "Clear asset class",
+      "actionType": "Investment type",
+      "actionTypePlaceholder": "Select investment type",
+      "actionTypeClear": "Clear investment type"
     },
     "action": {
       "name": "Action Name",
@@ -388,8 +400,8 @@
   "dashboard": {
     "title": "KPI Dashboard",
     "overallProgress": "Overall Progress",
-    "tagDistribution": "Project Distribution by Tag",
-    "tagDistributionDesc": "Average progress per tag",
+    "tagDistribution": "Maturity Level Distribution",
+    "tagDistributionDesc": "Distribution of projects by maturity level tag",
     "sourceDistribution": "Action Distribution by Business Line",
     "sourceSubtitle": "Turkey, Corporate and International operations",
     "completed": "Completed",
@@ -437,8 +449,6 @@
       "source": "Business Line"
     },
     "expandDeptBreakdown": "Show department breakdown",
-    "tagDistribution": "Maturity Level Distribution",
-    "tagDistributionDesc": "Distribution of projects by maturity level tag",
     "advancedFilter": "Advanced Filter",
     "dateRange": "Date Range",
     "start": "Start",
@@ -1128,5 +1138,20 @@
       "organization": "Organization",
       "organizationValue": "Tiryaki Agro"
     }
+  },
+  "assetClass": {
+    "AST-PROC": "Processing & Manufacturing Facilities",
+    "AST-PORT": "Port & Marine Infrastructure",
+    "AST-STOR": "Storage & Logistics Facilities",
+    "AST-ADMIN": "Buildings & Administrative Facilities",
+    "AST-UTIL": "Utilities, HSE & Technical Systems",
+    "AST-CIVIL": "Civil & Site Infrastructure"
+  },
+  "actionType": {
+    "ACT-NEW": "New Build / New Installation",
+    "ACT-EXP": "Expansion / Capacity Increase",
+    "ACT-UPG": "Upgrade / Integration",
+    "ACT-SUS": "Sustaining / Asset Renewal",
+    "ACT-REL": "Relocation"
   }
 }

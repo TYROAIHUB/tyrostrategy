@@ -14,6 +14,7 @@ import { useDataStore } from "@/stores/dataStore";
 import TagChip from "@/components/ui/TagChip";
 import { statusColor } from "@/lib/colorUtils";
 import { resolveLocationLabel } from "@/lib/locations";
+import { formatCapexCompact } from "@/lib/money";
 import { getStatusLabel } from "@/lib/constants";
 import { formatDate } from "@/lib/dateUtils";
 import type { EntityStatus } from "@/types";
@@ -61,14 +62,17 @@ function StackedStatusBar({ items, getStatus }: { items: { status: string }[]; g
 
 /* ── Progress Card (compact) ── */
 function ProgressCard({ item, onClick, showParent }: {
-  item: { id: string; name: string; progress: number; status: EntityStatus; endDate: string; owner?: string; parentName?: string; aksiyonCount?: number; locationId?: string };
+  item: { id: string; name: string; progress: number; status: EntityStatus; endDate: string; owner?: string; parentName?: string; aksiyonCount?: number; locationId?: string; capexUsd?: number };
   onClick: () => void;
   showParent?: boolean;
 }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   // Lokasyon opsiyonel — tanımlı değilse satırı hiç basmıyoruz, kart dar
   const locations = useDataStore((s) => s.locations);
   const locationLabel = resolveLocationLabel(item.locationId, locations);
+  // CAPEX kompakt gösterim ("1,25 Mn USD") — kart üç satır, uzun metin sığmaz.
+  // Varlık sınıfı / yatırım tipi bu kompakt karta BİLEREK eklenmedi.
+  const capexLabel = formatCapexCompact(item.capexUsd, i18n.language);
   // Halka + yüzde yazısı statüye göre renklensin — "Yüksek Riskte" bir proje %63
   // ilerlemiş olsa bile kullanıcıya kırmızı görünsün. (progressColor hâlâ başka
   // yerlerde kullanılıyor — örn. aksiyon detayında gradient.)
@@ -115,6 +119,9 @@ function ProgressCard({ item, onClick, showParent }: {
           )}
           {item.aksiyonCount !== undefined && (
             <span className="text-[11px] text-tyro-text-muted">{t("workspace.actionsShort", { count: item.aksiyonCount })}</span>
+          )}
+          {capexLabel && (
+            <span className="text-[11px] font-semibold text-tyro-text-muted tabular-nums shrink-0">{capexLabel}</span>
           )}
           {locationLabel && (
             <span className="inline-flex items-center gap-0.5 text-[11px] text-tyro-text-muted truncate max-w-[120px]">

@@ -3,6 +3,27 @@
 export type EntityStatus = "On Track" | "Achieved" | "High Risk" | "At Risk" | "Not Started" | "Cancelled" | "On Hold";
 export type Source = "Türkiye" | "Kurumsal" | "International" | "LALE" | "Organik";
 export type ProjectStatus = "active" | "planned" | "completed" | "delayed";
+
+// ===== Yatırım portföyü taksonomisi (migration 033) =====
+// İki bağımsız eksen. Kodlar DB'de CHECK constraint ile de kilitli;
+// etiketler i18n'de (assetClass.* / actionType.*), liste
+// src/config/projectTaxonomy.ts'de.
+/** Varlık sınıfı — yatırımın fiziksel varlık türü */
+export type AssetClass =
+  | "AST-PROC"   // Üretim ve İşleme Tesisleri
+  | "AST-PORT"   // Liman ve Deniz Altyapısı
+  | "AST-STOR"   // Depolama ve Lojistik Tesisleri
+  | "AST-ADMIN"  // İdari ve Sosyal Yapılar
+  | "AST-UTIL"   // Yardımcı Tesisler, HSE ve Teknik Sistemler
+  | "AST-CIVIL"; // Saha ve İnşaat Altyapısı
+
+/** Yatırım tipi — yatırımın niteliği */
+export type ProjectActionType =
+  | "ACT-NEW"    // Yeni Yapım / Yeni Kurulum
+  | "ACT-EXP"    // Genişleme / Kapasite Artışı
+  | "ACT-UPG"    // Modernizasyon / Entegrasyon
+  | "ACT-SUS"    // İdame / Yenileme / Büyük Bakım
+  | "ACT-REL";   // Taşıma / Yeniden Konumlandırma
 export type Priority = "critical" | "high" | "medium" | "low";
 
 // ===== RBAC =====
@@ -58,6 +79,12 @@ export interface Proje {
    *  Zorunlu değil: undefined = lokasyon girilmemiş. Ayarlar > Lokasyon'da
    *  tanımlı ülke/şehir çiftlerinden seçilir. */
   locationId?: string;
+  /** Opsiyonel yatırım tutarı, USD (migration 033). undefined = girilmemiş. */
+  capexUsd?: number;
+  /** Opsiyonel varlık sınıfı (migration 033) — sabit seçim */
+  assetClass?: AssetClass;
+  /** Opsiyonel yatırım tipi (migration 033) — sabit seçim */
+  actionType?: ProjectActionType;
   parentObjectiveId?: string;  // Ana proje ID — null ise bağımsız/ana proje
   createdBy?: string;
   createdAt?: string;
