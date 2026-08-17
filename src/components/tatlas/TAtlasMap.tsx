@@ -32,7 +32,15 @@ import TAtlasPinPopup from "./TAtlasPinPopup";
  * bile yedeğe düşüyordu (kullanıcı raporu: "hâlâ sade altlık diyor" —
  * kardeş uygulamada aynı altlık aynı tarayıcıda sorunsuz açılıyordu).
  * Fetch probe'u gerçek koşulu ölçer: altlığa erişebiliyor muyuz?
+ *
+ * Probe TEK BAŞINA yetmiyor: style.json erişilebilir olup asıl vector tile'lar
+ * bloklanabiliyor (yaşandı — CARTO tile'ları tiles-a…tiles-d subdomain'lerine
+ * bölünmüş, CSP'de yalnızca style host'u açıktı). O durumda probe başarılı
+ * dönüyor ama harita BOŞ kalıyordu. Bu yüzden tile yükleme hatalarını da
+ * sayıyoruz: eşiği aşarsa yedeğe geçiyoruz. Böylece "boş harita" durumu
+ * yapısal olarak imkânsız.
  */
+const TILE_ERROR_THRESHOLD = 4;
 const WORLD_CENTER = { longitude: 32, latitude: 39, zoom: 2.4 };
 const FIT_PADDING = 72;
 const FIT_MAX_ZOOM = 6.5;
@@ -109,6 +117,8 @@ export default function TAtlasMap({ points, onOpenProje }: Props) {
 
   const mapRef = useRef<MapRef | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
+  /** Art arda gelen tile yükleme hatası sayısı — eşiği aşınca yedeğe geçilir */
+  const tileErrorCount = useRef(0);
 
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [selectedGroup, setSelectedGroup] = useState<PinGroup | null>(null);
@@ -231,14 +241,27 @@ export default function TAtlasMap({ points, onOpenProje }: Props) {
         minZoom={1.2}
         onError={(e) => {
           const msg = String((e as unknown as { error?: { message?: string } })?.error?.message ?? "");
-          // SADECE haritayı tamamen çalışmaz kılan hatalar yüzeye çıkar.
-          // Eksik glyph / sprite / iptal edilen tile gibi iyi huylu hatalar
-          // yalnızca konsola gider ve altlık DEĞİŞTİRMEZ — bunlar yüzünden
-          // yedeğe düşmek önceki sürümün hatasıydı.
+
+          // Haritayı tamamen çalışmaz kılan hatalar → kullanıcıya göster
           if (/webgl|context lost/i.test(msg)) {
             setMapError(msg);
             return;
           }
+
+          // Asıl tile'lar gelmiyorsa altlık boş kalır — eşiği aşınca yedeğe
+          // geç. Yalnızca vector tile isteklerini sayıyoruz; eksik sprite
+          // ikonu ya da glyph aralığı gibi iyi huylu hatalar buraya girmiyor.
+          if (/vectortiles|\.mvt/i.test(msg)) {
+            tileErrorCount.current += 1;
+            if (!useOfflineBasemap && tileErrorCount.current >= TILE_ERROR_THRESHOLD) {
+              console.warn(
+                `[T-Atlas] ${tileErrorCount.current} tile isteği başarısız, yedek altlığa geçiliyor`
+              );
+              setUseOfflineBasemap(true);
+            }
+            return;
+          }
+
           console.warn("[T-Atlas] map error (yok sayıldı):", msg);
         }}
         style={{ width: "100%", height: "100%" }}
