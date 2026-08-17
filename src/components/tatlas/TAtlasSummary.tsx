@@ -1,6 +1,5 @@
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { motion } from "framer-motion";
 import {
   Crosshair,
   Banknote,
@@ -13,7 +12,7 @@ import {
   PieChart,
   type LucideIcon,
 } from "lucide-react";
-import AnimatedCounter from "@/components/ui/AnimatedCounter";
+import KPICard from "@/components/dashboard/KPICard";
 import { statusColor } from "@/lib/colorUtils";
 import { getStatusLabel } from "@/lib/constants";
 import { formatCapex, formatCapexCompact } from "@/lib/money";
@@ -32,36 +31,40 @@ import type { EntityStatus } from "@/types";
  * Sayılar FİLTRELENMİŞ kümeden gelir; harita pin'leriyle aynı kaynak,
  * dolayısıyla "haritada görünen küme ile özetteki sayılar her zaman aynı".
  *
- * Görsel düzen notları (kullanıcı geri bildirimi: ilk sürüm yüzeyseldi —
- * hepsi aynı altın ikon, hizasız yazı, özensiz renk):
- *   • Her metriğin KENDİ rengi var; ikon o renkte tonlu bir çip içinde
- *   • Değer / etiket / not sabit bir dikey ritimde hizalı
- *   • Kırılım panelleri boyuta göre renk ayrımı yapıyor: adet panelleri
- *     kendi boyut rengini, CAPEX panelleri para yeşilini kullanıyor
- *   • Satır etiketleri sabit genişlikte, sayılar tabular-nums ve sağa dayalı
+ * GÖRÜNÜM: özet kartları rapor sayfasının KPICard bileşeninin AYNISI —
+ * kendi kart tasarımımı yazmıyorum. Kullanıcı geri bildirimi netti: elle
+ * yazılmış kartlar "generic" duruyordu ve uygulamanın diliyle uyuşmuyordu.
+ * Artık aynı GlassCard, aynı tipografi, aynı ikon çipi, aynı ring; renkler de
+ * rapor sayfasıyla aynı konvansiyonla TYRO CSS token'ları.
+ *
+ * Kırılım panelleri boyuta göre renk ayrımı yapıyor (adet panelleri kendi
+ * boyut rengi, CAPEX panelleri para yeşili); ikon ve rozetler KPICard ile
+ * tutarlı olsun diye nötr çip zemini + renkli ikon kullanıyor.
  */
 interface Props {
   metrics: PortfolioMetrics;
   breakdowns: AtlasBreakdowns;
 }
 
-/** Metrik renkleri — statusColor paletiyle aynı aileden, her kart ayrı ton.
- *  MapLibre/inline stil bağlamında CSS değişkeni okunamadığı için literal hex;
- *  uygulamada colorUtils ve SOURCE_COLORS ile kurulmuş desen bu. */
+/**
+ * Metrik renkleri — rapor sayfasındaki KPI kartlarıyla AYNI konvansiyon:
+ * doğrudan TYRO CSS token'ları. Hem palet dışına çıkmıyoruz hem tema
+ * değişiminde renkler kendiliğinden uyum sağlıyor.
+ */
 const METRIC_COLOR = {
-  project: "#1e3a5f", // tyro-navy
-  capex: "#10b981", // emerald — para
-  country: "#3b82f6", // mavi — coğrafya
-  newInvestment: "#8b5cf6", // mor — yeni
-  progress: "#c8922a", // tyro-gold
-  risk: "#ef4444", // kırmızı — statusColor("High Risk") ile aynı
+  project: "var(--tyro-navy)",
+  capex: "var(--tyro-success)",
+  country: "var(--tyro-info)",
+  newInvestment: "var(--tyro-gold)",
+  progress: "var(--tyro-navy-light)",
+  risk: "var(--tyro-danger)",
 } as const;
 
-/** Kırılım boyutlarının renkleri — filtre ikonlarıyla eşleşir */
+/** Kırılım panelleri — filtre ikonlarıyla eşleşen boyut renkleri */
 const DIM_COLOR = {
   country: METRIC_COLOR.country,
-  actionType: METRIC_COLOR.newInvestment,
-  assetClass: METRIC_COLOR.progress,
+  actionType: "var(--tyro-navy)",
+  assetClass: METRIC_COLOR.newInvestment,
   capex: METRIC_COLOR.capex,
 } as const;
 
@@ -86,50 +89,67 @@ export default function TAtlasSummary({ metrics, breakdowns }: Props) {
       {/* ── Altı özet kartı ── */}
       <section>
         <SectionTitle icon={PieChart}>{t("tatlas.summary.cards")}</SectionTitle>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">
-          <MetricCard
-            icon={Crosshair}
-            color={METRIC_COLOR.project}
-            label={t("tatlas.metric.projectCount")}
-            value={metrics.projectCount}
-          />
-          <MetricCard
-            icon={Banknote}
-            color={METRIC_COLOR.capex}
-            label={t("tatlas.metric.totalCapex")}
-            display={formatCapexCompact(metrics.totalCapex, locale) || "0 USD"}
-            title={formatCapex(metrics.totalCapex, locale)}
-            note={capexNote}
-          />
-          <MetricCard
-            icon={Globe2}
-            color={METRIC_COLOR.country}
-            label={t("tatlas.metric.countryCount")}
-            value={metrics.countryCount}
-          />
-          <MetricCard
-            icon={Sparkles}
-            color={METRIC_COLOR.newInvestment}
-            label={t("tatlas.metric.newInvestment")}
-            value={metrics.newInvestmentCount}
-            note={t("tatlas.metric.newInvestmentNote")}
-          />
-          <MetricCard
-            icon={TrendingUp}
-            color={METRIC_COLOR.progress}
-            label={t("tatlas.metric.avgProgress")}
-            value={metrics.avgProgress}
-            suffix="%"
-            progress={metrics.avgProgress}
-          />
-          <MetricCard
-            icon={AlertTriangle}
-            color={METRIC_COLOR.risk}
-            label={t("tatlas.metric.riskyCount")}
-            value={metrics.riskyCount}
-            note={t("tatlas.metric.riskyNote")}
-            emphasize={metrics.riskyCount > 0}
-          />
+        {/* Rapor sayfasındaki KPI kartlarıyla aynı bileşen ve aynı ızgara
+            ritmi — sayfalar arası görünüm tutarlı kalsın. */}
+        <div className="grid grid-cols-1 items-stretch gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 sm:gap-5">
+          <div className="flex">
+            <KPICard
+              label={t("tatlas.metric.projectCount")}
+              value={metrics.projectCount}
+              icon={<Crosshair size={20} />}
+              color={METRIC_COLOR.project}
+              contextText={t("tatlas.metric.projectCountNote")}
+            />
+          </div>
+          <div className="flex">
+            <KPICard
+              label={t("tatlas.metric.totalCapex")}
+              value={metrics.totalCapex}
+              displayValue={formatCapexCompact(metrics.totalCapex, locale) || "0 USD"}
+              icon={<Banknote size={20} />}
+              color={METRIC_COLOR.capex}
+              contextText={capexNote ?? formatCapex(metrics.totalCapex, locale)}
+            />
+          </div>
+          <div className="flex">
+            <KPICard
+              label={t("tatlas.metric.countryCount")}
+              value={metrics.countryCount}
+              icon={<Globe2 size={20} />}
+              color={METRIC_COLOR.country}
+              contextText={t("tatlas.metric.countryCountNote")}
+            />
+          </div>
+          <div className="flex">
+            <KPICard
+              label={t("tatlas.metric.newInvestment")}
+              value={metrics.newInvestmentCount}
+              icon={<Sparkles size={20} />}
+              color={METRIC_COLOR.newInvestment}
+              contextText={t("tatlas.metric.newInvestmentNote")}
+            />
+          </div>
+          <div className="flex">
+            {/* progress verildiğinde kart CircularProgress ring'ini gösteriyor */}
+            <KPICard
+              label={t("tatlas.metric.avgProgress")}
+              value={metrics.avgProgress}
+              suffix="%"
+              icon={<TrendingUp size={20} />}
+              color={METRIC_COLOR.progress}
+              progress={metrics.avgProgress}
+              contextText={t("tatlas.metric.avgProgressNote")}
+            />
+          </div>
+          <div className="flex">
+            <KPICard
+              label={t("tatlas.metric.riskyCount")}
+              value={metrics.riskyCount}
+              icon={<AlertTriangle size={20} />}
+              color={METRIC_COLOR.risk}
+              contextText={t("tatlas.metric.riskyNote")}
+            />
+          </div>
         </div>
       </section>
 
@@ -217,87 +237,6 @@ function SectionTitle({ icon: Icon, children }: { icon: LucideIcon; children: Re
         {children}
       </p>
     </div>
-  );
-}
-
-/* ── Özet kartı ── */
-function MetricCard({
-  icon: Icon,
-  color,
-  label,
-  value,
-  display,
-  suffix,
-  note,
-  title,
-  progress,
-  emphasize,
-}: {
-  icon: LucideIcon;
-  color: string;
-  label: string;
-  value?: number;
-  /** Sayaç yerine hazır metin (biçimli tutarlar) */
-  display?: string;
-  suffix?: string;
-  note?: string;
-  title?: string;
-  /** Verildiğinde kartın altına ince bir ilerleme çubuğu çizilir */
-  progress?: number;
-  /** Değeri kendi renginde vurgula (ör. riskli proje > 0) */
-  emphasize?: boolean;
-}) {
-  return (
-    <motion.div
-      whileHover={{ y: -2 }}
-      transition={{ type: "spring", stiffness: 300, damping: 22 }}
-      className="glass-card rounded-card relative flex flex-col overflow-hidden p-3.5"
-    >
-      {/* Sol kenarda metrik rengi — kartlar bir bakışta ayrışsın */}
-      <span
-        aria-hidden
-        className="absolute inset-y-0 left-0 w-[3px]"
-        style={{ backgroundColor: color, opacity: 0.75 }}
-      />
-
-      <span
-        className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg"
-        style={{ backgroundColor: `${color}16`, color }}
-      >
-        <Icon size={14} strokeWidth={2.2} />
-      </span>
-
-      <p
-        className="mt-2.5 text-[19px] font-bold leading-none tabular-nums"
-        style={{ color: emphasize ? color : undefined }}
-        title={title}
-      >
-        {display !== undefined ? (
-          <span className={emphasize ? undefined : "text-tyro-text-primary"}>{display}</span>
-        ) : (
-          <span className={emphasize ? undefined : "text-tyro-text-primary"}>
-            <AnimatedCounter value={value ?? 0} suffix={suffix ?? ""} />
-          </span>
-        )}
-      </p>
-
-      <p className="mt-1.5 text-[11px] font-semibold leading-snug text-tyro-text-secondary">
-        {label}
-      </p>
-      {/* Not satırı her kartta aynı yükseklikte yer tutar → değerler hizalı kalır */}
-      <p className="mt-0.5 min-h-[14px] text-[11px] leading-snug text-tyro-text-muted">
-        {note ?? ""}
-      </p>
-
-      {progress !== undefined && (
-        <span className="mt-1.5 block h-1 w-full overflow-hidden rounded-full bg-tyro-bg">
-          <span
-            className="block h-full rounded-full transition-all duration-700"
-            style={{ width: `${Math.min(100, Math.max(0, progress))}%`, backgroundColor: color }}
-          />
-        </span>
-      )}
-    </motion.div>
   );
 }
 
@@ -404,8 +343,8 @@ function BreakdownPanel({
                 <div className="flex items-baseline gap-2">
                   {badgeOf && (
                     <span
-                      className="shrink-0 rounded px-1 py-px text-[10px] font-bold tabular-nums"
-                      style={{ backgroundColor: `${color}16`, color }}
+                      className="shrink-0 rounded bg-tyro-bg px-1 py-px text-[10px] font-bold tabular-nums"
+                      style={{ color }}
                     >
                       {badgeOf(r.key)}
                     </span>
@@ -453,9 +392,12 @@ function Panel({
   return (
     <div className="glass-card rounded-card flex flex-col p-3.5">
       <div className="mb-3 flex items-center gap-2">
+        {/* Nötr zemin + renkli ikon: renkler CSS token (var(--tyro-*)) olduğu
+            için `${color}16` gibi alfa eklemesi geçersiz CSS üretir. KPICard da
+            aynı şekilde davranıyor, görünüm tutarlı kalıyor. */}
         <span
-          className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md"
-          style={{ backgroundColor: `${color}16`, color }}
+          className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-tyro-bg"
+          style={{ color }}
         >
           <Icon size={12} strokeWidth={2.2} />
         </span>

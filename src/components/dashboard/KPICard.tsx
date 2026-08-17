@@ -17,11 +17,18 @@ const iconMap: Record<string, ReactNode> = {
 interface KPICardProps {
   label: string;
   value: number;
+  /** Sayaç yerine hazır metin. AnimatedCounter tam sayıya yuvarlıyor, bu yüzden
+   *  biçimli değerler (örn. "1,25 Mn USD") sayaçla gösterilemiyor. Verildiğinde
+   *  aynı tipografiyle basılır, kartın görünümü değişmez. */
+  displayValue?: string;
   prefix?: string;
   suffix?: string;
   trend?: number;
   trendLabel?: string;
-  icon: string;
+  /** iconMap anahtarı (mevcut çağrılar) VEYA doğrudan bir ikon elementi.
+   *  Element desteği T-Atlas için eklendi: sayfa iconMap'te olmayan ikonlar
+   *  kullanıyor, sabit haritayı şişirmek yerine element geçiyoruz. */
+  icon: string | ReactNode;
   color: string;
   progress?: number;
   target?: number;
@@ -112,6 +119,7 @@ function InteractiveSparkline({ data, color }: { data: number[]; color: string }
 export default function KPICard({
   label,
   value,
+  displayValue,
   prefix = "",
   suffix = "",
   trend,
@@ -146,7 +154,7 @@ export default function KPICard({
             animate={{ scale: hovered ? 1.1 : 1, rotate: hovered ? 5 : 0 }}
             transition={{ type: "spring", stiffness: 400, damping: 15 }}
           >
-            {iconMap[icon]}
+            {typeof icon === "string" ? iconMap[icon] : icon}
           </motion.div>
         </div>
 
@@ -156,7 +164,11 @@ export default function KPICard({
           animate={{ scale: hovered ? 1.03 : 1 }}
           transition={{ type: "spring", stiffness: 300, damping: 20 }}
         >
-          <AnimatedCounter value={value} prefix={prefix} suffix={suffix} />
+          {displayValue !== undefined ? (
+            displayValue
+          ) : (
+            <AnimatedCounter value={value} prefix={prefix} suffix={suffix} />
+          )}
           {target !== undefined && (
             <span className="text-base font-medium text-tyro-text-muted ml-1">
               / {target}

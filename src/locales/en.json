@@ -1196,7 +1196,10 @@
       "riskyCount": "At-risk projects",
       "riskyNote": "At risk + high risk",
       "capexMissing": "No CAPEX entered yet",
-      "capexPartial": "Entered for {{entered}}/{{total}}"
+      "capexPartial": "Entered for {{entered}}/{{total}}",
+      "projectCountNote": "Shown on the map",
+      "countryCountNote": "Distinct countries",
+      "avgProgressNote": "Average across the set"
     },
     "panel": {
       "statusDistribution": "Status distribution",

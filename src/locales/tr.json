@@ -1196,7 +1196,10 @@
       "riskyCount": "Riskli proje",
       "riskyNote": "Riskte + yüksek riskte",
       "capexMissing": "Henüz CAPEX girilmemiş",
-      "capexPartial": "{{entered}}/{{total}} projede girili"
+      "capexPartial": "{{entered}}/{{total}} projede girili",
+      "projectCountNote": "Haritada gösterilen",
+      "countryCountNote": "Tekil ülke",
+      "avgProgressNote": "Kümedeki ortalama"
     },
     "panel": {
       "statusDistribution": "Durum dağılımı",

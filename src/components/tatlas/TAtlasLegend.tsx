@@ -1,6 +1,6 @@
-import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ChevronUp, ChevronDown, Info } from "lucide-react";
+import { Button, Popover, PopoverTrigger, PopoverContent, Divider } from "@heroui/react";
+import { Info, ChevronUp } from "lucide-react";
 import { ASSET_CLASS_CODES, assetClassLabel } from "@/config/projectTaxonomy";
 import { ASSET_CLASS_ICON } from "@/config/assetClassIcons";
 import { statusColor } from "@/lib/colorUtils";
@@ -8,19 +8,21 @@ import { getStatusLabel } from "@/lib/constants";
 import type { EntityStatus } from "@/types";
 
 /**
- * Harita lejantı — sol altta, VARSAYILAN KATLANMIŞ (doküman §5).
+ * Harita lejantı — sol altta, varsayılan KATLANMIŞ (doküman §5).
  *
- * Dokümanın §2 tablosu "sol üstte lejant" derken §5 metni "sol alt köşede
- * katlanmış şerit" diyor. §5 daha spesifik olduğu için onu esas aldık; ayrıca
- * sağ üst köşe zoom + tam ekran düğmelerine ayrıldığı için çakışma olmuyor.
+ * Uygulamanın popover desenini kullanıyor: HeroUI `Popover` + flat `Button`
+ * trigger — Ayarlar'daki renk seçici ve Projeler'deki filtre popover'larıyla
+ * aynı dil. İlk sürüm elle yazılmış bir açılır kutuydu ve uygulamanın
+ * görünümüne yabancı duruyordu.
  *
- * İki görsel değişken açıklanıyor: ikon = varlık sınıfı, çerçeve = statü.
+ * İki görsel değişkeni açıklar: ikon = varlık sınıfı, çerçeve = proje statüsü.
+ * Varlık sınıfı satırlarında kod rozeti de var — kodlar raporlarda birincil
+ * anahtar, kullanıcı ikon ile kodu birlikte öğrensin.
  */
 
-// Lejantta gösterilen statüler — DB'deki 7 statünün tamamı. Doküman 5 renk
-// tanımlıyordu, `Cancelled` ve `Not Started` karşılıksız kalıyordu; uygulamanın
-// StatusBadge paletini kullanarak hepsini kapsıyoruz (UI kuralı: statü
-// renkleri her yerde aynı palet).
+/** Lejantta DB'deki 7 statünün tamamı yer alır. Doküman 5 renk tanımlıyordu,
+ *  `Cancelled` ve `Not Started` karşılıksız kalıyordu; uygulamanın StatusBadge
+ *  paletini kullanarak hepsini kapsıyoruz. */
 const LEGEND_STATUSES: EntityStatus[] = [
   "On Track",
   "At Risk",
@@ -33,72 +35,84 @@ const LEGEND_STATUSES: EntityStatus[] = [
 
 export default function TAtlasLegend() {
   const { t } = useTranslation();
-  const [open, setOpen] = useState(false);
-
-  if (!open) {
-    return (
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        aria-expanded={false}
-        className="flex h-8 cursor-pointer items-center gap-1.5 rounded-lg border border-tyro-border/40 bg-tyro-surface/90 px-2.5 text-[11px] font-semibold text-tyro-text-secondary shadow-sm backdrop-blur-md transition-colors hover:bg-tyro-surface hover:text-tyro-text-primary"
-      >
-        <Info size={13} />
-        {t("tatlas.legend.title")}
-        <ChevronUp size={13} />
-      </button>
-    );
-  }
 
   return (
-    <div className="w-[228px] rounded-card border border-tyro-border/40 bg-tyro-surface/95 p-3 shadow-lg backdrop-blur-md">
-      <button
-        type="button"
-        onClick={() => setOpen(false)}
-        aria-expanded
-        className="mb-2 flex w-full cursor-pointer items-center justify-between text-[11px] font-bold uppercase tracking-wider text-tyro-text-secondary"
-      >
-        {t("tatlas.legend.title")}
-        <ChevronDown size={13} />
-      </button>
+    <Popover placement="top-start" offset={8} backdrop="transparent">
+      <PopoverTrigger>
+        <Button
+          size="sm"
+          variant="flat"
+          startContent={<Info size={13} />}
+          endContent={<ChevronUp size={13} />}
+          className="h-8 border border-tyro-border/40 bg-tyro-surface/90 font-semibold text-tyro-text-secondary shadow-sm backdrop-blur-md"
+        >
+          {t("tatlas.legend.title")}
+        </Button>
+      </PopoverTrigger>
 
-      {/* İkon = varlık sınıfı */}
-      <p className="mb-1.5 text-[11px] font-semibold text-tyro-text-muted">
-        {t("tatlas.legend.iconMeaning")}
-      </p>
-      <ul className="mb-3 flex flex-col gap-1">
-        {ASSET_CLASS_CODES.map((code) => {
-          const Icon = ASSET_CLASS_ICON[code];
-          return (
-            <li key={code} className="flex items-center gap-2">
-              <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-md bg-tyro-bg text-tyro-text-secondary">
-                <Icon size={12} strokeWidth={2} />
-              </span>
-              <span className="truncate text-[11px] text-tyro-text-secondary" title={assetClassLabel(code, t)}>
-                {assetClassLabel(code, t)}
-              </span>
-            </li>
-          );
-        })}
-      </ul>
+      <PopoverContent className="w-[268px] rounded-card border border-tyro-border/40 bg-tyro-surface/95 p-0 shadow-xl backdrop-blur-xl">
+        {/* Başlık */}
+        <div className="flex w-full items-center gap-2 px-3.5 pb-2 pt-3">
+          <Info size={13} className="text-tyro-gold" />
+          <span className="text-[11px] font-bold uppercase tracking-wider text-tyro-text-secondary">
+            {t("tatlas.legend.title")}
+          </span>
+        </div>
 
-      {/* Çerçeve rengi = statü */}
-      <p className="mb-1.5 text-[11px] font-semibold text-tyro-text-muted">
-        {t("tatlas.legend.frameMeaning")}
-      </p>
-      <ul className="flex flex-wrap gap-x-3 gap-y-1">
-        {LEGEND_STATUSES.map((status) => (
-          <li key={status} className="flex items-center gap-1.5">
-            <span
-              className="h-2.5 w-2.5 shrink-0 rounded-full border-2"
-              style={{ borderColor: statusColor(status) }}
-            />
-            <span className="text-[11px] text-tyro-text-secondary">
-              {getStatusLabel(status, t)}
-            </span>
-          </li>
-        ))}
-      </ul>
-    </div>
+        <Divider className="bg-tyro-border/30" />
+
+        {/* İkon = varlık sınıfı */}
+        <div className="w-full px-3.5 py-2.5">
+          <p className="mb-2 text-[11px] font-semibold text-tyro-text-muted">
+            {t("tatlas.legend.iconMeaning")}
+          </p>
+          <ul className="flex flex-col gap-1">
+            {ASSET_CLASS_CODES.map((code) => {
+              const Icon = ASSET_CLASS_ICON[code];
+              const label = assetClassLabel(code, t);
+              return (
+                <li key={code} className="flex items-center gap-2">
+                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-tyro-bg text-tyro-text-secondary">
+                    <Icon size={12} strokeWidth={2.2} />
+                  </span>
+                  <span className="shrink-0 rounded bg-tyro-bg px-1 py-px text-[10px] font-bold tabular-nums text-tyro-text-muted">
+                    {code.replace("AST-", "")}
+                  </span>
+                  <span
+                    className="min-w-0 flex-1 truncate text-[11px] text-tyro-text-secondary"
+                    title={label}
+                  >
+                    {label}
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+
+        <Divider className="bg-tyro-border/30" />
+
+        {/* Çerçeve rengi = statü */}
+        <div className="w-full px-3.5 pb-3 pt-2.5">
+          <p className="mb-2 text-[11px] font-semibold text-tyro-text-muted">
+            {t("tatlas.legend.frameMeaning")}
+          </p>
+          <ul className="grid grid-cols-2 gap-x-3 gap-y-1.5">
+            {LEGEND_STATUSES.map((status) => (
+              <li key={status} className="flex items-center gap-1.5">
+                {/* Pin çerçevesini taklit eden halka — dolu daire değil */}
+                <span
+                  className="h-3 w-3 shrink-0 rounded-full border-2 bg-tyro-surface"
+                  style={{ borderColor: statusColor(status) }}
+                />
+                <span className="min-w-0 truncate text-[11px] text-tyro-text-secondary">
+                  {getStatusLabel(status, t)}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </PopoverContent>
+    </Popover>
   );
 }
