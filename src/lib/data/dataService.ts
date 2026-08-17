@@ -3,7 +3,7 @@
  * Adapter pattern: mock (localStorage), supabase, dataverse, azure-sql
  * Switch via VITE_DATA_PROVIDER env var.
  */
-import type { Proje, Aksiyon, TagDefinition } from "@/types";
+import type { Proje, Aksiyon, TagDefinition, LocationDefinition } from "@/types";
 
 export interface DataService {
   // Projeler
@@ -25,4 +25,10 @@ export interface DataService {
   createTagDefinition(data: Omit<TagDefinition, "id">): Promise<TagDefinition>;
   updateTagDefinition(id: string, data: Partial<TagDefinition>): Promise<TagDefinition>;
   deleteTagDefinition(id: string): Promise<boolean>;
+
+  // Locations — ülke + şehir tanımları (Ayarlar > Lokasyon)
+  fetchLocations(): Promise<LocationDefinition[]>;
+  createLocation(data: Omit<LocationDefinition, "id">): Promise<LocationDefinition>;
+  updateLocation(id: string, data: Partial<Omit<LocationDefinition, "id">>): Promise<LocationDefinition>;
+  deleteLocation(id: string): Promise<boolean>;
 }

@@ -20,6 +20,7 @@ vi.mock("@/lib/data/mock-adapter", () => ({
   getInitialAksiyonlar: () => [],
   getInitialData: () => ({ projeler: [], aksiyonlar: [] }),
   getInitialTagDefinitions: () => [],
+  getInitialLocations: () => [],
 }));
 
 // Mock react-router-dom

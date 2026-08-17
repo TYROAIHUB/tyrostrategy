@@ -7,6 +7,7 @@ vi.mock("@/lib/data/mock-adapter", () => ({
   getInitialAksiyonlar: () => [],
   getInitialData: () => ({ projeler: [], aksiyonlar: [] }),
   getInitialTagDefinitions: () => [],
+  getInitialLocations: () => [],
 }));
 
 // Reset the store before each test to avoid shared state
@@ -14,6 +15,7 @@ beforeEach(() => {
   useDataStore.setState({
     projeler: [],
     aksiyonlar: [],
+    locations: [],
   });
 });
 
@@ -182,5 +184,86 @@ describe("Aksiyon CRUD", () => {
     const result = useDataStore.getState().getAksiyonlarByProjeId("p1");
     expect(result).toHaveLength(1);
     expect(result[0].name).toBe("Aksiyon A");
+  });
+});
+
+// ===== Lokasyon tanımları (migration 031) =====
+// Ülke + şehir aynı satırda; Ayarlar > Lokasyon sekmesinden yönetilir.
+describe("Location CRUD", () => {
+  it("addLocation stores country and city on the same record", () => {
+    const created = useDataStore.getState().addLocation({
+      country: "Türkiye",
+      city: "Ankara",
+    });
+
+    const locations = useDataStore.getState().locations;
+    expect(locations).toHaveLength(1);
+    expect(locations[0].country).toBe("Türkiye");
+    expect(locations[0].city).toBe("Ankara");
+    expect(locations[0].id).toBeTruthy();
+    expect(created.id).toBe(locations[0].id);
+  });
+
+  it("addLocation trims surrounding whitespace", () => {
+    useDataStore.getState().addLocation({ country: "  Irak  ", city: "  Basra  " });
+
+    const loc = useDataStore.getState().locations[0];
+    expect(loc.country).toBe("Irak");
+    expect(loc.city).toBe("Basra");
+  });
+
+  it("keeps the list sorted by country then city", () => {
+    const store = useDataStore.getState();
+    store.addLocation({ country: "Türkiye", city: "İstanbul" });
+    store.addLocation({ country: "Irak", city: "Basra" });
+    store.addLocation({ country: "Türkiye", city: "Ankara" });
+
+    const pairs = useDataStore
+      .getState()
+      .locations.map((l) => `${l.country}/${l.city}`);
+    expect(pairs).toEqual(["Irak/Basra", "Türkiye/Ankara", "Türkiye/İstanbul"]);
+  });
+
+  it("updateLocation changes country and city", () => {
+    useDataStore.getState().addLocation({ country: "Türkiye", city: "Ankara" });
+    const id = useDataStore.getState().locations[0].id;
+
+    useDataStore.getState().updateLocation(id, { country: "Kazakistan", city: "Almatı" });
+
+    const updated = useDataStore.getState().locations[0];
+    expect(updated.country).toBe("Kazakistan");
+    expect(updated.city).toBe("Almatı");
+    expect(updated.id).toBe(id);
+  });
+
+  it("updateLocation can change only the city", () => {
+    useDataStore.getState().addLocation({ country: "Türkiye", city: "Ankara" });
+    const id = useDataStore.getState().locations[0].id;
+
+    useDataStore.getState().updateLocation(id, { city: "Çorum" });
+
+    const updated = useDataStore.getState().locations[0];
+    expect(updated.country).toBe("Türkiye");
+    expect(updated.city).toBe("Çorum");
+  });
+
+  it("deleteLocation removes a location by id", () => {
+    useDataStore.getState().addLocation({ country: "Türkiye", city: "Ankara" });
+    useDataStore.getState().addLocation({ country: "Irak", city: "Basra" });
+    const id = useDataStore.getState().locations.find((l) => l.city === "Ankara")!.id;
+
+    useDataStore.getState().deleteLocation(id);
+
+    const remaining = useDataStore.getState().locations;
+    expect(remaining).toHaveLength(1);
+    expect(remaining[0].city).toBe("Basra");
+  });
+
+  it("getLocationById returns the matching location", () => {
+    useDataStore.getState().addLocation({ country: "Irak", city: "Umm Qasr" });
+    const id = useDataStore.getState().locations[0].id;
+
+    expect(useDataStore.getState().getLocationById(id)?.city).toBe("Umm Qasr");
+    expect(useDataStore.getState().getLocationById("yok")).toBeUndefined();
   });
 });

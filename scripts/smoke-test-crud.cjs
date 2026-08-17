@@ -627,8 +627,138 @@ async function api(method, path, body) {
     return `${v}`;
   });
 
+  // ── locations (migration 031) ──
+  // Ülke + şehir aynı satırda; Ayarlar > Lokasyon sekmesinden yönetilir.
+  // Burada korunan davranışlar:
+  //   • Admin CRUD yapabilir
+  //   • unique index case-insensitive çalışıyor (23505)
+  //   • boş/whitespace şehir CHECK ile reddediliyor (23514)
+  //   • non-admin INSERT edemiyor (42501) ama SELECT edebiliyor —
+  //     proje formundaki dropdown her rol için dolmalı
+  console.log("\nLOCATIONS (migration 031):");
+  const LOC_COUNTRY = "SMOKE_TEST_COUNTRY";
+  const LOC_CITY = "SMOKE_TEST_CITY";
+  const LOC_TEST_EMAIL = "smoke.loc.test.delete.me@tiryaki.com.tr";
+  let locationId = null;
+
+  // Pre-cleanup (önceki yarım kalmış çalıştırma)
+  await fetch(URL + `/locations?country=eq.${LOC_COUNTRY}`, { method: "DELETE", headers });
+  await fetch(URL + `/users?email=eq.${LOC_TEST_EMAIL}`, { method: "DELETE", headers });
+
+  await step("INSERT location (country + city)", async () => {
+    const r = await api("POST", "/locations", { country: LOC_COUNTRY, city: LOC_CITY });
+    locationId = r[0].id;
+    return `${r[0].country}/${r[0].city}`;
+  });
+
+  await step("SELECT location back", async () => {
+    const r = await api("GET", `/locations?id=eq.${locationId}&select=*`);
+    if (r.length !== 1) throw new Error(`expected 1 row, got ${r.length}`);
+    if (r[0].country !== LOC_COUNTRY) throw new Error(`country mismatch: ${r[0].country}`);
+    if (r[0].city !== LOC_CITY) throw new Error(`city mismatch: ${r[0].city}`);
+    return "match";
+  });
+
+  await step("UPDATE location city", async () => {
+    const r = await api("PATCH", `/locations?id=eq.${locationId}`, { city: "SMOKE_TEST_CITY_2" });
+    if (r[0].city !== "SMOKE_TEST_CITY_2") throw new Error(`city not updated: ${r[0].city}`);
+    // updated_at trigger'ı da çalışmış olmalı
+    if (!r[0].updated_at) throw new Error("updated_at null");
+    return r[0].city;
+  });
+
+  await step("duplicate country+city rejected (case-insensitive)", async () => {
+    let rejected = false;
+    try {
+      // Aynı çift, farklı casing → lower() unique index tetiklenmeli
+      await api("POST", "/locations", {
+        country: LOC_COUNTRY.toLowerCase(),
+        city: "smoke_test_city_2",
+      });
+    } catch (e) {
+      // 23505 = unique_violation
+      if (e.message.includes("duplicate key") || e.message.includes("23505")) {
+        rejected = true;
+      } else {
+        throw new Error(`wrong error: ${e.message}`);
+      }
+    }
+    if (!rejected) throw new Error("duplicate pair was ACCEPTED (unique index missing?)");
+    return "rejected (23505 unique_violation)";
+  });
+
+  await step("blank city rejected (CHECK)", async () => {
+    let rejected = false;
+    try {
+      await api("POST", "/locations", { country: LOC_COUNTRY, city: "   " });
+    } catch (e) {
+      // 23514 = check_violation
+      if (e.message.includes("violates check constraint") || e.message.includes("23514")) {
+        rejected = true;
+      } else {
+        throw new Error(`wrong error: ${e.message}`);
+      }
+    }
+    if (!rejected) throw new Error("blank city was ACCEPTED (CHECK missing?)");
+    return "rejected (23514 check_violation)";
+  });
+
+  await step("setup non-admin user (Proje Lideri)", async () => {
+    await api("POST", "/users", {
+      email: LOC_TEST_EMAIL,
+      display_name: "Smoke Location Test User",
+      department: "BT",
+      role: "Proje Lideri",
+      locale: "tr",
+      is_active: true,
+    });
+    return "created";
+  });
+
+  await step("non-admin can SELECT locations (dropdown)", async () => {
+    const res = await fetch(URL + `/locations?id=eq.${locationId}&select=id`, {
+      headers: { ...headers, "X-User-Email": LOC_TEST_EMAIL },
+    });
+    if (!res.ok) throw new Error(`${res.status} ${await res.text()}`);
+    const data = await res.json();
+    if (data.length !== 1) throw new Error(`non-admin saw ${data.length} rows (expected 1)`);
+    return "visible";
+  });
+
+  await step("non-admin INSERT blocked (RLS)", async () => {
+    const res = await fetch(URL + "/locations", {
+      method: "POST",
+      headers: { ...headers, "X-User-Email": LOC_TEST_EMAIL },
+      body: JSON.stringify({ country: "SMOKE_RLS_COUNTRY", city: "SMOKE_RLS_CITY" }),
+    });
+    if (res.ok) {
+      // Sızdıysa temizle, sonra fail et
+      await fetch(URL + `/locations?country=eq.SMOKE_RLS_COUNTRY`, { method: "DELETE", headers });
+      throw new Error("non-admin INSERT SUCCEEDED (RLS not enforced!)");
+    }
+    if (res.status !== 401 && res.status !== 403) {
+      throw new Error(`unexpected status ${res.status}: ${await res.text()}`);
+    }
+    return `blocked (${res.status})`;
+  });
+
+  await step("cleanup non-admin user", async () => {
+    await api("DELETE", `/users?email=eq.${LOC_TEST_EMAIL}`);
+    return "204";
+  });
+
+  await step("DELETE location", async () => {
+    await api("DELETE", `/locations?id=eq.${locationId}`);
+    return "204";
+  });
+
   // ── Verify cleanup ──
   console.log("\nVERIFY CLEANUP:");
+  await step("location gone", async () => {
+    const r = await api("GET", `/locations?country=eq.${LOC_COUNTRY}&select=id`);
+    if (r.length !== 0) throw new Error(`still exists: ${JSON.stringify(r)}`);
+    return "0 rows";
+  });
   await step("proje gone", async () => {
     const r = await api("GET", `/projeler?id=eq.${PROJE_ID}&select=id`);
     if (r.length !== 0) throw new Error(`still exists: ${JSON.stringify(r)}`);

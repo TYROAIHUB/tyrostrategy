@@ -1,10 +1,11 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type { Proje, Aksiyon, TagDefinition, AppUser } from "@/types";
+import type { Proje, Aksiyon, TagDefinition, LocationDefinition, AppUser } from "@/types";
 import {
   getInitialProjeler,
   getInitialAksiyonlar,
   getInitialTagDefinitions,
+  getInitialLocations,
   getInitialData,
 } from "@/lib/data/mock-adapter";
 import { DEFAULT_TAG_COLOR } from "@/config/tagColors";
@@ -114,6 +115,7 @@ interface DataState {
   projeler: Proje[];
   aksiyonlar: Aksiyon[];
   tagDefinitions: TagDefinition[];
+  locations: LocationDefinition[];
   users: AppUser[];
 
   // CRUD — Users
@@ -138,12 +140,18 @@ interface DataState {
   deleteTagDefinition: (id: string) => void;
   renameTag: (oldName: string, newName: string) => void;
 
+  // CRUD — Locations (ülke + şehir tanımları)
+  addLocation: (loc: Omit<LocationDefinition, "id">) => LocationDefinition;
+  updateLocation: (id: string, data: Partial<Omit<LocationDefinition, "id">>) => void;
+  deleteLocation: (id: string) => void;
+
   // Selectors
   getProjeById: (id: string) => Proje | undefined;
   getAksiyonById: (id: string) => Aksiyon | undefined;
   getAksiyonlarByProjeId: (projeId: string) => Aksiyon[];
   getTagColor: (tagName: string) => string;
   getTagDefinitionByName: (tagName: string) => TagDefinition | undefined;
+  getLocationById: (id: string) => LocationDefinition | undefined;
 
   // Data consistency
   fixDataConsistency: () => void;
@@ -292,9 +300,23 @@ function recalcProjeProgress(
 // user never sees mock seeds leak through while the initial fetch is
 // in flight (or if it fails). Mock mode keeps its seed data so the
 // developer loop still renders something useful offline.
+/** Lokasyon listesini ülke → şehir sırasına sokar. Supabase fetch'i de aynı
+ *  sırayı döndürüyor (order country, city), böylece optimistic ekleme sonrası
+ *  liste F5'ten sonra yer değiştirmiyor. Türkçe collation için localeCompare. */
+function sortLocations(list: LocationDefinition[]): LocationDefinition[] {
+  return [...list].sort(
+    (a, b) =>
+      a.country.localeCompare(b.country, "tr") || a.city.localeCompare(b.city, "tr")
+  );
+}
+
 const INITIAL_DATA = isSupabaseMode
-  ? { projeler: [], aksiyonlar: [], tagDefinitions: [] }
-  : { ...getInitialData(), tagDefinitions: getInitialTagDefinitions() };
+  ? { projeler: [], aksiyonlar: [], tagDefinitions: [], locations: [] }
+  : {
+      ...getInitialData(),
+      tagDefinitions: getInitialTagDefinitions(),
+      locations: getInitialLocations(),
+    };
 
 export const useDataStore = create<DataState>()(
   persist(
@@ -673,6 +695,60 @@ export const useDataStore = create<DataState>()(
         }
       },
 
+      // ===== Locations CRUD (migration 031) =====
+      // Optimistic: zustand'a hemen yaz, sonra syncToSupabase. Adapter DB'nin
+      // ürettiği UUID'yi döndürünce geçici client ID'si onunla değiştirilir
+      // (tag_definitions ile aynı desen — mock modda swap hiç çalışmaz çünkü
+      // syncToSupabase erken return ediyor).
+      addLocation: (loc) => {
+        const clean = { country: loc.country.trim(), city: loc.city.trim() };
+        const newLocation: LocationDefinition = { ...clean, id: uid() };
+        set((s) => ({ locations: sortLocations([...s.locations, newLocation]) }));
+        syncToSupabase(
+          async () => {
+            const created = await supabaseAdapter.createLocation(clean);
+            set((s) => ({
+              locations: s.locations.map((l) =>
+                l.id === newLocation.id ? { ...l, id: created.id } : l
+              ),
+            }));
+          },
+          { entity: "Lokasyon", action: "oluşturma", label: `${clean.country} / ${clean.city}` }
+        );
+        return newLocation;
+      },
+      updateLocation: (id, data) => {
+        const target = get().locations.find((l) => l.id === id);
+        const clean: Partial<Omit<LocationDefinition, "id">> = {};
+        if (data.country !== undefined) clean.country = data.country.trim();
+        if (data.city !== undefined) clean.city = data.city.trim();
+        set((s) => ({
+          locations: sortLocations(
+            s.locations.map((l) => (l.id === id ? { ...l, ...clean } : l))
+          ),
+        }));
+        syncToSupabase(
+          () => supabaseAdapter.updateLocation(id, clean),
+          {
+            entity: "Lokasyon",
+            action: "güncelleme",
+            label: target ? `${target.country} / ${target.city}` : undefined,
+          }
+        );
+      },
+      deleteLocation: (id) => {
+        const target = get().locations.find((l) => l.id === id);
+        set((s) => ({ locations: s.locations.filter((l) => l.id !== id) }));
+        syncToSupabase(
+          () => supabaseAdapter.deleteLocation(id),
+          {
+            entity: "Lokasyon",
+            action: "silme",
+            label: target ? `${target.country} / ${target.city}` : undefined,
+          }
+        );
+      },
+
       // Selectors
       getProjeById: (id) => get().projeler.find((h) => h.id === id),
       getAksiyonById: (id) => get().aksiyonlar.find((a) => a.id === id),
@@ -690,6 +766,7 @@ export const useDataStore = create<DataState>()(
         get().tagDefinitions.find(
           (t) => t.name.toLocaleLowerCase("tr") === tagName.toLocaleLowerCase("tr")
         ),
+      getLocationById: (id) => get().locations.find((l) => l.id === id),
 
       // One-time data consistency fix
       fixDataConsistency: () => {
@@ -758,6 +835,7 @@ export const useDataStore = create<DataState>()(
         projeler: state.projeler,
         aksiyonlar: state.aksiyonlar,
         tagDefinitions: state.tagDefinitions,
+        locations: state.locations,
         // users excluded from persist — always fetched fresh from Supabase
       }),
     }
@@ -790,14 +868,15 @@ function buildMockUsers(): AppUser[] {
 export async function fetchAllFromSupabase(): Promise<void> {
   if (!isSupabaseMode) return;
   try {
-    const [projeler, aksiyonlar, tagDefinitions, users] = await Promise.all([
+    const [projeler, aksiyonlar, tagDefinitions, locations, users] = await Promise.all([
       supabaseAdapter.fetchProjeler(),
       supabaseAdapter.fetchAksiyonlar(),
       supabaseAdapter.fetchTagDefinitions(),
+      supabaseAdapter.fetchLocations(),
       supabaseAdapter.fetchUsers(),
     ]);
-    console.log(`[Supabase] Loaded ${projeler.length} projeler, ${aksiyonlar.length} aksiyonlar, ${tagDefinitions.length} tags, ${users.length} users`);
-    useDataStore.setState({ projeler, aksiyonlar, tagDefinitions, users });
+    console.log(`[Supabase] Loaded ${projeler.length} projeler, ${aksiyonlar.length} aksiyonlar, ${tagDefinitions.length} tags, ${locations.length} locations, ${users.length} users`);
+    useDataStore.setState({ projeler, aksiyonlar, tagDefinitions, locations, users });
   } catch (err) {
     const e = err as { message?: string; code?: string };
     console.error("[Supabase] fetchAllFromSupabase failed:", e?.message || e?.code || JSON.stringify(err));

@@ -34,6 +34,7 @@ vi.mock("@/lib/data/mock-adapter", () => ({
   getInitialAksiyonlar: () => [],
   getInitialData: () => ({ projeler: [], aksiyonlar: [] }),
   getInitialTagDefinitions: () => [],
+  getInitialLocations: () => [],
 }));
 
 function setCurrentUser(name: string, role: string) {

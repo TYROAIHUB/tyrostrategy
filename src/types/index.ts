@@ -69,6 +69,16 @@ export interface TagDefinition {
   color: string; // hex "#D4A017"
 }
 
+// ===== Lokasyon Tanımı — ülke + şehir aynı satırda (migration 031) =====
+// Ayarlar > Lokasyon sekmesinden yönetilir, proje formunda opsiyonel seçilir.
+// İsim `Location` değil `LocationDefinition`: DOM'un global `Location`
+// tipiyle (window.location) çakışmasın ve TagDefinition ile simetrik olsun.
+export interface LocationDefinition {
+  id: string;
+  country: string;
+  city: string;
+}
+
 // ===== Aksiyon (eski Görev — direkt hedefe bağlı) =====
 export interface Aksiyon {
   id: string;

@@ -4,7 +4,7 @@ import {
   internationalProjeler,
 } from "@/lib/mock-data/cascade-data";
 import type { CascadeProje } from "@/lib/mock-data/cascade-data";
-import type { Proje, Aksiyon, EntityStatus, Source, TagDefinition } from "@/types";
+import type { Proje, Aksiyon, EntityStatus, Source, TagDefinition, LocationDefinition } from "@/types";
 import { getDepartmentByUser } from "@/config/departments";
 import { TAG_COLOR_PALETTE } from "@/config/tagColors";
 
@@ -308,5 +308,24 @@ export function getInitialTagDefinitions(): TagDefinition[] {
     id: `tag-${i + 1}`,
     name,
     color: TAG_COLOR_PALETTE[i % TAG_COLOR_PALETTE.length],
+  }));
+}
+
+// ===== Parametrik Lokasyon Tanımları (migration 031) =====
+// Sadece MOCK modu için tohum veri — Supabase modunda tablo boş başlar ve
+// Ayarlar > Lokasyon sekmesinden doldurulur.
+const INITIAL_LOCATION_PAIRS: ReadonlyArray<readonly [string, string]> = [
+  ["Türkiye", "İstanbul"],
+  ["Türkiye", "Çorum"],
+  ["Türkiye", "Giresun"],
+  ["Irak", "Basra"],
+  ["Kazakistan", "Almatı"],
+];
+
+export function getInitialLocations(): LocationDefinition[] {
+  return INITIAL_LOCATION_PAIRS.map(([country, city], i) => ({
+    id: `loc-${i + 1}`,
+    country,
+    city,
   }));
 }

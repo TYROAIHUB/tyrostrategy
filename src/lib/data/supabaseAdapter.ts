@@ -4,7 +4,7 @@
  */
 import { supabase } from "@/lib/supabase";
 import type { DataService } from "./dataService";
-import type { Proje, Aksiyon, TagDefinition, EntityStatus, Source, AppUser, AppSetting, UserRole } from "@/types";
+import type { Proje, Aksiyon, TagDefinition, LocationDefinition, EntityStatus, Source, AppUser, AppSetting, UserRole } from "@/types";
 
 // ===== DB → App mappers =====
 
@@ -49,6 +49,14 @@ interface DbTag {
   name: string;
   color: string;
   created_at: string;
+}
+
+interface DbLocation {
+  id: string;
+  country: string;
+  city: string;
+  created_at: string;
+  updated_at: string;
 }
 
 function dbToProje(row: DbProje, tags: string[] = [], participants: string[] = []): Proje {
@@ -142,6 +150,10 @@ function aksiyonToDb(data: Partial<Aksiyon>): Record<string, unknown> {
 
 function dbToTag(row: DbTag): TagDefinition {
   return { id: row.id, name: row.name, color: row.color };
+}
+
+function dbToLocation(row: DbLocation): LocationDefinition {
+  return { id: row.id, country: row.country, city: row.city };
 }
 
 interface DbUser {
@@ -505,6 +517,56 @@ export const supabaseAdapter: DataService = {
     if (!supabase) return false;
     const { error } = await supabase.from("tag_definitions").delete().eq("id", id);
     if (error) { console.error("[Supabase] deleteTagDefinition:", error); throw error; }
+    return true;
+  },
+
+  // ── Locations (migration 031) ──
+  // country + city aynı satırda. Mutasyonlar Admin-only (RLS), okuma açık.
+  // Adapter kontratı: her mutasyon HATA'DA THROW eder — return null / false
+  // syncToSupabase'in retry + toast hattını bypass ederdi.
+
+  async fetchLocations(): Promise<LocationDefinition[]> {
+    if (!supabase) return [];
+    const { data, error } = await supabase
+      .from("locations")
+      .select("*")
+      .order("country")
+      .order("city");
+    // fetch degrade edebilir — UI boş liste gösterir (adapter kontratı)
+    if (error) { console.error("[Supabase] fetchLocations:", error); return []; }
+    return (data as DbLocation[]).map(dbToLocation);
+  },
+
+  async createLocation(input: Omit<LocationDefinition, "id">): Promise<LocationDefinition> {
+    if (!supabase) throw new Error("Supabase not configured");
+    const { data, error } = await supabase
+      .from("locations")
+      .insert({ country: input.country.trim(), city: input.city.trim() })
+      .select()
+      .single();
+    if (error) { console.error("[Supabase] createLocation:", error); throw error; }
+    return dbToLocation(data as DbLocation);
+  },
+
+  async updateLocation(id: string, data: Partial<Omit<LocationDefinition, "id">>): Promise<LocationDefinition> {
+    if (!supabase) throw new Error("Supabase not configured");
+    const row: Record<string, unknown> = {};
+    if (data.country !== undefined) row.country = data.country.trim();
+    if (data.city !== undefined) row.city = data.city.trim();
+    const { data: updated, error } = await supabase
+      .from("locations")
+      .update(row)
+      .eq("id", id)
+      .select()
+      .single();
+    if (error) { console.error("[Supabase] updateLocation:", error); throw error; }
+    return dbToLocation(updated as DbLocation);
+  },
+
+  async deleteLocation(id: string): Promise<boolean> {
+    if (!supabase) return false;
+    const { error } = await supabase.from("locations").delete().eq("id", id);
+    if (error) { console.error("[Supabase] deleteLocation:", error); throw error; }
     return true;
   },
 

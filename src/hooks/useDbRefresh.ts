@@ -5,8 +5,8 @@ import { isSupabaseMode } from "@/lib/supabaseMode";
 
 /**
  * Pulls the freshest projeler / aksiyonlar / users / tag_definitions /
- * role_permissions snapshot from Supabase and replaces the in-memory
- * store. Used by every list page (Workspace, Dashboard, Projeler,
+ * locations / role_permissions snapshot from Supabase and replaces the
+ * in-memory store. Used by every list page (Workspace, Dashboard, Projeler,
  * Aksiyonlar, Kullanıcılar, Kokpit) on mount so the user always reads
  * what's currently in the database, not whatever was cached in
  * localStorage from a previous session.
@@ -37,12 +37,13 @@ export function useDbRefresh(cooldownMs: number = DEFAULT_COOLDOWN_MS): void {
           supabaseAdapter.fetchProjeler(),
           supabaseAdapter.fetchAksiyonlar(),
           supabaseAdapter.fetchTagDefinitions(),
+          supabaseAdapter.fetchLocations(),
           supabaseAdapter.fetchUsers(),
           useRoleStore.getState().reloadFromDb(),
         ]),
       )
-      .then(([projeler, aksiyonlar, tagDefinitions, users]) => {
-        useDataStore.setState({ projeler, aksiyonlar, tagDefinitions, users });
+      .then(([projeler, aksiyonlar, tagDefinitions, locations, users]) => {
+        useDataStore.setState({ projeler, aksiyonlar, tagDefinitions, locations, users });
       })
       .catch((err) => {
         // err from Supabase is usually a PostgrestError-shape object;

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Input, Select, SelectItem, Switch, Button, Popover, PopoverTrigger, PopoverContent, Tabs, Tab } from "@heroui/react";
-import { Plus, Trash2, Pencil, Check, X, Tag, Settings, Bell, Plug, Info } from "lucide-react";
+import { Plus, Trash2, Pencil, Check, X, Tag, MapPin, Settings, Bell, Plug, Info } from "lucide-react";
 import { useUIStore, reloadUISettingsFromDb } from "@/stores/uiStore";
 import { useDataStore } from "@/stores/dataStore";
 import { useSidebarTheme } from "@/hooks/useSidebarTheme";
@@ -9,6 +9,7 @@ import { hexToHSL } from "@/lib/colorUtils";
 import PageHeader from "@/components/layout/PageHeader";
 import ColorPicker from "@/components/ui/ColorPicker";
 import ConfirmDialog from "@/components/shared/ConfirmDialog";
+import LocationSettings from "@/components/settings/LocationSettings";
 import { toast } from "@/stores/toastStore";
 import { DEFAULT_TAG_COLOR } from "@/config/tagColors";
 import { isSupabaseMode } from "@/lib/supabaseMode";
@@ -28,6 +29,7 @@ export default function AyarlarPage() {
 
   // Tag management state
   const tagDefinitions = useDataStore((s) => s.tagDefinitions);
+  const locations = useDataStore((s) => s.locations);
   const projeler = useDataStore((s) => s.projeler);
   const addTagDefinition = useDataStore((s) => s.addTagDefinition);
   const updateTagDefinition = useDataStore((s) => s.updateTagDefinition);
@@ -395,6 +397,20 @@ export default function AyarlarPage() {
           }
         >
           {tagsTab}
+        </Tab>
+        <Tab
+          key="locations"
+          title={
+            <div className="flex items-center gap-2">
+              <MapPin size={15} />
+              <span>{t("settings.locationManagement")}</span>
+              <span className="ml-0.5 text-[11px] bg-tyro-gold/15 text-tyro-gold px-1.5 py-0.5 rounded-full font-bold">
+                {locations.length}
+              </span>
+            </div>
+          }
+        >
+          <LocationSettings />
         </Tab>
       </Tabs>
 

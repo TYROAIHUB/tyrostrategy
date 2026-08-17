@@ -36,6 +36,7 @@ vi.mock("@/lib/data/mock-adapter", () => ({
   getInitialAksiyonlar: () => [],
   getInitialData: () => ({ projeler: [], aksiyonlar: [] }),
   getInitialTagDefinitions: () => [],
+  getInitialLocations: () => [],
 }));
 
 // Helper to set up the current user
