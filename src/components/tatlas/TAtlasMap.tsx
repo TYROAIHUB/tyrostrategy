@@ -7,7 +7,7 @@ import "maplibre-gl/dist/maplibre-gl.css";
 import { Plus, Minus, Crosshair, Maximize2, Minimize2, AlertTriangle } from "lucide-react";
 import { Tooltip } from "@heroui/react";
 import { statusColor } from "@/lib/colorUtils";
-import { buildBasemapStyle, BASEMAP_ATTRIBUTION } from "@/config/basemapStyle";
+import { cartoStyleUrl, buildBasemapStyle, FALLBACK_ATTRIBUTION } from "@/config/basemapStyle";
 import { assetClassIcon } from "@/config/assetClassIcons";
 import { useSidebarTheme } from "@/hooks/useSidebarTheme";
 import type { AtlasPoint } from "@/lib/investmentPortfolio";
@@ -18,13 +18,18 @@ import TAtlasPinPopup from "./TAtlasPinPopup";
 /**
  * T-Atlas haritası.
  *
- * ALTLIK ÇEVRİMDIŞI: uygulamanın CSP'si harici tile/style host'una izin
- * vermiyor (connect-src / img-src bilinçli olarak sıkı). İlk sürümde CARTO
- * vector style ve OSM raster fallback'i denedik, ikisi de CSP tarafından
- * bloklandı ve harita boş kaldı. Artık altlık gömülü Natural Earth ülke
- * sınırlarından çiziliyor — bkz. config/basemapStyle.ts. Harici istek yok,
- * kurumsal proxy ardında ve çevrimdışı da çalışır.
+ * ALTLIK: birincil olarak CARTO vector style (şehirler, sınırlar, denizler,
+ * etiketler — tyrofreight/tyrotrader haritalarındaki görünüm). Erişilemezse
+ * gömülü Natural Earth altlığına düşer, harita boş kalmaz.
+ *
+ * Yedeğe geçiş iki sinyalle tetiklenir:
+ *   • MapLibre style/sprite/glyph/tile yükleme hatası bildirirse → hemen
+ *   • Stil BASEMAP_LOAD_TIMEOUT_MS içinde hiç yüklenmezse → zaman aşımı
+ * İkinci sinyal sağlayıcıdan bağımsız: CSP bloğu, proxy, DNS, servis
+ * kesintisi — hepsini yakalar. (İlk sürümde yalnızca hata mesajı regex'ine
+ * bakıyordum; iyi huylu maplibre hataları da fallback'i tetikliyordu.)
  */
+const BASEMAP_LOAD_TIMEOUT_MS = 6000;
 const WORLD_CENTER = { longitude: 32, latitude: 39, zoom: 2.4 };
 const FIT_PADDING = 72;
 const FIT_MAX_ZOOM = 6.5;
@@ -107,14 +112,29 @@ export default function TAtlasMap({ points, onOpenProje }: Props) {
 
   const groups = useMemo(() => groupByCoordinate(points), [points]);
 
-  // Altlık tema ile birlikte değişsin. Veri gömülü olduğu için stil üretimi
-  // ucuz ama yine de memo'luyoruz — her render'da yeni style objesi vermek
-  // MapLibre'ı gereksiz setStyle'a zorlar.
-  const mapStyle = useMemo(() => buildBasemapStyle(isDark), [isDark]);
-
+  // Altlık: CARTO birincil, gömülü Natural Earth yedek.
+  const [useOfflineBasemap, setUseOfflineBasemap] = useState(false);
+  const [styleReady, setStyleReady] = useState(false);
   // Harita hiç ayağa kalkmazsa (WebGL yok, worker bloklandı vb.) sessiz boş
   // kutu bırakmayalım — kullanıcıya söyleyelim.
   const [mapError, setMapError] = useState<string | null>(null);
+
+  const mapStyle = useMemo(
+    () => (useOfflineBasemap ? buildBasemapStyle(isDark) : cartoStyleUrl(isDark)),
+    [useOfflineBasemap, isDark]
+  );
+
+  // Stil değişince "yüklendi" bayrağını sıfırla (tema değişimi de dahil)
+  useEffect(() => {
+    setStyleReady(false);
+  }, [mapStyle]);
+
+  // Zaman aşımı: uzak stil gelmiyorsa yedeğe geç
+  useEffect(() => {
+    if (useOfflineBasemap || styleReady) return;
+    const id = window.setTimeout(() => setUseOfflineBasemap(true), BASEMAP_LOAD_TIMEOUT_MS);
+    return () => window.clearTimeout(id);
+  }, [useOfflineBasemap, styleReady]);
 
   // ── Açılış görünümü: koordinatı olan tüm projeleri kapsa (doküman §5) ──
   const fitToPoints = useCallback(() => {
@@ -195,17 +215,28 @@ export default function TAtlasMap({ points, onOpenProje }: Props) {
         touchPitch={false}
         maxZoom={14}
         minZoom={1.2}
+        onLoad={() => setStyleReady(true)}
         onError={(e) => {
-          // MapLibre pek çok iyi huylu olay için de error yayıyor (eksik
-          // glyph, iptal edilen istek). Sadece haritayı gerçekten çalışmaz
-          // hale getiren durumları yüzeye çıkarıyoruz.
           const msg = String((e as unknown as { error?: { message?: string } })?.error?.message ?? "");
-          if (/webgl|context|worker/i.test(msg)) setMapError(msg);
-          else console.warn("[T-Atlas] map error:", msg);
+          // Haritayı tamamen çalışmaz kılan hatalar → kullanıcıya göster
+          if (/webgl|context lost|worker/i.test(msg)) {
+            setMapError(msg);
+            return;
+          }
+          // Uzak altlık yüklenemiyorsa yedeğe geç
+          if (!useOfflineBasemap && /cartocdn|style|sprite|glyph|fetch|network/i.test(msg)) {
+            setUseOfflineBasemap(true);
+            return;
+          }
+          console.warn("[T-Atlas] map error:", msg);
         }}
         style={{ width: "100%", height: "100%" }}
       >
-        <AttributionControl compact position="bottom-right" customAttribution={BASEMAP_ATTRIBUTION} />
+        <AttributionControl
+          compact
+          position="bottom-right"
+          customAttribution={useOfflineBasemap ? FALLBACK_ATTRIBUTION : undefined}
+        />
 
         {groups.map((group) => {
           const status = dominantStatus(group.points);
@@ -298,6 +329,16 @@ export default function TAtlasMap({ points, onOpenProje }: Props) {
       <div className="absolute bottom-3 left-3 z-10">
         <TAtlasLegend />
       </div>
+
+      {/* ── Yedek altlık devrede: harita sade görünüyorsa nedeni belli olsun ── */}
+      {useOfflineBasemap && !mapError && (
+        <div className="absolute left-1/2 top-3 z-10 -translate-x-1/2">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-tyro-surface/90 px-3 py-1 text-[11px] font-semibold text-tyro-text-muted shadow-sm backdrop-blur-md">
+            <AlertTriangle size={12} />
+            {t("tatlas.map.basemapFallback")}
+          </span>
+        </div>
+      )}
 
       {/* ── Harita hiç çizilemediyse ── */}
       {mapError && (

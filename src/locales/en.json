@@ -1169,7 +1169,8 @@
       "groupTooltip": "{{city}} · {{count}} projects",
       "emptyTitle": "No projects to show on the map",
       "emptyDesc": "Loosen the filters or assign locations to projects.",
-      "renderFailed": "Map could not be rendered — your browser may not support WebGL"
+      "renderFailed": "Map could not be rendered — your browser may not support WebGL",
+      "basemapFallback": "Remote base map unavailable, using the simple base layer"
     },
     "legend": {
       "title": "Legend",
