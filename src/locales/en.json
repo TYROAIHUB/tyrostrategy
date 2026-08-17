@@ -202,7 +202,7 @@
       "participantsPlaceholder": "Select project members",
       "department": "Department",
       "departmentPlaceholder": "Select department",
-      "locationPlaceholder": "Select location (optional)",
+      "locationPlaceholder": "Select location",
       "locationEmpty": "No locations defined — add them in Settings > Location",
       "locationClear": "Clear location selection",
       "reviewDate": "Review Date",
