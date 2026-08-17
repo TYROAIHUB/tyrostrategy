@@ -22,7 +22,8 @@
     "dataManagement": "Data Management",
     "pinSidebar": "Pin sidebar",
     "unpinSidebar": "Unpin sidebar",
-    "help": "Help"
+    "help": "Help",
+    "tAtlas": "T-Atlas"
   },
   "sections": {
     "mainMenu": "Main Menu",
@@ -108,7 +109,8 @@
     "tryChangingCriteria": "Try changing your search criteria.",
     "capex": "CAPEX",
     "assetClass": "Asset class",
-    "actionType": "Investment type"
+    "actionType": "Investment type",
+    "close": "Close"
   },
   "roles": {
     "admin": "Admin",
@@ -182,6 +184,10 @@
       "title": "Page Not Found",
       "subtitle": "The page you are looking for does not exist.",
       "goHome": "Go to Home Page"
+    },
+    "tatlas": {
+      "title": "T-Atlas",
+      "subtitle": "Geographic distribution and portfolio metrics of the investment portfolio"
     }
   },
   "forms": {
@@ -1153,5 +1159,72 @@
     "ACT-UPG": "Upgrade / Integration",
     "ACT-SUS": "Sustaining / Asset Renewal",
     "ACT-REL": "Relocation"
+  },
+  "tatlas": {
+    "map": {
+      "fullscreen": "Fullscreen",
+      "zoomIn": "Zoom in",
+      "zoomOut": "Zoom out",
+      "resetView": "Reset view",
+      "groupTooltip": "{{city}} · {{count}} projects",
+      "basemapFallback": "Base map could not load, using fallback",
+      "emptyTitle": "No projects to show on the map",
+      "emptyDesc": "Loosen the filters or assign locations to projects."
+    },
+    "legend": {
+      "title": "Legend",
+      "iconMeaning": "Icon — asset class",
+      "frameMeaning": "Frame color — project status"
+    },
+    "filter": {
+      "country": "Country",
+      "reset": "Reset",
+      "resultCount": "{{count}} projects on map"
+    },
+    "summary": {
+      "cards": "Summary cards",
+      "breakdowns": "Breakdown panels"
+    },
+    "metric": {
+      "projectCount": "Project count",
+      "totalCapex": "Total CAPEX",
+      "countryCount": "Country count",
+      "newInvestment": "New investment",
+      "newInvestmentNote": "ACT-NEW",
+      "avgProgress": "Avg. progress",
+      "riskyCount": "At-risk projects",
+      "riskyNote": "At risk + high risk",
+      "capexMissing": "No CAPEX entered yet",
+      "capexPartial": "Entered for {{entered}}/{{total}}"
+    },
+    "panel": {
+      "statusDistribution": "Status distribution",
+      "countByCountry": "Project count by country",
+      "countByActionType": "Count by investment type",
+      "countByAssetClass": "Count by asset class",
+      "capexByCountry": "CAPEX by country",
+      "capexByActionType": "CAPEX by investment type",
+      "capexByAssetClass": "CAPEX by asset class",
+      "noCapex": "No CAPEX data in this breakdown"
+    },
+    "popup": {
+      "groupCount": "{{count}} projects at this location",
+      "openDetail": "Go to project detail",
+      "approximate": "Location shown approximately at the country centre."
+    },
+    "pending": {
+      "title": "Projects awaiting location",
+      "subtitle": "Not shown on the map, excluded from summary figures",
+      "noLocation": "{{count}} without a location",
+      "unknownCoords": "{{count}} with a city missing from the coordinate dictionary",
+      "showAll": "Show {{count}} more"
+    },
+    "empty": {
+      "noPortfolioTitle": "Investment portfolio is empty",
+      "noPortfolioDesc": "T-Atlas shows projects that have an asset class. Assign an asset class and investment type to projects.",
+      "goToProjects": "Go to projects",
+      "noLocationsDefined": "No locations defined yet — add countries and cities under Settings > Location to assign them to projects.",
+      "goToSettings": "Go to settings"
+    }
   }
 }

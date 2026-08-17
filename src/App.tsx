@@ -19,6 +19,9 @@ const GanttPage = lazy(() => import("@/pages/GanttPage"));
 // TreePage (WBS) removed
 const StrategyMapPage = lazy(() => import("@/pages/StrategyMapPage"));
 const TAlignmentPage = lazy(() => import("@/pages/TAlignmentPage"));
+// T-Atlas maplibre-gl taşıyor (~850 KB) — lazy kalması şart, sayfaya
+// girmeyen kullanıcı indirmesin.
+const TAtlasPage = lazy(() => import("@/pages/TAtlasPage"));
 const KullanicilarPage = lazy(() => import("@/pages/KullanicilarPage"));
 const AyarlarPage = lazy(() => import("@/pages/AyarlarPage"));
 const VeriYonetimiPage = lazy(() => import("@/pages/VeriYonetimiPage"));
@@ -89,6 +92,11 @@ export default function App() {
             {/* WBS/Tree page removed */}
             <Route path="/strategy-map" element={<ProtectedRoute pageKey="tMap"><PageSuspense><StrategyMapPage /></PageSuspense></ProtectedRoute>} />
             <Route path="/t-alignment" element={<ProtectedRoute pageKey="tAlignment"><PageSuspense><TAlignmentPage /></PageSuspense></ProtectedRoute>} />
+            {/* T-Atlas yetkisi mevcut pages.kpi anahtarını kullanıyor:
+                Admin + Management true, Proje Lideri false — dokümanın
+                "Admin ve yönetim rolü" şartıyla birebir aynı. Yeni pageKey
+                eklemek role_permissions yazması demekti. */}
+            <Route path="/t-atlas" element={<ProtectedRoute pageKey="kpi"><PageSuspense><TAtlasPage /></PageSuspense></ProtectedRoute>} />
             <Route path="/kullanicilar" element={<ProtectedRoute pageKey="kullanicilar"><PageSuspense><KullanicilarPage /></PageSuspense></ProtectedRoute>} />
             <Route path="/veri-yonetimi" element={<ProtectedRoute pageKey="ayarlar"><PageSuspense><VeriYonetimiPage /></PageSuspense></ProtectedRoute>} />
             <Route path="/ayarlar" element={<ProtectedRoute pageKey="ayarlar"><PageSuspense><AyarlarPage /></PageSuspense></ProtectedRoute>} />

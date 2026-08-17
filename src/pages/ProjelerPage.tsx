@@ -45,6 +45,7 @@ const INITIAL_VISIBLE = new Set(["name", "owner", "source", "location", "capex",
 export default function ProjelerPage() {
   const { t, i18n } = useTranslation();
   const sidebarTheme = useSidebarTheme();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const columns = [
     { uid: "name", name: t("forms.objective.name") },
@@ -168,6 +169,24 @@ export default function ProjelerPage() {
     setSelectedProje(h);
     setPanelMode("edit");
   };
+
+  // Derin link: /#/projeler?proje=P26-0107 → o projenin detay paneli açılır.
+  // T-Atlas'ın pin popup'ındaki "detay sayfasına git" bağlantısı bu yolu
+  // kullanıyor (yeni sekmede açıldığı için harita sayfası kapanmıyor).
+  // Panel açıldıktan sonra parametre temizlenir ki kullanıcı paneli kapatıp
+  // sayfayı yenilediğinde tekrar açılmasın.
+  useEffect(() => {
+    const wanted = searchParams.get("proje");
+    if (!wanted) return;
+    const found = (projeler ?? []).find((p) => p.id === wanted);
+    if (!found) return;
+    setSelectedProje(found);
+    setPanelMode("detail");
+    setDetailTitle(t("detail.objectiveDetail"));
+    const next = new URLSearchParams(searchParams);
+    next.delete("proje");
+    setSearchParams(next, { replace: true });
+  }, [searchParams, setSearchParams, projeler, t]);
 
   const closePanel = () => {
     setPanelMode("closed");

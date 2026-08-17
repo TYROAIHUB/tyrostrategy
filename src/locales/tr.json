@@ -22,7 +22,8 @@
     "dataManagement": "Veri Yönetimi",
     "pinSidebar": "Sidebar'ı sabitle",
     "unpinSidebar": "Sidebar'ı serbest bırak",
-    "help": "Yardım"
+    "help": "Yardım",
+    "tAtlas": "T-Atlas"
   },
   "sections": {
     "mainMenu": "Ana Menü",
@@ -108,7 +109,8 @@
     "tryChangingCriteria": "Arama kriterlerinizi değiştirmeyi deneyiniz.",
     "capex": "CAPEX",
     "assetClass": "Varlık sınıfı",
-    "actionType": "Yatırım tipi"
+    "actionType": "Yatırım tipi",
+    "close": "Kapat"
   },
   "roles": {
     "admin": "Admin",
@@ -182,6 +184,10 @@
       "title": "Sayfa Bulunamadı",
       "subtitle": "Aradığınız sayfa mevcut değil.",
       "goHome": "Ana Sayfaya Dön"
+    },
+    "tatlas": {
+      "title": "T-Atlas",
+      "subtitle": "Yatırım portföyünün coğrafi dağılımı ve portföy metrikleri"
     }
   },
   "forms": {
@@ -1153,5 +1159,72 @@
     "ACT-UPG": "Modernizasyon / Entegrasyon",
     "ACT-SUS": "İdame / Yenileme / Büyük Bakım",
     "ACT-REL": "Taşıma / Yeniden Konumlandırma"
+  },
+  "tatlas": {
+    "map": {
+      "fullscreen": "Tam ekran",
+      "zoomIn": "Yakınlaştır",
+      "zoomOut": "Uzaklaştır",
+      "resetView": "Görünümü sıfırla",
+      "groupTooltip": "{{city}} · {{count}} proje",
+      "basemapFallback": "Harita altlığı yüklenemedi, yedek altlık kullanılıyor",
+      "emptyTitle": "Haritada gösterilecek proje yok",
+      "emptyDesc": "Filtreleri gevşetin ya da projelere lokasyon tanımlayın."
+    },
+    "legend": {
+      "title": "Lejant",
+      "iconMeaning": "İkon — varlık sınıfı",
+      "frameMeaning": "Çerçeve rengi — proje statüsü"
+    },
+    "filter": {
+      "country": "Ülke",
+      "reset": "Sıfırla",
+      "resultCount": "{{count}} proje haritada"
+    },
+    "summary": {
+      "cards": "Özet kartları",
+      "breakdowns": "Kırılım panelleri"
+    },
+    "metric": {
+      "projectCount": "Proje sayısı",
+      "totalCapex": "Toplam CAPEX",
+      "countryCount": "Ülke sayısı",
+      "newInvestment": "Yeni yatırım",
+      "newInvestmentNote": "ACT-NEW",
+      "avgProgress": "Ort. ilerleme",
+      "riskyCount": "Riskli proje",
+      "riskyNote": "Riskte + yüksek riskte",
+      "capexMissing": "Henüz CAPEX girilmemiş",
+      "capexPartial": "{{entered}}/{{total}} projede girili"
+    },
+    "panel": {
+      "statusDistribution": "Durum dağılımı",
+      "countByCountry": "Ülkeye göre proje adedi",
+      "countByActionType": "Yatırım tipine göre adet",
+      "countByAssetClass": "Varlık sınıfına göre adet",
+      "capexByCountry": "Ülkeye göre CAPEX",
+      "capexByActionType": "Yatırım tipine göre CAPEX",
+      "capexByAssetClass": "Varlık sınıfına göre CAPEX",
+      "noCapex": "Bu kırılımda CAPEX verisi yok"
+    },
+    "popup": {
+      "groupCount": "Bu konumda {{count}} proje",
+      "openDetail": "Proje detay sayfasına git",
+      "approximate": "Konum ülke merkezine göre yaklaşık gösteriliyor."
+    },
+    "pending": {
+      "title": "Konumu bekleyen projeler",
+      "subtitle": "Haritada gösterilmiyor, özet hesaplarına dahil değil",
+      "noLocation": "{{count}} projede lokasyon girilmemiş",
+      "unknownCoords": "{{count}} projenin şehri koordinat sözlüğünde yok",
+      "showAll": "{{count}} tane daha göster"
+    },
+    "empty": {
+      "noPortfolioTitle": "Yatırım portföyü boş",
+      "noPortfolioDesc": "T-Atlas, varlık sınıfı atanmış projeleri gösterir. Projelere varlık sınıfı ve yatırım tipi tanımlayın.",
+      "goToProjects": "Projelere git",
+      "noLocationsDefined": "Henüz hiç lokasyon tanımlı değil — projelere konum atayabilmek için Ayarlar > Lokasyon'dan ülke ve şehir ekleyiniz.",
+      "goToSettings": "Ayarlara git"
+    }
   }
 }
