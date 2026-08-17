@@ -1210,7 +1210,7 @@
     },
     "popup": {
       "groupCount": "{{count}} projects at this location",
-      "openDetail": "Go to project detail",
+      "openDetail": "Open project detail",
       "approximate": "Location shown approximately at the country centre."
     },
     "pending": {

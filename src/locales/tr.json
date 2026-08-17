@@ -1210,7 +1210,7 @@
     },
     "popup": {
       "groupCount": "Bu konumda {{count}} proje",
-      "openDetail": "Proje detay sayfasına git",
+      "openDetail": "Proje detayını aç",
       "approximate": "Konum ülke merkezine göre yaklaşık gösteriliyor."
     },
     "pending": {

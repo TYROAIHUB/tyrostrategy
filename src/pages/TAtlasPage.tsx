@@ -1,10 +1,12 @@
 import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@heroui/react";
-import { Settings2 } from "lucide-react";
+import { Settings2, Crosshair } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import PageHeader from "@/components/layout/PageHeader";
 import EmptyState from "@/components/shared/EmptyState";
+import SlidingPanel from "@/components/shared/SlidingPanel";
+import ProjeDetail from "@/components/projeler/ProjeDetail";
 import { useDataStore } from "@/stores/dataStore";
 import { useDbRefresh } from "@/hooks/useDbRefresh";
 import { usePermissions } from "@/hooks/usePermissions";
@@ -50,6 +52,9 @@ export default function TAtlasPage() {
   const { filterProjeler } = usePermissions();
 
   const [filters, setFilters] = useState<AtlasFilters>(EMPTY_ATLAS_FILTERS);
+  // Detay sağ panelde açılır — harita ve filtreler ekranda kalır
+  const [detailProje, setDetailProje] = useState<Proje | null>(null);
+  const [detailTitle, setDetailTitle] = useState("");
 
   const locationById = useMemo(() => buildLocationMap(locations), [locations]);
 
@@ -78,14 +83,22 @@ export default function TAtlasPage() {
   const metrics = useMemo(() => computePortfolioMetrics(points), [points]);
   const breakdowns = useMemo(() => computeBreakdowns(points), [points]);
 
-  /** Detay YENİ SEKMEDE açılır (doküman §6): harita sayfası kapanmaz,
-   *  kullanıcının filtreleri ve zoom'u olduğu gibi kalır. */
-  const openProje = useCallback((proje: Proje) => {
-    // HashRouter — proje detayı Projeler sayfasında panel olarak açılıyor,
-    // derin link için id'yi query'de taşıyoruz.
-    const url = `${window.location.origin}${window.location.pathname}#/projeler?proje=${encodeURIComponent(proje.id)}`;
-    window.open(url, "_blank", "noopener,noreferrer");
-  }, []);
+  /** Detay SAĞ PANELDE açılır (kullanıcı isteği).
+   *
+   *  Doküman §6 "yeni sekmede açılsın" diyordu; gerekçesi haritanın kapanmaması
+   *  ve filtre/zoom kaybının önlenmesiydi. Sağ panel aynı gerekçeyi daha iyi
+   *  karşılıyor: sayfa hiç terk edilmiyor, panel kapanınca kullanıcı bıraktığı
+   *  görünümde kalıyor — ve sekme kalabalığı olmuyor.
+   *  Projeler sayfasındaki detay paneliyle aynı bileşen ve aynı genişlik. */
+  const openProje = useCallback(
+    (proje: Proje) => {
+      setDetailProje(proje);
+      setDetailTitle(t("detail.objectiveDetail"));
+    },
+    [t]
+  );
+
+  const closeDetail = useCallback(() => setDetailProje(null), []);
 
   // Hiç yatırım projesi yok → sayfayı boş kartlarla doldurmak yerine ne
   // yapılması gerektiğini söyle.
@@ -152,6 +165,30 @@ export default function TAtlasPage() {
 
       {/* E — Konumu bekleyen projeler */}
       <TAtlasPendingLocations pending={pending} locations={locations} onOpenProje={openProje} />
+
+      {/* Proje detayı — sağdan açılan panel (Projeler sayfasıyla aynı desen) */}
+      <SlidingPanel
+        isOpen={detailProje !== null}
+        onClose={closeDetail}
+        title={detailTitle}
+        icon={<Crosshair size={18} />}
+        maxWidth={640}
+        hideHeader
+      >
+        {detailProje && (
+          <ProjeDetail
+            proje={detailProje}
+            onEdit={() => undefined}
+            onClose={closeDetail}
+            onModeChange={(m) => {
+              if (m === "editing") setDetailTitle(t("detail.editObjective"));
+              else if (m === "addAksiyon") setDetailTitle(t("detail.addAction"));
+              else if (m === "aksiyonDetail") setDetailTitle(t("detail.actionDetail"));
+              else setDetailTitle(t("detail.objectiveDetail"));
+            }}
+          />
+        )}
+      </SlidingPanel>
     </div>
   );
 }

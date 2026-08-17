@@ -72,6 +72,23 @@ export function actionTypeLabel(code: string | undefined | null, t: TFunction): 
   return t(`actionType.${code}` as "actionType.ACT-NEW");
 }
 
+/** Kod ile adı birlikte gösterir: "AST-PROC — Üretim ve İşleme Tesisleri".
+ *  Kullanıcı isteği: sabit seçim listelerinde yalnızca ad değil kod da görünsün
+ *  (kodlar Excel ve raporlarda birincil anahtar olarak kullanılıyor). */
+export const CODE_LABEL_SEPARATOR = " — ";
+
+export function assetClassCodeAndLabel(code: string | undefined | null, t: TFunction): string {
+  if (!code) return "";
+  const label = assetClassLabel(code, t);
+  return label && label !== code ? `${code}${CODE_LABEL_SEPARATOR}${label}` : code;
+}
+
+export function actionTypeCodeAndLabel(code: string | undefined | null, t: TFunction): string {
+  if (!code) return "";
+  const label = actionTypeLabel(code, t);
+  return label && label !== code ? `${code}${CODE_LABEL_SEPARATOR}${label}` : code;
+}
+
 /** Bir kodun sabit listede olup olmadığını doğrular (DB CHECK'i ile aynı küme). */
 export function isAssetClass(v: unknown): v is AssetClass {
   return typeof v === "string" && (ASSET_CLASS_CODES as readonly string[]).includes(v);

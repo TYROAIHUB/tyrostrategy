@@ -5,7 +5,7 @@ import { statusColor } from "@/lib/colorUtils";
 import { getStatusLabel } from "@/lib/constants";
 import { formatDate } from "@/lib/dateUtils";
 import { formatCapex } from "@/lib/money";
-import { assetClassLabel, actionTypeLabel } from "@/config/projectTaxonomy";
+import { assetClassCodeAndLabel, actionTypeCodeAndLabel } from "@/config/projectTaxonomy";
 import { assetClassIcon } from "@/config/assetClassIcons";
 import { formatLocationLabel } from "@/lib/locations";
 import type { AtlasPoint } from "@/lib/investmentPortfolio";
@@ -15,10 +15,10 @@ import type { Proje } from "@/types";
  * Pin popup kartı (doküman §6).
  *
  * Kartın TÜM içeriği proje kaydından okunur — harita tarafında hiçbir alan
- * yeniden girilmez. Proje adı ve "detay sayfasına git" bağlantısı YENİ
- * SEKMEDE açılır: kullanıcı haritada bir kümeyi filtreleyip birkaç projeyi
- * sırayla inceliyor, aynı sekmede yönlendirme yapılsa her dönüşte filtreleri
- * ve zoom'u yeniden kurması gerekirdi.
+ * yeniden girilmez. Proje adı ve "Proje detayını aç" bağlantısı SAĞ PANELİ
+ * açar (kullanıcı isteği): sayfa hiç terk edilmediği için filtreler ve zoom
+ * korunur, sekme kalabalığı da olmaz. Doküman §6 yeni sekme öneriyordu;
+ * gerekçesi (harita kapanmasın) panelle daha iyi karşılanıyor.
  *
  * Bir koordinatta birden fazla proje varsa önce liste, sonra kart gösterilir.
  */
@@ -94,8 +94,8 @@ export default function TAtlasPinPopup({ points, approximate, onClose, onOpenPro
                 {/* Kategori satırı: varlık sınıfı · yatırım tipi */}
                 <p className="truncate text-[11px] font-semibold text-tyro-text-muted">
                   {[
-                    assetClassLabel(active.proje.assetClass, t),
-                    actionTypeLabel(active.proje.actionType, t),
+                    assetClassCodeAndLabel(active.proje.assetClass, t),
+                    actionTypeCodeAndLabel(active.proje.actionType, t),
                   ]
                     .filter(Boolean)
                     .join(" · ") || "—"}

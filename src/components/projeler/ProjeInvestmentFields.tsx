@@ -2,7 +2,12 @@ import { useMemo } from "react";
 import { Controller, type Control, type FieldErrors, type FieldValues } from "react-hook-form";
 import { Input, Select, SelectItem } from "@heroui/react";
 import { useTranslation } from "react-i18next";
-import { getAssetClassOptions, getActionTypeOptions } from "@/config/projectTaxonomy";
+import {
+  getAssetClassOptions,
+  getActionTypeOptions,
+  assetClassCodeAndLabel,
+  actionTypeCodeAndLabel,
+} from "@/config/projectTaxonomy";
 import { CAPEX_CURRENCY } from "@/lib/money";
 
 /**
@@ -103,12 +108,20 @@ export default function ProjeInvestmentFields({
                 size="sm"
                 classNames={{ trigger: "border-tyro-border", value: "font-semibold text-tyro-text-primary" }}
                 placeholder={t("forms.objective.assetClassPlaceholder")}
+                // Seçili değer kod ile birlikte görünsün (kullanıcı isteği)
+                renderValue={(items) => (
+                  <span className="truncate text-[13px] font-semibold">
+                    {assetClassCodeAndLabel(String(items[0]?.key ?? ""), t)}
+                  </span>
+                )}
               >
                 {assetOptions.map((opt) => (
-                  <SelectItem key={opt.key} textValue={opt.label}>
-                    <span className="flex flex-col">
+                  <SelectItem key={opt.key} textValue={`${opt.code} ${opt.label}`}>
+                    <span className="flex items-baseline gap-2">
+                      <span className="shrink-0 rounded bg-tyro-bg px-1 py-px text-[10px] font-bold tabular-nums text-tyro-text-secondary">
+                        {opt.code}
+                      </span>
                       <span className="text-[13px] font-medium">{opt.label}</span>
-                      <span className="text-[11px] text-tyro-text-muted tabular-nums">{opt.code}</span>
                     </span>
                   </SelectItem>
                 ))}
@@ -142,12 +155,19 @@ export default function ProjeInvestmentFields({
                 size="sm"
                 classNames={{ trigger: "border-tyro-border", value: "font-semibold text-tyro-text-primary" }}
                 placeholder={t("forms.objective.actionTypePlaceholder")}
+                renderValue={(items) => (
+                  <span className="truncate text-[13px] font-semibold">
+                    {actionTypeCodeAndLabel(String(items[0]?.key ?? ""), t)}
+                  </span>
+                )}
               >
                 {actionOptions.map((opt) => (
-                  <SelectItem key={opt.key} textValue={opt.label}>
-                    <span className="flex flex-col">
+                  <SelectItem key={opt.key} textValue={`${opt.code} ${opt.label}`}>
+                    <span className="flex items-baseline gap-2">
+                      <span className="shrink-0 rounded bg-tyro-bg px-1 py-px text-[10px] font-bold tabular-nums text-tyro-text-secondary">
+                        {opt.code}
+                      </span>
                       <span className="text-[13px] font-medium">{opt.label}</span>
-                      <span className="text-[11px] text-tyro-text-muted tabular-nums">{opt.code}</span>
                     </span>
                   </SelectItem>
                 ))}

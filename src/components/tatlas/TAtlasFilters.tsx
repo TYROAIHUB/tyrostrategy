@@ -1,39 +1,52 @@
 import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import { Select, SelectItem, Button } from "@heroui/react";
-import { RotateCcw } from "lucide-react";
-import { assetClassLabel, actionTypeLabel } from "@/config/projectTaxonomy";
+import {
+  Dropdown,
+  DropdownTrigger,
+  DropdownMenu,
+  DropdownItem,
+  Button,
+} from "@heroui/react";
+import { ChevronDown, RotateCcw, Boxes, Hammer, Globe2, CircleDot, type LucideIcon } from "lucide-react";
+import {
+  assetClassCodeAndLabel,
+  actionTypeCodeAndLabel,
+} from "@/config/projectTaxonomy";
 import { getStatusLabel } from "@/lib/constants";
-import { hexToHSL } from "@/lib/colorUtils";
-import { useSidebarTheme } from "@/hooks/useSidebarTheme";
+import { statusColor } from "@/lib/colorUtils";
 import type { AtlasFilters, AtlasFilterOptions } from "@/lib/investmentPortfolio";
 import { hasActiveFilters } from "@/lib/investmentPortfolio";
+import type { EntityStatus } from "@/types";
 
 /**
  * Filtre satırı (doküman §7).
  *
- * Dört çoklu seçim grubu + sıfırlama. Grup İÇİNDE VEYA, gruplar ARASINDA VE —
- * mantık `applyAtlasFilters` içinde; bu bileşen yalnızca seçimi yönetiyor.
+ * Uygulamanın yerleşik filtre desenini kullanıyor: Dropdown + flat Button
+ * (ikon + ChevronDown), seçim varken buton renklenir — Projeler sayfasındaki
+ * statü/etiket filtreleriyle birebir aynı dil. İlk sürümde HeroUI `Select`
+ * kullanmıştım; sabit genişlikli trigger uzun etiketleri kırpıyordu
+ * ("Yardımcı Tesisler, HSE ve Teknik Sistemler" görünmüyordu). Dropdown
+ * popover'ı trigger'dan bağımsız genişleyebildiği için tam ad sığıyor.
  *
- * Seçenekler portföyde FİİLEN bulunan değerlerden geliyor (boş sonuç veren
- * seçim sunmuyoruz) — projeler sayfasındaki departman dropdown'ı ile aynı
- * yaklaşım.
+ * Sabit seçim listelerinde KOD — AD birlikte gösteriliyor: kodlar Excel ve
+ * raporlarda birincil anahtar, kullanıcı hangi kodu seçtiğini görmek istiyor.
+ *
+ * Mantık burada değil: grup içi VEYA / gruplar arası VE `applyAtlasFilters`
+ * içinde. Bu bileşen yalnızca seçimi yönetir.
  */
 interface Props {
   filters: AtlasFilters;
   options: AtlasFilterOptions;
   onChange: (next: AtlasFilters) => void;
-  /** Filtre uygulandıktan sonra kalan proje adedi — kullanıcı etkiyi görsün */
+  /** Filtre sonrası haritada kalan proje adedi */
   resultCount: number;
 }
 
 export default function TAtlasFilters({ filters, options, onChange, resultCount }: Props) {
   const { t } = useTranslation();
-  const theme = useSidebarTheme();
 
   const setGroup = useCallback(
     (group: keyof AtlasFilters, keys: "all" | Set<React.Key>) => {
-      // HeroUI "all" gönderebiliyor — o durumda tüm seçenekleri işaretliyoruz
       const next =
         keys === "all"
           ? [...(options[group] as string[])]
@@ -49,114 +62,49 @@ export default function TAtlasFilters({ filters, options, onChange, resultCount 
 
   const active = hasActiveFilters(filters);
 
-  const selectClassNames = {
-    trigger: "border-tyro-border h-9 min-h-9",
-    value: "text-[12px] font-semibold text-tyro-text-primary",
-    label: "text-[11px]",
-  };
-
   return (
     <div className="glass-card rounded-card px-3 py-2.5">
       <div className="flex flex-wrap items-center gap-2">
-        <Select
-          aria-label={t("common.assetClass")}
-          selectionMode="multiple"
-          selectedKeys={new Set(filters.assetClasses)}
+        {/* ── Varlık sınıfı ── */}
+        <FilterDropdown
+          icon={Boxes}
+          label={t("common.assetClass")}
+          selected={filters.assetClasses}
+          options={options.assetClasses}
+          renderOption={(code) => assetClassCodeAndLabel(code, t)}
           onSelectionChange={(k) => setGroup("assetClasses", k)}
-          placeholder={t("common.assetClass")}
-          variant="bordered"
-          size="sm"
-          isDisabled={options.assetClasses.length === 0}
-          className="w-full sm:w-[190px]"
-          classNames={selectClassNames}
-          renderValue={(items) => (
-            <span className="text-[12px] font-semibold">
-              {t("common.assetClass")}
-              {items.length > 0 ? ` · ${items.length}` : ""}
-            </span>
-          )}
-        >
-          {options.assetClasses.map((code) => (
-            <SelectItem key={code} textValue={assetClassLabel(code, t)}>
-              {assetClassLabel(code, t)}
-            </SelectItem>
-          ))}
-        </Select>
+        />
 
-        <Select
-          aria-label={t("common.actionType")}
-          selectionMode="multiple"
-          selectedKeys={new Set(filters.actionTypes)}
+        {/* ── Yatırım tipi ── */}
+        <FilterDropdown
+          icon={Hammer}
+          label={t("common.actionType")}
+          selected={filters.actionTypes}
+          options={options.actionTypes}
+          renderOption={(code) => actionTypeCodeAndLabel(code, t)}
           onSelectionChange={(k) => setGroup("actionTypes", k)}
-          placeholder={t("common.actionType")}
-          variant="bordered"
-          size="sm"
-          isDisabled={options.actionTypes.length === 0}
-          className="w-full sm:w-[175px]"
-          classNames={selectClassNames}
-          renderValue={(items) => (
-            <span className="text-[12px] font-semibold">
-              {t("common.actionType")}
-              {items.length > 0 ? ` · ${items.length}` : ""}
-            </span>
-          )}
-        >
-          {options.actionTypes.map((code) => (
-            <SelectItem key={code} textValue={actionTypeLabel(code, t)}>
-              {actionTypeLabel(code, t)}
-            </SelectItem>
-          ))}
-        </Select>
+        />
 
-        <Select
-          aria-label={t("tatlas.filter.country")}
-          selectionMode="multiple"
-          selectedKeys={new Set(filters.countries)}
+        {/* ── Ülke ── */}
+        <FilterDropdown
+          icon={Globe2}
+          label={t("tatlas.filter.country")}
+          selected={filters.countries}
+          options={options.countries}
+          renderOption={(c) => c}
           onSelectionChange={(k) => setGroup("countries", k)}
-          placeholder={t("tatlas.filter.country")}
-          variant="bordered"
-          size="sm"
-          isDisabled={options.countries.length === 0}
-          className="w-full sm:w-[150px]"
-          classNames={selectClassNames}
-          renderValue={(items) => (
-            <span className="text-[12px] font-semibold">
-              {t("tatlas.filter.country")}
-              {items.length > 0 ? ` · ${items.length}` : ""}
-            </span>
-          )}
-        >
-          {options.countries.map((c) => (
-            <SelectItem key={c} textValue={c}>
-              {c}
-            </SelectItem>
-          ))}
-        </Select>
+        />
 
-        <Select
-          aria-label={t("common.status")}
-          selectionMode="multiple"
-          selectedKeys={new Set(filters.statuses)}
+        {/* ── Statü ── Renkli nokta ile, StatusBadge paletiyle aynı */}
+        <FilterDropdown
+          icon={CircleDot}
+          label={t("common.status")}
+          selected={filters.statuses}
+          options={options.statuses}
+          renderOption={(s) => getStatusLabel(s as EntityStatus, t)}
+          dotColorOf={(s) => statusColor(s as EntityStatus)}
           onSelectionChange={(k) => setGroup("statuses", k)}
-          placeholder={t("common.status")}
-          variant="bordered"
-          size="sm"
-          isDisabled={options.statuses.length === 0}
-          className="w-full sm:w-[150px]"
-          classNames={selectClassNames}
-          renderValue={(items) => (
-            <span className="text-[12px] font-semibold">
-              {t("common.status")}
-              {items.length > 0 ? ` · ${items.length}` : ""}
-            </span>
-          )}
-        >
-          {options.statuses.map((s) => (
-            <SelectItem key={s} textValue={getStatusLabel(s, t)}>
-              {getStatusLabel(s, t)}
-            </SelectItem>
-          ))}
-        </Select>
+        />
 
         <Button
           size="sm"
@@ -164,17 +112,149 @@ export default function TAtlasFilters({ filters, options, onChange, resultCount 
           onPress={reset}
           isDisabled={!active}
           startContent={<RotateCcw size={13} />}
-          className="h-9 font-semibold text-tyro-text-secondary"
-          style={{ "--heroui-primary": hexToHSL(theme.accentColor) } as React.CSSProperties}
+          className="h-8 font-semibold text-tyro-text-secondary"
         >
           {t("tatlas.filter.reset")}
         </Button>
 
-        {/* Filtrenin etkisi — haritadaki küme ile bu sayı her zaman aynı */}
-        <span className="ml-auto shrink-0 text-[11px] font-semibold text-tyro-text-muted tabular-nums">
+        {/* Filtrenin etkisi — haritadaki pin kümesiyle bu sayı her zaman aynı */}
+        <span className="ml-auto shrink-0 text-[11px] font-semibold tabular-nums text-tyro-text-muted">
           {t("tatlas.filter.resultCount", { count: resultCount })}
         </span>
       </div>
+
+      {/* Seçili değerler — tam adlarıyla, kırpılmadan. Çok seçim yapıldığında
+          buton etiketine sığmıyor; kullanıcı neyi filtrelediğini burada görür. */}
+      {active && (
+        <div className="mt-2 flex flex-wrap items-center gap-1.5 border-t border-tyro-border/20 pt-2">
+          {filters.assetClasses.map((c) => (
+            <Chip key={`a-${c}`} onRemove={() => setGroup("assetClasses", new Set(filters.assetClasses.filter((x) => x !== c)))}>
+              {assetClassCodeAndLabel(c, t)}
+            </Chip>
+          ))}
+          {filters.actionTypes.map((c) => (
+            <Chip key={`t-${c}`} onRemove={() => setGroup("actionTypes", new Set(filters.actionTypes.filter((x) => x !== c)))}>
+              {actionTypeCodeAndLabel(c, t)}
+            </Chip>
+          ))}
+          {filters.countries.map((c) => (
+            <Chip key={`c-${c}`} onRemove={() => setGroup("countries", new Set(filters.countries.filter((x) => x !== c)))}>
+              {c}
+            </Chip>
+          ))}
+          {filters.statuses.map((s) => (
+            <Chip
+              key={`s-${s}`}
+              color={statusColor(s as EntityStatus)}
+              onRemove={() => setGroup("statuses", new Set(filters.statuses.filter((x) => x !== s)))}
+            >
+              {getStatusLabel(s as EntityStatus, t)}
+            </Chip>
+          ))}
+        </div>
+      )}
     </div>
   );
+}
+
+/* ── Tek filtre grubu ── */
+function FilterDropdown({
+  icon: Icon,
+  label,
+  selected,
+  options,
+  renderOption,
+  dotColorOf,
+  onSelectionChange,
+}: {
+  icon: LucideIcon;
+  label: string;
+  selected: string[];
+  options: string[];
+  renderOption: (key: string) => string;
+  dotColorOf?: (key: string) => string;
+  onSelectionChange: (keys: "all" | Set<React.Key>) => void;
+}) {
+  const count = selected.length;
+  const isActive = count > 0;
+
+  return (
+    <Dropdown placement="bottom-start">
+      <DropdownTrigger>
+        <Button
+          size="sm"
+          variant="flat"
+          isDisabled={options.length === 0}
+          startContent={<Icon size={14} />}
+          endContent={<ChevronDown size={14} />}
+          className={`h-8 font-semibold ${isActive ? "border border-tyro-gold/40 bg-tyro-gold/10 text-tyro-gold" : ""}`}
+        >
+          {/* Tek seçimde değerin kendisini yaz — kullanıcı butona bakınca
+              neyi filtrelediğini görsün. Çoklu seçimde adede düş. */}
+          {count === 1 ? truncate(renderOption(selected[0]), 28) : count > 1 ? `${label} · ${count}` : label}
+        </Button>
+      </DropdownTrigger>
+      <DropdownMenu
+        aria-label={label}
+        closeOnSelect={false}
+        selectionMode="multiple"
+        selectedKeys={new Set(selected)}
+        onSelectionChange={onSelectionChange}
+        // Popover trigger genişliğinden bağımsız — uzun etiketler tam görünür
+        classNames={{ list: "min-w-[260px] max-w-[380px]" }}
+        itemClasses={{ title: "text-[12px] whitespace-normal leading-snug" }}
+      >
+        {options.map((key) => (
+          <DropdownItem
+            key={key}
+            textValue={renderOption(key)}
+            startContent={
+              dotColorOf ? (
+                <span
+                  className="h-2 w-2 shrink-0 rounded-full"
+                  style={{ backgroundColor: dotColorOf(key) }}
+                />
+              ) : undefined
+            }
+          >
+            {renderOption(key)}
+          </DropdownItem>
+        ))}
+      </DropdownMenu>
+    </Dropdown>
+  );
+}
+
+/* ── Seçili değer çipi ── */
+function Chip({
+  children,
+  color,
+  onRemove,
+}: {
+  children: React.ReactNode;
+  color?: string;
+  onRemove: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onRemove}
+      className="inline-flex max-w-full cursor-pointer items-center gap-1.5 rounded-full border px-2 py-0.5 text-[11px] font-semibold transition-colors hover:opacity-80"
+      style={
+        color
+          ? { borderColor: `${color}55`, backgroundColor: `${color}14`, color }
+          : undefined
+      }
+    >
+      {color && <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ backgroundColor: color }} />}
+      <span className={color ? "" : "text-tyro-text-secondary"}>{children}</span>
+      <span aria-hidden className={color ? "" : "text-tyro-text-muted"}>
+        ×
+      </span>
+    </button>
+  );
+}
+
+function truncate(s: string, max: number): string {
+  return s.length > max ? `${s.slice(0, max - 1)}…` : s;
 }
