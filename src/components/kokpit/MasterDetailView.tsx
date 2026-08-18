@@ -348,29 +348,21 @@ function DetailPanel({
           <>
             {/* ── MOBILE layout: title full-width + progress bar ── */}
             <div className="sm:hidden flex flex-col gap-2">
-              {/* Title + ID */}
-              <div>
-                {/* "Proje Adı:" etiketi ince ve soluk, ad kalın — kullanıcı
-                    geri bildirimi: detay ekranında alanın ne olduğu açıkça
-                    yazsın. */}
+              {/* Title + ID — masaüstüyle aynı etiket/değer düzeni */}
+              <FieldRow label={t("common.projectName")} labelWidth={72}>
                 <h2 className="text-[15px] font-bold text-tyro-text-primary leading-snug">
-                  <span className="text-[12px] font-normal text-tyro-text-muted">
-                    {t("common.projectName")}:{" "}
-                  </span>
                   {proje.name}
                 </h2>
-                <p className="text-[11px] text-tyro-text-muted mt-0.5">
+                <p className="mt-0.5 text-[11px] text-tyro-text-muted">
                   {proje.id}{proje.description ? ` · ${proje.description}` : ""}
                 </p>
-              </div>
+              </FieldRow>
               {/* Status + tags — statü pill'i hover'da neden bu statüde
                   olduğunu kullanıcı diliyle açıklayan tooltip gösterir
                   (kullanıcı isteği 2026-05-22, migration 030 escalation
                   kuralının görünür yansıması). */}
-              <div className="flex items-center flex-wrap gap-1.5">
-                <span className="text-[11px] font-normal text-tyro-text-muted">
-                  {t("common.projectStatus")}:
-                </span>
+              <FieldRow label={t("common.projectStatus")} labelWidth={72}>
+                <div className="flex flex-wrap items-center gap-1.5">
                 <Tooltip
                   content={getStatusExplanation(proje.status, aksiyonlar, t)}
                   placement="top"
@@ -382,7 +374,8 @@ function DetailPanel({
                 {proje.tags && proje.tags.length > 0 && proje.tags.map((tag) => (
                   <TagChip key={tag} name={tag} size="sm" />
                 ))}
-              </div>
+                </div>
+              </FieldRow>
               {/* Horizontal progress bar */}
               <div className="flex items-center gap-2">
                 <div className="flex-1 h-2 rounded-full overflow-hidden bg-tyro-border/20">
@@ -396,27 +389,32 @@ function DetailPanel({
             {/* ── DESKTOP layout: title left + circular progress right ── */}
             <div className="hidden sm:flex items-start gap-4">
               <div className="flex-1 min-w-0">
-                <h2 className="text-[20px] font-bold text-tyro-text-primary leading-snug">
-                  <span className="text-[13px] font-normal text-tyro-text-muted">
-                    {t("common.projectName")}:{" "}
-                  </span>
-                  {proje.name}
-                </h2>
-                <div className="flex items-center gap-3 mt-1 ml-1">
-                  {proje.owner && (
-                    <span className="text-[12px] text-tyro-text-muted">
-                      <span className="font-medium text-tyro-text-secondary">{proje.owner}</span>
-                    </span>
+                {/* Etiket / değer düzeni: sabit genişlikte etiket kolonu +
+                    dikey ayırıcı çizgi. Böylece proje adı, meta satırı ve
+                    statü rozeti AYNI dikey hizadan başlıyor (kullanıcı
+                    isteği: hizalamayı düzelt, etiketten sonra düz çizgi). */}
+                <FieldRow label={t("common.projectName")}>
+                  <h2 className="text-[20px] font-bold text-tyro-text-primary leading-snug">
+                    {proje.name}
+                  </h2>
+                  {(proje.owner || proje.source) && (
+                    <div className="mt-0.5 flex items-center gap-2.5">
+                      {proje.owner && (
+                        <span className="text-[12px] font-medium text-tyro-text-secondary">
+                          {proje.owner}
+                        </span>
+                      )}
+                      {proje.owner && proje.source && (
+                        <span className="h-3.5 w-px rounded-full bg-tyro-border/60" />
+                      )}
+                      {proje.source && (
+                        <span className="text-[12px] text-tyro-text-muted">{proje.source}</span>
+                      )}
+                    </div>
                   )}
-                  {proje.owner && proje.source && <span className="w-px h-3.5 bg-tyro-border/60 rounded-full" />}
-                  {proje.source && (
-                    <span className="text-[12px] text-tyro-text-muted">{proje.source}</span>
-                  )}
-                </div>
-                <div className="flex items-center flex-wrap gap-2 mt-1.5">
-                  <span className="text-[12px] font-normal text-tyro-text-muted">
-                    {t("common.projectStatus")}:
-                  </span>
+                </FieldRow>
+                <FieldRow label={t("common.projectStatus")} className="mt-1.5">
+                  <div className="flex flex-wrap items-center gap-2">
                   <Tooltip
                     content={getStatusExplanation(proje.status, aksiyonlar, t)}
                     placement="top"
@@ -431,7 +429,8 @@ function DetailPanel({
                       {proje.tags.map((tag) => <TagChip key={tag} name={tag} size="sm" />)}
                     </>
                   )}
-                </div>
+                  </div>
+                </FieldRow>
               </div>
               <div className="flex flex-col items-center shrink-0">
                 <div className="relative w-[80px] h-[80px]">
@@ -625,6 +624,42 @@ function DetailPanel({
 }
 
 // Small info cell
+/**
+ * Etiket / değer satırı — sabit genişlikte etiket kolonu, ardından dikey
+ * ayırıcı çizgi, sonra değer. Birden fazla satır aynı `labelWidth` ile
+ * kullanıldığında değerler dikeyde birebir hizalanır.
+ *
+ * Kullanıcı geri bildirimi: "hizalamasını daha doğru yapalım ve proje adı /
+ * proje durumundan sonra düz çizgi koyalım". Etiketten sonra iki nokta üst
+ * üste yerine gerçek bir çizgi kullanmak alanı da görsel olarak ayırıyor.
+ */
+function FieldRow({
+  label,
+  children,
+  className = "",
+  labelWidth = 88,
+}: {
+  label: string;
+  children: React.ReactNode;
+  className?: string;
+  /** Etiket kolonunun px genişliği — mobilde daha dar */
+  labelWidth?: number;
+}) {
+  return (
+    <div className={`flex items-start gap-2.5 ${className}`}>
+      <span
+        className="shrink-0 pt-0.5 text-[12px] font-normal leading-snug text-tyro-text-muted"
+        style={{ width: labelWidth }}
+      >
+        {label}
+      </span>
+      {/* Düz dikey çizgi — etiket ile değeri ayırıyor */}
+      <span aria-hidden className="w-px self-stretch rounded-full bg-tyro-border/50" />
+      <div className="min-w-0 flex-1">{children}</div>
+    </div>
+  );
+}
+
 function InfoCell({ icon, label, value, className }: { icon?: React.ReactNode; label: string; value: string; className?: string }) {
   return (
     <div className={`px-2 py-2 sm:px-3 sm:py-2.5 ${className ?? ""}`}>

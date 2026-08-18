@@ -68,13 +68,20 @@ export default function ColumnFilterMenu({ columnName, options, selected, onChan
           // basınca tablo sıralaması değişmesin.
           onClick={(e) => e.stopPropagation()}
           onPointerDown={(e) => e.stopPropagation()}
-          className={`ml-1 inline-flex h-5 w-5 shrink-0 cursor-pointer items-center justify-center rounded transition-colors ${
+          // Kullanıcı geri bildirimi: ikon fazla soluktu, daha belli olsun.
+          // Boşta da kendi zeminini taşıyor ve tam opak renk kullanıyor;
+          // aktifken altın dolgu + ince çerçeveyle net ayrışıyor.
+          className={`relative ml-1.5 inline-flex h-[22px] w-[22px] shrink-0 cursor-pointer items-center justify-center rounded-md border transition-all ${
             isActive
-              ? "bg-tyro-gold/15 text-tyro-gold"
-              : "text-tyro-text-muted/50 hover:bg-tyro-bg hover:text-tyro-text-secondary"
+              ? "border-tyro-gold/50 bg-tyro-gold/15 text-tyro-gold shadow-sm"
+              : "border-tyro-border/50 bg-tyro-surface text-tyro-text-secondary hover:border-tyro-gold/40 hover:bg-tyro-gold/10 hover:text-tyro-gold"
           }`}
         >
-          <Filter size={11} strokeWidth={2.5} />
+          <Filter size={13} strokeWidth={2.5} />
+          {/* Aktif filtre göstergesi — ikonun köşesinde küçük nokta */}
+          {isActive && (
+            <span className="absolute -right-0.5 -top-0.5 h-1.5 w-1.5 rounded-full bg-tyro-gold ring-1 ring-tyro-surface" />
+          )}
         </button>
       </DropdownTrigger>
 
