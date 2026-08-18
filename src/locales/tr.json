@@ -990,7 +990,9 @@
   "table": {
     "actionsTable": "Aksiyonlar tablosu",
     "objectivesTable": "Hedefler tablosu",
-    "actions": "Aksiyon"
+    "actions": "Aksiyon",
+    "filterColumn": "{{column}} kolonunu filtrele",
+    "activeColumnFilters": "{{count}} kolonda filtre"
   },
   "projectDepartments": {
     "uluslararasi-operasyonlar": "Uluslararası Operasyonlar",

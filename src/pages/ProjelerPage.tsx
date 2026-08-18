@@ -6,7 +6,7 @@ import {
   Pagination, Input, Button, Tooltip,
   Dropdown, DropdownTrigger, DropdownMenu, DropdownItem,
 } from "@heroui/react";
-import { Search, Target, ChevronDown, Trash2, LayoutList, Kanban, CircleDot, Columns3, Eye, Pencil, Tag, MapPin } from "lucide-react";
+import { Search, Target, ChevronDown, Trash2, LayoutList, Kanban, CircleDot, Columns3, Eye, Pencil, Tag, MapPin, Filter, X } from "lucide-react";
 import TagChip from "@/components/ui/TagChip";
 import { useDataStore as useDataStoreTag } from "@/stores/dataStore";
 import { useProjeler } from "@/hooks/useProjeler";
@@ -16,6 +16,7 @@ import SlidingPanel from "@/components/shared/SlidingPanel";
 import KanbanView, { statusColumns } from "@/components/shared/KanbanView";
 import ProjeForm from "@/components/projeler/ProjeForm";
 import ProjeDetail from "@/components/projeler/ProjeDetail";
+import ColumnFilterMenu, { type ColumnFilterOption } from "@/components/projeler/ColumnFilterMenu";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useSidebarTheme } from "@/hooks/useSidebarTheme";
 import { hexToHSL } from "@/lib/colorUtils";
@@ -24,9 +25,10 @@ import ConfirmDialog from "@/components/shared/ConfirmDialog";
 import EmptyState from "@/components/shared/EmptyState";
 import { toast } from "@/stores/toastStore";
 import { STATUS_DOT_COLOR, getStatusLabel } from "@/lib/constants";
+import { statusColor } from "@/lib/colorUtils";
 import { resolveLocationLabel } from "@/lib/locations";
 import { formatCapex, formatCapexCompact } from "@/lib/money";
-import { assetClassLabel, actionTypeLabel } from "@/config/projectTaxonomy";
+import { assetClassLabel, actionTypeLabel, assetClassCodeAndLabel, actionTypeCodeAndLabel } from "@/config/projectTaxonomy";
 import type { Proje } from "@/types";
 
 type ViewTab = "list" | "kanban";
@@ -39,6 +41,11 @@ function formatDate(dateStr: string): string {
     return dateStr;
   }
 }
+
+/** Excel benzeri filtre desteklenen kolonlar — hepsi kategorik alanlar.
+ *  Tarih / sayı kolonları listeye alınmadı: onlarda değer listesi anlamsız
+ *  uzunlukta olur, sıralama zaten yeterli. */
+const FILTERABLE_COLUMNS = new Set(["owner", "source", "status", "tags", "location", "assetClass", "actionType"]);
 
 const INITIAL_VISIBLE = new Set(["name", "owner", "source", "location", "capex", "assetClass", "actionType", "tags", "status", "startDate", "endDate", "reviewDate", "aksiyonCount", "actions"]);
 
@@ -76,6 +83,10 @@ export default function ProjelerPage() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [tagFilter, setTagFilter] = useState<string>("all");
   const [visibleColumns, setVisibleColumns] = useState(INITIAL_VISIBLE);
+  /** Excel benzeri kolon filtreleri: { kolonUid: [seçili değerler] }.
+   *  Kolon içi VEYA, kolonlar arası VE — birden fazla kolon aynı anda
+   *  filtrelenebiliyor (kullanıcı isteği). */
+  const [columnFilters, setColumnFilters] = useState<Record<string, string[]>>({});
   const rowsPerPage = 25;
   const [page, setPage] = useState(1);
   const [sortDescriptor, setSortDescriptor] = useState<{ column: string; direction: "ascending" | "descending" }>({ column: "name", direction: "ascending" });
@@ -110,6 +121,77 @@ export default function ProjelerPage() {
     return Array.from(tagSet).sort((a, b) => a.localeCompare(b, "tr"));
   }, [projeler]);
 
+  /** Bir projenin verilen kolondaki filtre değer(ler)i. Etiketler çoklu
+   *  olduğu için dizi dönüyor; boş değerler atlanıyor. */
+  const columnValuesOf = useCallback(
+    (h: Proje, uid: string): string[] => {
+      switch (uid) {
+        case "owner": return h.owner ? [h.owner] : [];
+        case "source": return h.source ? [h.source] : [];
+        case "status": return [h.status];
+        case "tags": return h.tags ?? [];
+        case "location": return h.locationId ? [h.locationId] : [];
+        case "assetClass": return h.assetClass ? [h.assetClass] : [];
+        case "actionType": return h.actionType ? [h.actionType] : [];
+        default: return [];
+      }
+    },
+    []
+  );
+
+  /** Bir filtre değerinin kullanıcıya gösterilecek etiketi ve rengi. */
+  const optionMetaOf = useCallback(
+    (uid: string, value: string): { label: string; color?: string } => {
+      switch (uid) {
+        case "status": return { label: getStatusLabel(value as Proje["status"], t), color: statusColor(value as Proje["status"]) };
+        case "tags": return { label: value, color: getTagColor(value) };
+        case "location": return { label: resolveLocationLabel(value, locations) || value };
+        case "assetClass": return { label: assetClassCodeAndLabel(value, t) };
+        case "actionType": return { label: actionTypeCodeAndLabel(value, t) };
+        default: return { label: value };
+      }
+    },
+    // getTagColor her render'da yeniden yaratılıyor ama saf bir lookup;
+    // bağımlılığa almak gereksiz yeniden hesap doğurur.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [t, locations]
+  );
+
+  /**
+   * Kolon filtresi seçenekleri — YETKİ SÜZGECİNDEN geçmiş TÜM projelerden
+   * üretilir, diğer filtrelerden bağımsız. Excel'de bir kolonun listesi başka
+   * bir kolonda seçim yapılınca daralmıyor; aynı davranışı koruyoruz ki
+   * kullanıcı seçtiği değerin listeden "kaybolduğunu" görmesin.
+   */
+  const columnFilterOptions = useMemo(() => {
+    const base = filterProjeler(projeler ?? []);
+    const out: Record<string, ColumnFilterOption[]> = {};
+    for (const uid of FILTERABLE_COLUMNS) {
+      const counts = new Map<string, number>();
+      for (const h of base) {
+        for (const v of columnValuesOf(h, uid)) {
+          counts.set(v, (counts.get(v) ?? 0) + 1);
+        }
+      }
+      out[uid] = Array.from(counts.entries())
+        .map(([key, count]) => ({ key, count, ...optionMetaOf(uid, key) }))
+        .sort((a, b) => a.label.localeCompare(b.label, "tr"));
+    }
+    return out;
+  }, [projeler, filterProjeler, columnValuesOf, optionMetaOf]);
+
+  const setColumnFilter = useCallback((uid: string, values: string[]) => {
+    setColumnFilters((prev) => {
+      const next = { ...prev };
+      if (values.length === 0) delete next[uid];
+      else next[uid] = values;
+      return next;
+    });
+    setPage(1);
+  }, []);
+
+  const activeColumnFilterCount = Object.keys(columnFilters).length;
+
   const filtered = useMemo(() => {
     let result = filterProjeler(projeler ?? []);
     if (search.trim()) {
@@ -125,8 +207,15 @@ export default function ProjelerPage() {
     if (tagFilter !== "all") {
       result = result.filter((h) => (h.tags ?? []).includes(tagFilter));
     }
+    // Kolon filtreleri: kolonlar arası VE, kolon içi VEYA (Excel davranışı).
+    // Birden fazla kolon aynı anda uygulanabiliyor.
+    for (const [uid, values] of Object.entries(columnFilters)) {
+      if (!values.length) continue;
+      const allowed = new Set(values);
+      result = result.filter((h) => columnValuesOf(h, uid).some((v) => allowed.has(v)));
+    }
     return result;
-  }, [projeler, search, statusFilter, tagFilter, aksiyonCountMap, filterProjeler, locations, t, i18n.language]);
+  }, [projeler, search, statusFilter, tagFilter, columnFilters, columnValuesOf, aksiyonCountMap, filterProjeler, locations, t, i18n.language]);
 
   // Sort
   const sorted = useMemo(() => {
@@ -313,6 +402,21 @@ export default function ProjelerPage() {
     <div className={`flex items-center justify-between${selectedKeys.size > 0 ? " sticky top-14 lg:top-0 z-20 bg-tyro-bg/95 backdrop-blur-sm py-2 -mx-1 px-1 rounded-lg" : ""}`}>
       <div className="flex items-center gap-3">
         <span className="text-tyro-text-muted text-xs">{filtered.length} {t("grid.records")}</span>
+        {/* Kolon filtreleri aktifken kaç kolonun filtrelendiğini söyle ve
+            tek tıkla hepsini temizleme imkânı ver — kullanıcı hangi kolonda
+            filtre bıraktığını unutup "kayıtlar nerede" diye aramasın. */}
+        {activeColumnFilterCount > 0 && (
+          <Button
+            size="sm"
+            variant="flat"
+            onPress={() => { setColumnFilters({}); setPage(1); }}
+            startContent={<Filter size={12} />}
+            endContent={<X size={12} />}
+            className="h-6 min-w-0 border border-tyro-gold/40 bg-tyro-gold/10 px-2 text-[11px] font-semibold text-tyro-gold"
+          >
+            {t("table.activeColumnFilters", { count: activeColumnFilterCount })}
+          </Button>
+        )}
         {selectedKeys.size > 0 && (
           <>
             <span className="text-xs font-semibold text-tyro-navy">
@@ -342,7 +446,7 @@ export default function ProjelerPage() {
         )}
       </div>
     </div>
-  ), [filtered.length, selectedKeys, deleteProje, canDeleteProje, t]);
+  ), [filtered.length, selectedKeys, deleteProje, canDeleteProje, t, activeColumnFilterCount]);
 
   // Bottom content
   const bottomContent = useMemo(() => (
@@ -593,7 +697,20 @@ export default function ProjelerPage() {
                 align={column.uid === "actions" ? "center" : "start"}
                 allowsSorting={column.uid !== "actions"}
               >
-                {column.name}
+                {/* Başlık hem sıralama tetikliyor hem Excel benzeri filtre
+                    huneisini taşıyor; huni kendi tıklamasını durduruyor ki
+                    filtre açarken sıralama değişmesin. */}
+                <span className="inline-flex items-center">
+                  {column.name}
+                  {FILTERABLE_COLUMNS.has(column.uid) && (
+                    <ColumnFilterMenu
+                      columnName={column.name}
+                      options={columnFilterOptions[column.uid] ?? []}
+                      selected={columnFilters[column.uid] ?? []}
+                      onChange={(vals) => setColumnFilter(column.uid, vals)}
+                    />
+                  )}
+                </span>
               </TableColumn>
             )}
           </TableHeader>

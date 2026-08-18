@@ -990,7 +990,9 @@
   "table": {
     "actionsTable": "Actions table",
     "objectivesTable": "Objectives table",
-    "actions": "Action"
+    "actions": "Action",
+    "filterColumn": "Filter {{column}} column",
+    "activeColumnFilters": "Filtered in {{count}} column(s)"
   },
   "projectDepartments": {
     "uluslararasi-operasyonlar": "International Operations",

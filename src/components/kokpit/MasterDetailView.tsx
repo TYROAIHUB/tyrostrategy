@@ -350,7 +350,13 @@ function DetailPanel({
             <div className="sm:hidden flex flex-col gap-2">
               {/* Title + ID */}
               <div>
+                {/* "Proje Adı:" etiketi ince ve soluk, ad kalın — kullanıcı
+                    geri bildirimi: detay ekranında alanın ne olduğu açıkça
+                    yazsın. */}
                 <h2 className="text-[15px] font-bold text-tyro-text-primary leading-snug">
+                  <span className="text-[12px] font-normal text-tyro-text-muted">
+                    {t("common.projectName")}:{" "}
+                  </span>
                   {proje.name}
                 </h2>
                 <p className="text-[11px] text-tyro-text-muted mt-0.5">
@@ -362,6 +368,9 @@ function DetailPanel({
                   (kullanıcı isteği 2026-05-22, migration 030 escalation
                   kuralının görünür yansıması). */}
               <div className="flex items-center flex-wrap gap-1.5">
+                <span className="text-[11px] font-normal text-tyro-text-muted">
+                  {t("common.projectStatus")}:
+                </span>
                 <Tooltip
                   content={getStatusExplanation(proje.status, aksiyonlar, t)}
                   placement="top"
@@ -388,6 +397,9 @@ function DetailPanel({
             <div className="hidden sm:flex items-start gap-4">
               <div className="flex-1 min-w-0">
                 <h2 className="text-[20px] font-bold text-tyro-text-primary leading-snug">
+                  <span className="text-[13px] font-normal text-tyro-text-muted">
+                    {t("common.projectName")}:{" "}
+                  </span>
                   {proje.name}
                 </h2>
                 <div className="flex items-center gap-3 mt-1 ml-1">
@@ -402,6 +414,9 @@ function DetailPanel({
                   )}
                 </div>
                 <div className="flex items-center flex-wrap gap-2 mt-1.5">
+                  <span className="text-[12px] font-normal text-tyro-text-muted">
+                    {t("common.projectStatus")}:
+                  </span>
                   <Tooltip
                     content={getStatusExplanation(proje.status, aksiyonlar, t)}
                     placement="top"
