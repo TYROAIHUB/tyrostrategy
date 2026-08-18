@@ -36,9 +36,23 @@ import worldGeoJson from "@/assets/world-110m.geojson.json";
 export const CARTO_STYLE_LIGHT = "https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json";
 export const CARTO_STYLE_DARK = "https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json";
 
-/** Aktif temaya göre birincil (uzak) altlık stili. */
-export function cartoStyleUrl(isDark: boolean): string {
-  return isDark ? CARTO_STYLE_DARK : CARTO_STYLE_LIGHT;
+/**
+ * Birincil (uzak) altlık stili — HER ZAMAN AÇIK.
+ *
+ * Kullanıcı isteği: sidebar teması renkli/koyu bir paletle değiştirildiğinde
+ * harita siyaha dönüyordu, harita hep beyaz kalsın.
+ *
+ * Kök neden: stil seçimi sidebar temasının `isDark` bayrağına bağlıydı. Ama
+ * renkli sidebar temalarının `scope` değeri "sidebar" — yani yalnızca menü
+ * koyulaşıyor, sayfa içeriği aydınlık kalıyor. Harita yanlış sinyali
+ * dinlediği için tek başına koyuya geçiyordu.
+ *
+ * CARTO_STYLE_DARK ve aşağıdaki DARK paleti bilinçli olarak korunuyor:
+ * ileride gerçek bir uygulama-geneli koyu tema devreye alınırsa tek satırla
+ * bağlanabilir.
+ */
+export function cartoStyleUrl(): string {
+  return CARTO_STYLE_LIGHT;
 }
 
 const LIGHT = {
@@ -56,8 +70,10 @@ const DARK = {
   border: "#2b3a4a",
 } as const;
 
-/** YEDEK altlık stili — gömülü veriden, harici istek yok. */
-export function buildBasemapStyle(isDark: boolean): StyleSpecification {
+/** YEDEK altlık stili — gömülü veriden, harici istek yok.
+ *  `isDark` varsayılan olarak false: harita her zaman açık kalıyor (bkz.
+ *  cartoStyleUrl açıklaması). Parametre ileride koyu tema için duruyor. */
+export function buildBasemapStyle(isDark = false): StyleSpecification {
   const c = isDark ? DARK : LIGHT;
 
   return {

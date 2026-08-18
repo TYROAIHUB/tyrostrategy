@@ -9,7 +9,6 @@ import { Tooltip } from "@heroui/react";
 import { statusColor } from "@/lib/colorUtils";
 import { cartoStyleUrl, buildBasemapStyle, FALLBACK_ATTRIBUTION } from "@/config/basemapStyle";
 import { assetClassIcon } from "@/config/assetClassIcons";
-import { useSidebarTheme } from "@/hooks/useSidebarTheme";
 import type { AtlasPoint } from "@/lib/investmentPortfolio";
 import type { Proje, EntityStatus } from "@/types";
 import TAtlasLegend from "./TAtlasLegend";
@@ -112,9 +111,6 @@ interface Props {
 
 export default function TAtlasMap({ points, onOpenProje }: Props) {
   const { t } = useTranslation();
-  const theme = useSidebarTheme();
-  const isDark = theme.isDark !== false;
-
   const mapRef = useRef<MapRef | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
   /** Art arda gelen tile yükleme hatası sayısı — eşiği aşınca yedeğe geçilir */
@@ -131,9 +127,11 @@ export default function TAtlasMap({ points, onOpenProje }: Props) {
   // kutu bırakmayalım — kullanıcıya söyleyelim.
   const [mapError, setMapError] = useState<string | null>(null);
 
+  // Altlık her zaman AÇIK tema — sidebar teması koyu/renkli olsa da harita
+  // beyaz kalır (kullanıcı isteği). Ayrıntı: config/basemapStyle.ts
   const mapStyle = useMemo(
-    () => (useOfflineBasemap ? buildBasemapStyle(isDark) : cartoStyleUrl(isDark)),
-    [useOfflineBasemap, isDark]
+    () => (useOfflineBasemap ? buildBasemapStyle() : cartoStyleUrl()),
+    [useOfflineBasemap]
   );
 
   // Uzak altlığa gerçekten erişilebiliyor mu? Tek karar noktası bu.
@@ -141,7 +139,7 @@ export default function TAtlasMap({ points, onOpenProje }: Props) {
   // İyi huylu MapLibre hataları buraya hiç dokunmuyor.
   useEffect(() => {
     let cancelled = false;
-    const url = cartoStyleUrl(isDark);
+    const url = cartoStyleUrl();
     fetch(url, { cache: "force-cache" })
       .then((res) => {
         if (cancelled) return;
@@ -158,7 +156,7 @@ export default function TAtlasMap({ points, onOpenProje }: Props) {
     return () => {
       cancelled = true;
     };
-  }, [isDark]);
+  }, []);
 
   // ── Açılış görünümü: koordinatı olan tüm projeleri kapsa (doküman §5) ──
   const fitToPoints = useCallback(() => {
@@ -211,12 +209,35 @@ export default function TAtlasMap({ points, onOpenProje }: Props) {
     }
   }, []);
 
+  /**
+   * Harita künyesini KAPALI başlat.
+   *
+   * MapLibre `compact` attribution'ı kurulumda `maplibregl-compact-show`
+   * sınıfını ekliyor, yani künye metni açık geliyor ve kullanıcı ⓘ'ya basıp
+   * kapatmak zorunda kalıyor. Sınıfı kaldırmak metni gizliyor; ⓘ butonunun
+   * kendi toggle mantığı bu sınıfın varlığına baktığı için buton normal
+   * çalışmaya devam ediyor (kaldırılmışsa geri ekliyor).
+   *
+   * Sadece BU haritanın kabı içinde arıyoruz — sayfadaki başka bir MapLibre
+   * örneğine dokunmuyoruz.
+   */
+  const collapseAttribution = useCallback(() => {
+    containerRef.current
+      ?.querySelectorAll(".maplibregl-ctrl-attrib.maplibregl-compact-show")
+      .forEach((el) => el.classList.remove("maplibregl-compact-show"));
+  }, []);
+
   // Tam ekrana girip çıkınca canvas boyutu değişiyor; MapLibre'ın yeniden
   // ölçmesi gerekiyor yoksa harita kırpılmış kalıyor.
   useEffect(() => {
-    const id = window.setTimeout(() => mapRef.current?.resize(), 120);
+    const id = window.setTimeout(() => {
+      mapRef.current?.resize();
+      // resize, MapLibre'ın _updateCompact'ini yeniden tetikleyip künyeyi
+      // açıyor — tam ekrandan çıkınca tekrar kapatıyoruz.
+      collapseAttribution();
+    }, 120);
     return () => window.clearTimeout(id);
-  }, [isFullscreen]);
+  }, [isFullscreen, collapseAttribution]);
 
   const handleMarkerClick = useCallback((group: PinGroup) => {
     setSelectedGroup((cur) => (cur?.key === group.key ? null : group));
@@ -239,6 +260,7 @@ export default function TAtlasMap({ points, onOpenProje }: Props) {
         touchPitch={false}
         maxZoom={14}
         minZoom={1.2}
+        onLoad={collapseAttribution}
         onError={(e) => {
           const msg = String((e as unknown as { error?: { message?: string } })?.error?.message ?? "");
 
