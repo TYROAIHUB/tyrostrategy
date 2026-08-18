@@ -68,17 +68,19 @@ export default function ColumnFilterMenu({ columnName, options, selected, onChan
           // basınca tablo sıralaması değişmesin.
           onClick={(e) => e.stopPropagation()}
           onPointerDown={(e) => e.stopPropagation()}
-          // Kullanıcı geri bildirimi: ikon fazla soluktu, daha belli olsun.
-          // Boşta da kendi zeminini taşıyor ve tam opak renk kullanıyor;
-          // aktifken altın dolgu + ince çerçeveyle net ayrışıyor.
+          // Kullanıcı tercihi: eskiden yalnızca hover'da görünen altın rengi
+          // görünüm beğenildi → artık VARSAYILAN hâli bu. Hover ise TERS
+          // yönde çalışıyor: altın dolgu nötre çekiliyor, yani imleç üzerine
+          // gelince öğe sakinleşiyor. Aktif filtre daha koyu altın dolgu +
+          // köşedeki noktayla ayrışıyor ve hover'da rengini kaybetmiyor.
           className={`relative ml-1.5 inline-flex h-[22px] w-[22px] shrink-0 cursor-pointer items-center justify-center rounded-md border transition-all ${
             isActive
-              ? "border-tyro-gold/50 bg-tyro-gold/15 text-tyro-gold shadow-sm"
-              : "border-tyro-border/50 bg-tyro-surface text-tyro-text-secondary hover:border-tyro-gold/40 hover:bg-tyro-gold/10 hover:text-tyro-gold"
+              ? "border-tyro-gold/60 bg-tyro-gold/25 text-tyro-gold shadow-sm hover:bg-tyro-gold/40"
+              : "border-tyro-gold/40 bg-tyro-gold/10 text-tyro-gold hover:border-tyro-border/60 hover:bg-tyro-surface hover:text-tyro-text-secondary"
           }`}
         >
           <Filter size={13} strokeWidth={2.5} />
-          {/* Aktif filtre göstergesi — ikonun köşesinde küçük nokta */}
+          {/* Aktif filtre göstergesi */}
           {isActive && (
             <span className="absolute -right-0.5 -top-0.5 h-1.5 w-1.5 rounded-full bg-tyro-gold ring-1 ring-tyro-surface" />
           )}

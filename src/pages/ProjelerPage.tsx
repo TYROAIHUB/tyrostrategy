@@ -42,10 +42,20 @@ function formatDate(dateStr: string): string {
   }
 }
 
-/** Excel benzeri filtre desteklenen kolonlar — hepsi kategorik alanlar.
- *  Tarih / sayı kolonları listeye alınmadı: onlarda değer listesi anlamsız
- *  uzunlukta olur, sıralama zaten yeterli. */
-const FILTERABLE_COLUMNS = new Set(["owner", "source", "status", "tags", "location", "assetClass", "actionType"]);
+/**
+ * Excel benzeri filtre desteklenen kolonlar.
+ *
+ * Ölçüt: kolonun BENZERSİZ DEĞER SAYISI seçilebilir olacak kadar küçük mü?
+ *   • Kategorik alanlar (lider, kaynak, statü, etiket, lokasyon, varlık
+ *     sınıfı, yatırım tipi) → evet
+ *   • Aksiyon adedi → evet, değerler 0/1/2… gibi kısa bir küme
+ *   • Proje adı / açıklama → hayır; 200+ benzersiz metin seçilebilir bir liste
+ *     değil, bunun için üstteki arama kutusu var
+ *   • Tarihler ve CAPEX → hayır; değer listesi yerine aralık filtresi doğru
+ *     kontrol, sıralama şimdilik yeterli
+ *   • Aksiyonlar kolonu → buton kolonu, filtrelenecek verisi yok
+ */
+const FILTERABLE_COLUMNS = new Set(["owner", "source", "status", "tags", "location", "assetClass", "actionType", "aksiyonCount"]);
 
 const INITIAL_VISIBLE = new Set(["name", "owner", "source", "location", "capex", "assetClass", "actionType", "tags", "status", "startDate", "endDate", "reviewDate", "aksiyonCount", "actions"]);
 
@@ -133,10 +143,11 @@ export default function ProjelerPage() {
         case "location": return h.locationId ? [h.locationId] : [];
         case "assetClass": return h.assetClass ? [h.assetClass] : [];
         case "actionType": return h.actionType ? [h.actionType] : [];
+        case "aksiyonCount": return [String(aksiyonCountMap.get(h.id) ?? 0)];
         default: return [];
       }
     },
-    []
+    [aksiyonCountMap]
   );
 
   /** Bir filtre değerinin kullanıcıya gösterilecek etiketi ve rengi. */
@@ -175,7 +186,8 @@ export default function ProjelerPage() {
       }
       out[uid] = Array.from(counts.entries())
         .map(([key, count]) => ({ key, count, ...optionMetaOf(uid, key) }))
-        .sort((a, b) => a.label.localeCompare(b.label, "tr"));
+        // numeric: true → aksiyon adedi 0,1,2,10 diye sıralanır (0,1,10,2 değil)
+        .sort((a, b) => a.label.localeCompare(b.label, "tr", { numeric: true }));
     }
     return out;
   }, [projeler, filterProjeler, columnValuesOf, optionMetaOf]);
