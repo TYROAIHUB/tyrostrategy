@@ -1214,7 +1214,8 @@
     "popup": {
       "groupCount": "Bu konumda {{count}} proje",
       "openDetail": "Proje detayını aç",
-      "approximate": "Konum ülke merkezine göre yaklaşık gösteriliyor."
+      "approximate": "Konum ülke merkezine göre yaklaşık gösteriliyor.",
+      "ariaLabel": "Proje künye kartı"
     },
     "pending": {
       "title": "Konumu bekleyen projeler",
