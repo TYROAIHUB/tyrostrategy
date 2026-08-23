@@ -42,7 +42,7 @@ export default function GuvenlikPage() {
     raporKonfigurasyonu: t("dashboard.reportWizard"),
     tMap: "T-Map",
     tAlignment: "T-Align",
-    tAtlas: "T-Atlas",
+    tAtlas: t("nav.tAtlas"),
     gantt: t("nav.gantt"),
     // — Sistem —
     kullanicilar: t("nav.users"),

@@ -23,7 +23,7 @@
     "pinSidebar": "Pin sidebar",
     "unpinSidebar": "Unpin sidebar",
     "help": "Help",
-    "tAtlas": "T-Atlas"
+    "tAtlas": "Investment Map"
   },
   "sections": {
     "mainMenu": "Main Menu",
@@ -186,7 +186,7 @@
       "goHome": "Go to Home Page"
     },
     "tatlas": {
-      "title": "T-Atlas",
+      "title": "Investment Map",
       "subtitle": "Geographic distribution and portfolio metrics of the investment portfolio"
     }
   },
