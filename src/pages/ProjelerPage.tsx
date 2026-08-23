@@ -235,9 +235,30 @@ export default function ProjelerPage() {
       const col = sortDescriptor.column;
       let va: string | number = "";
       let vb: string | number = "";
-      if (col === "projeCount") {
+      // Kolon uid'i ile Proje alan adı her zaman aynı değil. Aşağıdaki üç kolon
+      // doğrudan a[col] ile okunuyordu; karşılığı olmadığı için hepsi undefined
+      // dönüyor, tüm satırlar eşit çıkıyor ve sıralama sessizce hiçbir şey
+      // yapmıyordu. (`projeCount` da artık var olmayan eski bir uid'di.)
+      if (col === "aksiyonCount") {
         va = aksiyonCountMap.get(a.id) ?? 0;
         vb = aksiyonCountMap.get(b.id) ?? 0;
+      } else if (col === "capex") {
+        // Alan adı capexUsd. Tutarı girilmemiş kayıtlar sıralama yönünden
+        // BAĞIMSIZ olarak sonda kalsın: tek bir sentinel sayı (-1 gibi) yön
+        // ters çevrildiğinde onları başa taşıyordu ve ilk sayfa tamamen boş
+        // CAPEX'lerle doluyordu.
+        const ea = a.capexUsd == null;
+        const eb = b.capexUsd == null;
+        if (ea !== eb) return ea ? 1 : -1;
+        va = a.capexUsd ?? 0;
+        vb = b.capexUsd ?? 0;
+      } else if (col === "location") {
+        // Alan adı locationId ve içeriği UUID. Kullanıcının gördüğü etikete
+        // göre sıralıyoruz — UUID'ye göre sıralama anlamsız olurdu.
+        // Lokasyonu olmayanlar da CAPEX'te olduğu gibi hep sonda.
+        va = resolveLocationLabel(a.locationId, locations);
+        vb = resolveLocationLabel(b.locationId, locations);
+        if (!va !== !vb) return va ? -1 : 1;
       } else {
         va = ((a as unknown) as Record<string, unknown>)[col] as string ?? "";
         vb = ((b as unknown) as Record<string, unknown>)[col] as string ?? "";
@@ -247,7 +268,7 @@ export default function ProjelerPage() {
       else cmp = String(va).localeCompare(String(vb), "tr");
       return sortDescriptor.direction === "ascending" ? cmp : -cmp;
     });
-  }, [filtered, sortDescriptor, aksiyonCountMap]);
+  }, [filtered, sortDescriptor, aksiyonCountMap, locations]);
 
   // Paginate
   const totalPages = Math.ceil(sorted.length / rowsPerPage);

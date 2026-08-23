@@ -264,6 +264,55 @@ describe("dataTransfer — içe aktarma", () => {
   });
 });
 
+describe("dataTransfer — kısmi / boş hücreli dosyalar", () => {
+  it("REGRESYON: boş hücre anahtarı düşürülüyor, veritabanına \"\" gitmiyor", () => {
+    // Elektronik tabloda her satır aynı kolon kümesine sahip. Bir alanı yalnızca
+    // BAZI kayıtlar doldurduğunda (canlıda 14 projede tamamlanma tarihi var) o
+    // kolon dosyaya giriyor ve diğer satırlar "" taşıyor. "" bir tarih ya da
+    // UUID kolonuna gönderilirse Postgres 22007 / FK hatası veriyor.
+    const { rows } = prepareImportRows("projeler", [{
+      "ID": "P26-0001", "Proje Adı": "A", "Durum": "On Track",
+      "Başlangıç Tarihi": "2026-01-01", "Bitiş Tarihi": "2026-12-31",
+      "Tamamlanma": "", "Üst Proje ID": "", "Kontrol Tarihi": "", "Açıklama": "",
+    }], CTX);
+    expect(rows[0]).not.toHaveProperty("completedAt");
+    expect(rows[0]).not.toHaveProperty("parentObjectiveId");
+    expect(rows[0]).not.toHaveProperty("reviewDate");
+    expect(rows[0]).not.toHaveProperty("description");
+    // Hiçbir değer boş string olarak kalmamalı
+    expect(Object.values(rows[0])).not.toContain("");
+  });
+
+  it("REGRESYON: kolonu OLMAYAN dosyada üyelik/etiket alanlarına dokunmuyor", () => {
+    // Koşulsuz atama `[]` üretiyordu; adapter bunu "üyeliklerin ve etiketlerin
+    // hepsini sil" olarak uygulayıp bağlantı tablolarını boşaltıyordu.
+    const { rows } = prepareImportRows("projeler", [{
+      "ID": "P26-0001", "Proje Adı": "A", "Durum": "On Track",
+      "Başlangıç Tarihi": "2026-01-01", "Bitiş Tarihi": "2026-12-31",
+    }], CTX);
+    expect(rows[0]).not.toHaveProperty("participants");
+    expect(rows[0]).not.toHaveProperty("tags");
+  });
+
+  it("kolon VARSA ve doluysa üyelik/etiketleri güncelliyor", () => {
+    const { rows } = prepareImportRows("projeler", [{
+      name: "A", status: "On Track", startDate: "x", endDate: "y",
+      "Proje Üyeleri": "Ali; Ayşe", "Etiketler": "Yatırım",
+    }], CTX);
+    expect(rows[0].participants).toEqual(["Ali", "Ayşe"]);
+    expect(rows[0].tags).toEqual(["Yatırım"]);
+  });
+
+  it("zorunlu alan boş hücreyle geldiyse hâlâ hata veriyor", () => {
+    // Boş string düşürülüyor ama bu zorunluluğu kaybettirmemeli.
+    const { issues, rows, skipped } = prepareImportRows("projeler",
+      [{ "Proje Adı": "", "Durum": "On Track", "Başlangıç Tarihi": "x", "Bitiş Tarihi": "y" }], CTX);
+    expect(issues.some((i) => i.field === "name" && i.blocking)).toBe(true);
+    expect(rows).toHaveLength(0);
+    expect(skipped).toBe(1);
+  });
+});
+
 describe("dataTransfer — tam gidiş-dönüş", () => {
   it("projeyi CSV'ye yazıp geri okuduğunda yeni alanların hepsi korunuyor", () => {
     const original = proje({

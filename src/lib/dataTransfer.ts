@@ -348,6 +348,23 @@ export function normalizeImportRow(
   ctx: TransferContext,
 ): Record<string, unknown> {
   const r = { ...row };
+
+  // BOŞ HÜCRE = "değer yok" → anahtarı tamamen düşür ("dokunma" anlamına gelir).
+  //
+  // Elektronik tabloda her satır aynı kolon kümesine sahip. Bir alanı yalnızca
+  // BAZI kayıtlar doldurduğunda (örn. tamamlanma tarihi) o kolon dosyaya girer
+  // ve diğer satırlar "" taşır. "" bir tarih ya da UUID kolonuna gönderilirse
+  // Postgres 22007 / FK hatası döner ve kullanıcı kırmızı toast yığını görür.
+  // Anahtarı düşürünce ilgili alan PATCH'e hiç girmiyor.
+  //
+  // TAKAS: hücreyi boşaltarak bir değeri TEMİZLEMEK bu yüzden mümkün değil —
+  // temizleme uygulama formundan yapılır. Sessizce yanlış veri yazmaya ya da
+  // içe aktarmayı çökertmeye tercih edilir.
+  for (const key of Object.keys(r)) {
+    const v = r[key];
+    if (typeof v === "string" && v.trim() === "") delete r[key];
+  }
+
   const parseArr = (v: unknown): string[] => {
     if (Array.isArray(v)) return v.map((x) => String(x).trim()).filter(Boolean);
     if (typeof v === "string" && v.trim()) return v.split(/[;,]/).map((s) => s.trim()).filter(Boolean);
@@ -363,8 +380,11 @@ export function normalizeImportRow(
   }
 
   if (tableId === "projeler") {
-    r.participants = parseArr(r.participants);
-    r.tags = parseArr(r.tags);
+    // YALNIZCA kolon dosyada varsa dokun. Koşulsuz atama, kolonu silinmiş bir
+    // dosyada `[]` üretiyordu; adapter da bunu "üyeliklerin/etiketlerin
+    // hepsini sil" olarak uygulayıp bağlantı tablolarını boşaltıyordu.
+    if ("participants" in r) r.participants = parseArr(r.participants);
+    if ("tags" in r) r.tags = parseArr(r.tags);
 
     // CAPEX — hücre sayı da olabilir, "1.250.000" / "1,250,000" da.
     // Çözülemeyen metin SİLİNMİYOR, ham bırakılıyor: `parseCapexInput` negatif

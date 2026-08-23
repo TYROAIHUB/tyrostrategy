@@ -770,7 +770,7 @@
     "operationHistory": "Operation History",
     "clear": "Clear",
     "projects": "Projects",
-    "projectsDesc": "Strategic project records",
+    "projectsDesc": "Strategic project records — import matches by ID and updates",
     "actions": "Actions",
     "actionsDesc": "Action items linked to objectives",
     "users": "Users",

@@ -2,6 +2,11 @@
  * One-shot importer: reads C:/Users/Cenk/Desktop/veri girişleri.xlsx and
  * populates public.projeler / aksiyonlar / proje_participants.
  *
+ * ⚠ TEK KULLANIMLIKTIR — tekrar çalıştırmayın. projeler tablosunu komple
+ *   siliyor ve migration 032/033 öncesi kolon listesiyle yeniden yazıyor;
+ *   lokasyon / CAPEX / varlık sınıfı / yatırım tipi verisi kaybolur. Bu yüzden
+ *   transaction'ın başında bir güvenlik kilidi var (bkz. ALLOW_INVESTMENT_DATA_LOSS).
+ *
  *   DATABASE_URL='postgresql://...' node scripts/import-excel-data.cjs
  *
  * Decisions confirmed with user (2026-04-22):
@@ -272,6 +277,30 @@ function parseDate(s) {
   // ─── Transaction ────────────────────────────────────────────────────
   try {
     await c.query('BEGIN');
+
+    // ─── Güvenlik kilidi (2026-08-23) ───────────────────────────────────
+    // Bu script projeler tablosunu KOMPLE silip aşağıdaki `projCols` listesiyle
+    // yeniden yazıyor. O liste migration 032/033 ÖNCESİNDEN: location_id,
+    // capex_usd, asset_class ve action_type üretmiyor. Dolayısıyla script
+    // yeniden çalıştırılırsa canlıda girilmiş her lokasyon, CAPEX ve yatırım
+    // taksonomisi değeri sessizce yok olur; Yatırım Haritası da boşalır
+    // (selectInvestmentProjects yatırım projesini assetClass'a göre seçiyor).
+    // Bu yüzden böyle veri varsa DURUYORUZ. Bilinçli olarak kaybetmek isteyen
+    // ALLOW_INVESTMENT_DATA_LOSS=1 ile çalıştırır.
+    const { rows: [inv] } = await c.query(
+      `SELECT count(*)::int AS n FROM public.projeler
+        WHERE location_id IS NOT NULL OR capex_usd IS NOT NULL
+           OR asset_class IS NOT NULL OR action_type IS NOT NULL`
+    );
+    if (inv.n > 0 && process.env.ALLOW_INVESTMENT_DATA_LOSS !== '1') {
+      throw new Error(
+        `ABORT: ${inv.n} projede lokasyon / CAPEX / varlık sınıfı / yatırım tipi verisi var. ` +
+        `Bu script projeler tablosunu silip bu alanlar OLMADAN yeniden yazıyor, ` +
+        `yani o veriyi kalıcı olarak kaybedersin. Önce yedek al ` +
+        `(Veri Yönetimi > Dışa aktar, ya da projeler_taxonomy_backup_* tablosu). ` +
+        `Gerçekten devam etmek istiyorsan ALLOW_INVESTMENT_DATA_LOSS=1 ile çalıştır.`
+      );
+    }
 
     console.log('\n🧹 Wiping existing data (test projeler + aksiyonlar + participants + tags)...');
     await c.query('DELETE FROM public.proje_participants');

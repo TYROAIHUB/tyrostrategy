@@ -770,7 +770,7 @@
     "operationHistory": "İşlem Geçmişi",
     "clear": "Temizle",
     "projects": "Projeler",
-    "projectsDesc": "Stratejik proje kayıtları",
+    "projectsDesc": "Stratejik proje kayıtları — içe aktarma ID'ye göre eşleştirip günceller",
     "actions": "Aksiyonlar",
     "actionsDesc": "Hedeflere bağlı aksiyon maddeleri",
     "users": "Kullanıcılar",

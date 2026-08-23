@@ -74,11 +74,36 @@ export default function VeriYonetimiPage() {
       color: "#1e3a5f",
       getCount: () => projeler.length,
       getData: () => projeler,
+      // ID'ye göre BİRLEŞTİR — sil-ve-yeniden-ekle DEĞİL.
+      // Eskiden her projeyi deleteProje ile siliyordu; ama deleteProje
+      // aksiyonu olan projede `false` dönüp satırı BIRAKIYOR ve bu dönüş
+      // değeri yok sayılıyordu. Ardından addProje yeni bir ID üretiyordu:
+      // değiştirilmemiş bir dışa aktarımı geri yüklemek, aksiyonu olan her
+      // projeyi ÇOĞALTIYOR ve CAPEX toplamlarını iki kez saydırıyordu.
+      // Birleştirme aynı zamanda içe aktarmayı fikirsel olarak idempotent
+      // yapıyor: aynı dosyayı iki kez yüklemek aynı sonucu veriyor.
       setData: (data) => {
         const store = useDataStore.getState();
-        // Clear and re-add
-        store.projeler.forEach((h) => store.deleteProje(h.id));
-        (data as Proje[]).forEach((h) => store.addProje(h));
+        const existing = new Set(store.projeler.map((p) => p.id));
+        (data as Proje[]).forEach((row) => {
+          if (row.id && existing.has(row.id)) {
+            // Kimlik ve oluşturma izi korunur; kalan alanlar güncellenir.
+            // updatedAt/updatedBy de ayıklanıyor: dosyadaki eski damga
+            // gönderilirse `updateProje` onu tercih ediyor ve kaydı kimin
+            // güncellediği kaybolup "son güncelleme" geriye gidiyordu.
+            const {
+              id,
+              createdAt: _createdAt,
+              createdBy: _createdBy,
+              updatedAt: _updatedAt,
+              updatedBy: _updatedBy,
+              ...rest
+            } = row;
+            store.updateProje(id, rest);
+          } else {
+            store.addProje(row);
+          }
+        });
       },
       description: t("dataManagement.projectsDesc"),
     },
@@ -374,7 +399,12 @@ export default function VeriYonetimiPage() {
         return;
       }
 
-      if (errors.length > 10) {
+      // Eşik yalnızca ENGELLEYİCİ bulguları sayar. Engelleyici satırlar zaten
+      // `prepareImportRows` tarafından ayıklandı; uyarı seviyesindeki bulgular
+      // (örn. çözülemeyen lokasyon etiketi) geçerli bir içe aktarmayı iptal
+      // ettirmemeli — eskiden hepsi bir arada sayıldığı için ettiriyordu.
+      const blockingCount = prepared.issues.filter((issue) => issue.blocking).length;
+      if (blockingCount > 10) {
         addLog({
           type: "import",
           table: table.label,
