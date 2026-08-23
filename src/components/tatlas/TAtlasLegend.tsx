@@ -39,9 +39,11 @@ export default function TAtlasLegend() {
   const { t } = useTranslation();
 
   return (
-    <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5">
+    // flex-nowrap + overflow-x-auto: filtre barında TEK SATIR kalmalı;
+    // yer yetmediğinde sarmak yerine kendi içinde kayıyor.
+    <div className="flex items-center gap-x-3 overflow-x-auto whitespace-nowrap py-0.5">
       {/* ── İkon = varlık sınıfı ── */}
-      <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+      <div className="flex shrink-0 items-center gap-x-1.5">
         <span className="text-[11px] font-semibold text-tyro-text-muted">
           {t("common.assetClass")}
         </span>
@@ -65,7 +67,7 @@ export default function TAtlasLegend() {
       <span aria-hidden className="h-4 w-px shrink-0 rounded-full bg-tyro-border/60" />
 
       {/* ── Çerçeve rengi = statü ── */}
-      <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
+      <div className="flex shrink-0 items-center gap-x-2.5">
         <span className="text-[11px] font-semibold text-tyro-text-muted">
           {t("common.status")}
         </span>

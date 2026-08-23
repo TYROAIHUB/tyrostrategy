@@ -118,15 +118,19 @@ export default function TAtlasFilters({ filters, options, onChange, resultCount 
           {t("tatlas.filter.reset")}
         </Button>
 
-        {/* Lejant — Sıfırla'nın SAĞINDA, aynı satırda (kullanıcı isteği:
-            alt satıra değil sıfırlanın sağına). Araya kalıcı bir ayraç
-            konuyor; basis-full KALDIRILDI, aksi halde lejant kendi satırına
-            düşüyordu. Yer yetmezse flex-wrap doğal olarak sarar. */}
+        {/* Lejant — Sıfırla'nın SAĞINDA, aynı satırda.
+            basis-full'u kaldırmak yetmedi: lejant kalan boşluktan geniş
+            olduğu için flex-wrap onu yine alt satıra atıyordu. Çözüm →
+            `min-w-0 flex-1` ile kalan alanı veriyoruz ve lejant taşarsa
+            KENDİ İÇİNDE yatay kayıyor. Böylece hiçbir genişlikte satır
+            değiştirmiyor. */}
         <span aria-hidden className="h-5 w-px shrink-0 rounded-full bg-tyro-border/60" />
-        <TAtlasLegend />
+        <div className="min-w-0 flex-1">
+          <TAtlasLegend />
+        </div>
 
         {/* Filtrenin etkisi — haritadaki pin kümesiyle bu sayı her zaman aynı */}
-        <span className="ml-auto shrink-0 text-[11px] font-semibold tabular-nums text-tyro-text-muted">
+        <span className="shrink-0 text-[11px] font-semibold tabular-nums text-tyro-text-muted">
           {t("tatlas.filter.resultCount", { count: resultCount })}
         </span>
       </div>
