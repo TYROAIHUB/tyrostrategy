@@ -75,9 +75,13 @@ export default function TAtlasLegend() {
         <span className="w-[74px] shrink-0 text-[11px] font-semibold text-tyro-text-muted">
           {t("common.status")}
         </span>
-        <div className="flex min-w-0 items-center gap-x-2.5 overflow-x-auto whitespace-nowrap">
+        <div className="flex min-w-0 items-center gap-x-1.5 overflow-x-auto whitespace-nowrap">
           {LEGEND_STATUSES.map((status) => (
-            <span key={status} className="inline-flex shrink-0 items-center gap-1">
+            /* px-1.5: varlık sınıfı çipiyle AYNI içe dolgu. Çipin sol dolgusu
+               ikonu 6px içeri itiyordu, durum halkası ise hemen başlıyordu —
+               iki satırın ilk ikonu hizasız görünüyordu. Aynı dolguyu buraya
+               da vererek başlangıç ikonları dikeyde birebir hizalanıyor. */
+            <span key={status} className="inline-flex shrink-0 items-center gap-1 px-1.5 py-0.5">
               {/* Pin çerçevesini taklit eden halka — dolu daire değil */}
               <span
                 className="h-2.5 w-2.5 shrink-0 rounded-full border-2 bg-tyro-surface"
