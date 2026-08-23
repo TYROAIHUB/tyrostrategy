@@ -4,7 +4,7 @@
  */
 import { supabase } from "@/lib/supabase";
 import type { DataService } from "./dataService";
-import type { Proje, Aksiyon, TagDefinition, LocationDefinition, EntityStatus, Source, AppUser, AppSetting, UserRole } from "@/types";
+import type { Proje, ProjeUpdate, Aksiyon, AksiyonUpdate, TagDefinition, LocationDefinition, EntityStatus, Source, AppUser, AppSetting, UserRole } from "@/types";
 
 // ===== DB → App mappers =====
 
@@ -95,7 +95,7 @@ function dbToProje(row: DbProje, tags: string[] = [], participants: string[] = [
   };
 }
 
-function projeToDb(data: Partial<Proje>): Record<string, unknown> {
+function projeToDb(data: ProjeUpdate): Record<string, unknown> {
   const map: Record<string, unknown> = {};
   if (data.name !== undefined) map.name = data.name;
   if (data.description !== undefined) map.description = data.description;
@@ -152,7 +152,7 @@ function dbToAksiyon(row: DbAksiyon): Aksiyon {
   };
 }
 
-function aksiyonToDb(data: Partial<Aksiyon>): Record<string, unknown> {
+function aksiyonToDb(data: AksiyonUpdate): Record<string, unknown> {
   const map: Record<string, unknown> = {};
   if (data.name !== undefined) map.name = data.name;
   if (data.description !== undefined) map.description = data.description;
@@ -403,7 +403,7 @@ export const supabaseAdapter: DataService = {
     return dbToProje(data as DbProje, input.tags ?? [], participants);
   },
 
-  async updateProje(id: string, data: Partial<Proje>): Promise<Proje> {
+  async updateProje(id: string, data: ProjeUpdate): Promise<Proje> {
     if (!supabase) throw new Error("Supabase not configured");
     const dbData = projeToDb(data);
     const { data: updated, error } = await supabase.from("projeler").update(dbData).eq("id", id).select().single();
@@ -499,7 +499,7 @@ export const supabaseAdapter: DataService = {
     return dbToAksiyon(data as DbAksiyon);
   },
 
-  async updateAksiyon(id: string, data: Partial<Aksiyon>): Promise<Aksiyon> {
+  async updateAksiyon(id: string, data: AksiyonUpdate): Promise<Aksiyon> {
     if (!supabase) throw new Error("Supabase not configured");
     const dbData = aksiyonToDb(data);
     const { data: updated, error } = await supabase.from("aksiyonlar").update(dbData).eq("id", id).select().single();

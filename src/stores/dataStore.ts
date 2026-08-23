@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type { Proje, Aksiyon, TagDefinition, LocationDefinition, AppUser } from "@/types";
+import type { Proje, ProjeUpdate, Aksiyon, AksiyonUpdate, TagDefinition, LocationDefinition, AppUser } from "@/types";
 import {
   getInitialProjeler,
   getInitialAksiyonlar,
@@ -127,12 +127,12 @@ interface DataState {
 
   // CRUD — Proje
   addProje: (h: Omit<Proje, "id">) => void;
-  updateProje: (id: string, data: Partial<Proje>) => void;
+  updateProje: (id: string, data: ProjeUpdate) => void;
   deleteProje: (id: string) => boolean;
 
   // CRUD — Aksiyon
   addAksiyon: (a: Omit<Aksiyon, "id">) => void;
-  updateAksiyon: (id: string, data: Partial<Aksiyon>) => void;
+  updateAksiyon: (id: string, data: AksiyonUpdate) => void;
   deleteAksiyon: (id: string) => boolean;
 
   // CRUD — Tag Definitions
@@ -208,6 +208,19 @@ function generateSystematicId(
 
   const nextSerial = String(maxSerial + 1).padStart(4, "0");
   return `${yearPrefix}${nextSerial}`;
+}
+
+/**
+ * `null` → `undefined`. Güncelleme yükünde `null` "bu alanı veritabanında NULL
+ * yap" demek; `undefined` ise "dokunma". Ayrım adapter için gerekli ama yerel
+ * durumda yeri yok: `Proje` tipi null tutmuyor ve localStorage'a null yazmak
+ * ikon/etiket okuyan bileşenleri beklenmedik değerle karşılaştırırdı.
+ * Anahtarları koruyoruz — `{...h, ...bu}` yayılımı alanı temizlemeye devam etsin.
+ */
+function nullsToUndefined<T>(data: ProjeUpdate | AksiyonUpdate): T {
+  const out: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(data)) out[k] = v === null ? undefined : v;
+  return out as T;
 }
 
 function getCurrentUser() { return localStorage.getItem("tyro-mock-user") || "Demo User"; }
@@ -402,7 +415,7 @@ export const useDataStore = create<DataState>()(
           // DB too — otherwise completedAt updated locally but stayed
           // NULL in Postgres.
           const before = s.projeler.find((h) => h.id === id);
-          const syncData: Partial<Proje> = {
+          const syncData: ProjeUpdate = {
             ...data,
             // Audit trail: stamp every write with who/when. Client sets
             // them so the local cache matches; the DB's update_updated_at
@@ -415,7 +428,10 @@ export const useDataStore = create<DataState>()(
             if (data.status === "Achieved" && before.status !== "Achieved") {
               syncData.completedAt = new Date().toISOString();
             } else if (data.status && data.status !== "Achieved" && before.status === "Achieved") {
-              syncData.completedAt = undefined;
+              // `null`, `undefined` DEĞİL. `undefined` adapter için "bu alana dokunma"
+              // demek ve PATCH gövdesinden düşüyor; eski tamamlanma tarihi
+              // veritabanında kalıyordu. `null` = "NULL yap".
+              syncData.completedAt = null;
             }
             // Otomatik risk hesaplaması — kullanıcı isteği 2026-05-22:
             // proje statüsü artık tarih bazlı değil, AKSIYON statülerinden
@@ -444,7 +460,10 @@ export const useDataStore = create<DataState>()(
                   if (suggested === "Achieved" && before.status !== "Achieved") {
                     syncData.completedAt = new Date().toISOString();
                   } else if (suggested !== "Achieved" && before.status === "Achieved") {
-                    syncData.completedAt = undefined;
+                    // `null`, `undefined` DEĞİL. `undefined` adapter için "bu alana dokunma"
+                    // demek ve PATCH gövdesinden düşüyor; eski tamamlanma tarihi
+                    // veritabanında kalıyordu. `null` = "NULL yap".
+                    syncData.completedAt = null;
                   }
                 }
               }
@@ -452,7 +471,11 @@ export const useDataStore = create<DataState>()(
           }
           const projeler = s.projeler.map((h) => {
             if (h.id !== id) return h;
-            return { ...h, ...syncData };
+            // `null` yalnızca adapter'a giden sinyal ("bu alanı NULL yap").
+            // Yerel duruma yazarken `undefined`'a çeviriyoruz: `Proje` tipi ve
+            // localStorage şekli null tutmuyor, tutsa ikon/etiket okuyan
+            // bileşenler beklenmedik değerle karşılaşırdı.
+            return { ...h, ...nullsToUndefined<Partial<Proje>>(syncData) };
           });
           const projeName = before?.name ?? "Proje";
           syncToSupabase(
@@ -515,9 +538,11 @@ export const useDataStore = create<DataState>()(
           const updatedProje = projeler.find((p) => p.id === newAksiyon.projeId);
           const prevProje = s.projeler.find((p) => p.id === newAksiyon.projeId);
           if (updatedProje) {
-            const parentSync: Partial<Proje> = { progress: updatedProje.progress, status: updatedProje.status };
+            const parentSync: ProjeUpdate = { progress: updatedProje.progress, status: updatedProje.status };
             if (prevProje && updatedProje.completedAt !== prevProje.completedAt) {
-              parentSync.completedAt = updatedProje.completedAt;
+              // recalc temizlemişse `undefined` gelir; PATCH'te NULL olabilmesi
+              // için `?? null` — yoksa alan gövdeden düşer ve eski tarih kalır.
+              parentSync.completedAt = updatedProje.completedAt ?? null;
             }
             syncToSupabase(() => supabaseAdapter.updateProje(updatedProje.id, parentSync));
           }
@@ -528,7 +553,7 @@ export const useDataStore = create<DataState>()(
           // Same completedAt-on-Achieved logic + DB sync as updateProje,
           // plus the updatedBy / updatedAt audit stamp.
           const before = s.aksiyonlar.find((a) => a.id === id);
-          const syncData: Partial<Aksiyon> = {
+          const syncData: AksiyonUpdate = {
             ...data,
             updatedBy: data.updatedBy ?? getCurrentUser(),
             updatedAt: data.updatedAt ?? now(),
@@ -537,7 +562,10 @@ export const useDataStore = create<DataState>()(
             if (data.status === "Achieved" && before.status !== "Achieved") {
               syncData.completedAt = new Date().toISOString();
             } else if (data.status && data.status !== "Achieved" && before.status === "Achieved") {
-              syncData.completedAt = undefined;
+              // `null`, `undefined` DEĞİL. `undefined` adapter için "bu alana dokunma"
+              // demek ve PATCH gövdesinden düşüyor; eski tamamlanma tarihi
+              // veritabanında kalıyordu. `null` = "NULL yap".
+              syncData.completedAt = null;
             }
             // Otomatik risk hesaplaması (kullanıcı geri bildirimi 2026-05-08):
             // aksiyon güncellendiğinde de progress + dates üzerinden statü
@@ -560,7 +588,9 @@ export const useDataStore = create<DataState>()(
           }
           const aksiyonlar = s.aksiyonlar.map((a) => {
             if (a.id !== id) return a;
-            return { ...a, ...syncData };
+            // Proje tarafındaki gerekçenin aynısı: `null` yalnızca adapter'a
+            // giden sinyal, yerel durumda `undefined` olarak duruyor.
+            return { ...a, ...nullsToUndefined<Partial<Aksiyon>>(syncData) };
           });
           const aksiyon = aksiyonlar.find((a) => a.id === id);
           const projeler = aksiyon
@@ -575,12 +605,14 @@ export const useDataStore = create<DataState>()(
             const updatedProje = projeler.find((p) => p.id === aksiyon.projeId);
             const prevProje = s.projeler.find((p) => p.id === aksiyon.projeId);
             if (updatedProje) {
-              const parentSync: Partial<Proje> = {
+              const parentSync: ProjeUpdate = {
                 progress: updatedProje.progress,
                 status: updatedProje.status,
               };
               if (prevProje && updatedProje.completedAt !== prevProje.completedAt) {
-                parentSync.completedAt = updatedProje.completedAt;
+                // recalc temizlemişse `undefined` gelir; PATCH'te NULL olabilmesi
+                // için `?? null` — yoksa alan gövdeden düşer ve eski tarih kalır.
+                parentSync.completedAt = updatedProje.completedAt ?? null;
               }
               syncToSupabase(() => supabaseAdapter.updateProje(updatedProje.id, parentSync));
             }
@@ -603,9 +635,11 @@ export const useDataStore = create<DataState>()(
           const updatedProje = projeler.find((p) => p.id === aksiyon.projeId);
           const prevProje = state.projeler.find((p) => p.id === aksiyon.projeId);
           if (updatedProje) {
-            const parentSync: Partial<Proje> = { progress: updatedProje.progress, status: updatedProje.status };
+            const parentSync: ProjeUpdate = { progress: updatedProje.progress, status: updatedProje.status };
             if (prevProje && updatedProje.completedAt !== prevProje.completedAt) {
-              parentSync.completedAt = updatedProje.completedAt;
+              // recalc temizlemişse `undefined` gelir; PATCH'te NULL olabilmesi
+              // için `?? null` — yoksa alan gövdeden düşer ve eski tarih kalır.
+              parentSync.completedAt = updatedProje.completedAt ?? null;
             }
             syncToSupabase(() => supabaseAdapter.updateProje(updatedProje.id, parentSync));
           }
@@ -811,11 +845,16 @@ export const useDataStore = create<DataState>()(
             a.status === "On Hold" || a.status === "Cancelled" || a.status === "Achieved";
           if (isLifecycle) return a;
           const suggested = suggestStatusFromProgress(a.progress ?? 0, a.startDate, a.endDate);
-          if (suggested === a.status) return a;
+          // Achieved OLMAYAN bir aksiyonda tamamlanma tarihi kalıntısı varsa o da
+          // temizlenmeli. Bu kalıntılar Achieved'dan çıkarken `undefined`
+          // gönderildiği (ve PATCH'ten düştüğü) için oluşmuş; statü zaten doğru
+          // olduğunda eski kod bu satıra hiç dokunmuyordu.
+          const staleCompletedAt = a.completedAt != null;
+          if (suggested === a.status && !staleCompletedAt) return a;
           changedAksiyonCount++;
-          const updated: Aksiyon = { ...a, status: suggested };
+          const updated: Aksiyon = { ...a, status: suggested, completedAt: undefined };
           syncToSupabase(
-            () => supabaseAdapter.updateAksiyon(a.id, { status: suggested }),
+            () => supabaseAdapter.updateAksiyon(a.id, { status: suggested, completedAt: null }),
             { entity: "Aksiyon", action: "statü tazeleme", label: a.name }
           );
           return updated;
@@ -842,7 +881,11 @@ export const useDataStore = create<DataState>()(
                 supabaseAdapter.updateProje(after.id, {
                   progress: after.progress,
                   status: after.status,
-                  completedAt: after.completedAt,
+                  // ?? null KRİTİK: recalc, Achieved'dan çıkan projede bunu
+                  // temizliyor ama `undefined` PATCH'ten düşüyordu. Bu yüzden
+                  // "Verileri yenile" her basışta aynı sayıyı gösteriyor,
+                  // asla yakınsamıyordu.
+                  completedAt: after.completedAt ?? null,
                 }),
               { entity: "Proje", action: "statü tazeleme", label: after.name }
             );

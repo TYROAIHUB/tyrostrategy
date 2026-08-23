@@ -416,3 +416,86 @@ describe("refreshDerivedStatuses", () => {
     expect(useDataStore.getState().projeler[0].progress).toBe(0);
   });
 });
+
+describe("Proje opsiyonel yatırım alanlarını temizleme", () => {
+  const base = {
+    name: "Yatırım projesi",
+    source: "Kurumsal" as const,
+    status: "On Track" as const,
+    owner: "Test Owner",
+    participants: ["Test Owner"],
+    department: "IT",
+    progress: 10,
+    startDate: "2026-01-01",
+    endDate: "2026-12-31",
+  };
+
+  it("null gönderilince yerel durumda alan undefined oluyor, null KALMIYOR", () => {
+    // `null` yalnızca adapter'a giden "bu alanı NULL yap" sinyali. `Proje` tipi
+    // ve localStorage şekli null tutmuyor; tutsa ikon/etiket okuyan bileşenler
+    // beklenmedik değerle karşılaşırdı.
+    useDataStore.getState().addProje({
+      ...base,
+      locationId: "loc-1",
+      capexUsd: 1_000_000,
+      assetClass: "AST-PROC",
+      actionType: "ACT-NEW",
+    });
+    const id = useDataStore.getState().projeler[0].id;
+
+    useDataStore.getState().updateProje(id, {
+      locationId: null,
+      capexUsd: null,
+      assetClass: null,
+      actionType: null,
+      parentObjectiveId: null,
+    });
+
+    const p = useDataStore.getState().projeler[0];
+    expect(p.locationId).toBeUndefined();
+    expect(p.capexUsd).toBeUndefined();
+    expect(p.assetClass).toBeUndefined();
+    expect(p.actionType).toBeUndefined();
+    expect(p.parentObjectiveId).toBeUndefined();
+    // localStorage'a null sızmasın
+    expect(JSON.stringify(p)).not.toContain("null");
+  });
+
+  it("temizleme diğer alanlara dokunmuyor", () => {
+    useDataStore.getState().addProje({
+      ...base,
+      locationId: "loc-1",
+      capexUsd: 500,
+      assetClass: "AST-PORT",
+      actionType: "ACT-EXP",
+    });
+    const id = useDataStore.getState().projeler[0].id;
+
+    useDataStore.getState().updateProje(id, { capexUsd: null });
+
+    const p = useDataStore.getState().projeler[0];
+    expect(p.capexUsd).toBeUndefined();
+    // Sadece CAPEX temizlendi; diğerleri yerinde
+    expect(p.locationId).toBe("loc-1");
+    expect(p.assetClass).toBe("AST-PORT");
+    expect(p.actionType).toBe("ACT-EXP");
+    expect(p.name).toBe(base.name);
+    expect(p.progress).toBe(base.progress);
+  });
+
+  it("değer güncelleme (temizleme değil) çalışmaya devam ediyor", () => {
+    useDataStore.getState().addProje({ ...base, capexUsd: 100 });
+    const id = useDataStore.getState().projeler[0].id;
+
+    useDataStore.getState().updateProje(id, {
+      capexUsd: 250,
+      assetClass: "AST-STOR",
+      locationId: "loc-9",
+    });
+
+    const p = useDataStore.getState().projeler[0];
+    expect(p.capexUsd).toBe(250);
+    expect(p.assetClass).toBe("AST-STOR");
+    expect(p.locationId).toBe("loc-9");
+  });
+});

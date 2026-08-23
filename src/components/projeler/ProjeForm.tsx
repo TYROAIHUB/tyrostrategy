@@ -15,6 +15,7 @@ import { getStatusOptions, getSourceOptions } from "@/lib/constants";
 import { deptLabel, canonicalDeptKey } from "@/config/departments";
 import { formatLocationLabel, resolveLocationLabel } from "@/lib/locations";
 import { parseCapexInput, formatCapex } from "@/lib/money";
+import { clearIfEmptied } from "@/lib/updatePayload";
 import { assetClassLabel, actionTypeLabel } from "@/config/projectTaxonomy";
 import ProjeInvestmentFields from "@/components/projeler/ProjeInvestmentFields";
 import type { AssetClass, ProjectActionType } from "@/types";
@@ -224,7 +225,34 @@ export default function ProjeForm({ proje, onSuccess, onClose }: ProjeFormProps)
         if (oldParts !== newParts) {
           details.push({ label: t("common.participants", "Üyeler"), value: (data.participants ?? []).length > 0 ? (data.participants ?? []).join(", ") : "—" });
         }
-        updateProje(proje.id, payload);
+        // Opsiyonel alanların temizlenmesi: `null` = "DB'de NULL yap",
+        // `undefined` = "bu alana dokunma". İkisini karıştırmak iki ayrı hataya
+        // yol açıyor, ikisinden de kaçınmamız gerekiyor:
+        //
+        //  • Her zaman `undefined` göndermek (eski davranış): adapter alanı
+        //    PATCH'ten düşürüyor, temizleme veritabanına HİÇ ulaşmıyor. Alan
+        //    ekranda boşalıp ilk yenilemede eski değerine dönüyordu.
+        //  • Her zaman `null` göndermek: form `defaultValues`'ı BELLEKTEKİ
+        //    kayıttan okuyor ve uygulamada polling/realtime yok (veri yalnızca
+        //    açılışta ve girişte çekiliyor). Sabahtan açık bir sekmede sadece
+        //    ilerlemeyi değiştirip kaydeden kullanıcı, o arada başkasının
+        //    girdiği CAPEX/lokasyon/taksonomiyi NULL'a çekerdi.
+        //
+        // Doğrusu: yalnızca YÜKLENEN kayıtta değer VARDI ve şimdi yoksa temizle.
+        // Aksi halde alana dokunma.
+        updateProje(proje.id, {
+          ...payload,
+          locationId: clearIfEmptied(proje.locationId, payload.locationId),
+          // `loaded == null` bilinçli: CAPEX 0 geçerli bir tutar, "yok" değil.
+          capexUsd: clearIfEmptied(proje.capexUsd, payload.capexUsd),
+          assetClass: clearIfEmptied(proje.assetClass, payload.assetClass),
+          actionType: clearIfEmptied(proje.actionType, payload.actionType),
+          parentObjectiveId: clearIfEmptied(proje.parentObjectiveId, payload.parentObjectiveId),
+          // Etiketler aynı mantık: kullanıcı hepsini kaldırdıysa boş dizi
+          // gönderilir (adapter bağlantı satırlarını temizler); zaten etiketsiz
+          // bir kayıtta ise alana dokunulmaz.
+          tags: data.tags.length > 0 ? data.tags : proje.tags?.length ? [] : undefined,
+        });
         toast.success(t("toast.objectiveUpdated"), {
           message: data.name,
           details: details.length > 0 ? details : [{ label: t("common.status"), value: t("toast.changeSaved") }],

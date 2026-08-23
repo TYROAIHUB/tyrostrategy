@@ -95,6 +95,47 @@ export interface Proje {
   completedAt?: string;
 }
 
+/**
+ * Proje güncelleme yükü — `updateProje` için.
+ *
+ * `Partial<Proje>` ile aynı; tek fark, temizlenebilir opsiyonel alanların
+ * `null` kabul etmesi. Ayrım anlamlı ve adapter buna göre davranıyor:
+ *   • alan yok ya da `undefined` → "bu alana DOKUNMA" (PATCH gövdesine girmez)
+ *   • `null`                     → "bu alanı TEMİZLE" (SQL NULL gönderilir)
+ *
+ * Neden gerekti: form temizlenen alanı `undefined` gönderiyordu, adapter'ın
+ * `!== undefined` guard'ı da onu PATCH'ten düşürüyordu. Sonuç, alan ekranda
+ * temizlenmiş görünüp ilk yenilemede eski değerine dönüyordu — yani bu alanlar
+ * pratikte tek yazımlıktı. `null` ile temizleme artık veritabanına ulaşıyor.
+ *
+ * `null` yalnızca adapter'a giden yükte bulunur; zustand'a yazılırken
+ * `undefined`'a çevrilir (bkz. dataStore `nullsToUndefined`), böylece `Proje`
+ * tipi ve localStorage şekli değişmeden kalıyor.
+ */
+export type ProjeUpdate = Omit<
+  Partial<Proje>,
+  "locationId" | "capexUsd" | "assetClass" | "actionType" | "parentObjectiveId" | "completedAt"
+> & {
+  locationId?: string | null;
+  capexUsd?: number | null;
+  assetClass?: AssetClass | null;
+  actionType?: ProjectActionType | null;
+  parentObjectiveId?: string | null;
+  /** Achieved'dan çıkan kayıtta temizlenmesi gerekiyor — `null` ile. */
+  completedAt?: string | null;
+};
+
+/**
+ * Aksiyon güncelleme yükü — `ProjeUpdate` ile aynı gerekçe.
+ *
+ * `completedAt` Achieved'dan çıkıldığında temizlenmeli; `undefined` gönderilirse
+ * adapter alanı PATCH'ten düşürüyor ve eski tamamlanma tarihi veritabanında
+ * kalıyor. `null` = "NULL yap", `undefined` = "dokunma".
+ */
+export type AksiyonUpdate = Omit<Partial<Aksiyon>, "completedAt"> & {
+  completedAt?: string | null;
+};
+
 // ===== Tag Tanımı — parametrik etiketler (ad + renk) =====
 export interface TagDefinition {
   id: string;
