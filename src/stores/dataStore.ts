@@ -395,7 +395,17 @@ export const useDataStore = create<DataState>()(
       addProje: (h) =>
         set((s) => {
           const id = generateSystematicId("P", h.startDate, s.projeler.map((x) => x.id));
-          const newProje = { ...h, id, createdBy: h.createdBy ?? getCurrentUser(), createdAt: h.createdAt ?? now() };
+          // Doğrudan "Tamamlandı" olarak OLUŞTURULAN kayda tamamlanma tarihi
+          // bas. Kod tarihi yalnızca GEÇİŞ anında damgalıyordu (not-Achieved →
+          // Achieved); doğrudan Achieved oluşturulan kayıtta geçiş olmadığı için
+          // tarih hiç oluşmuyordu.
+          const newProje = {
+            ...h,
+            id,
+            createdBy: h.createdBy ?? getCurrentUser(),
+            createdAt: h.createdAt ?? now(),
+            completedAt: h.completedAt ?? (h.status === "Achieved" ? now() : undefined),
+          };
           // Sync promise'i pending map'e ekle — wizard child aksiyonları
           // bu promise'i bekleyip sonra fire eder. Promise success/fail'da
           // map'ten silinir (auto-cleanup).
@@ -500,7 +510,17 @@ export const useDataStore = create<DataState>()(
       addAksiyon: (a) =>
         set((s) => {
           const id = generateSystematicId("A", a.startDate, s.aksiyonlar.map((x) => x.id));
-          const newAksiyon: Aksiyon = { ...a, id, createdBy: a.createdBy ?? getCurrentUser(), createdAt: a.createdAt ?? now() };
+          // Doğrudan "Tamamlandı" olarak OLUŞTURULAN kayda tamamlanma tarihi
+          // bas. Kod tarihi yalnızca GEÇİŞ anında damgalıyordu (not-Achieved →
+          // Achieved); doğrudan Achieved oluşturulan kayıtta geçiş olmadığı için
+          // tarih hiç oluşmuyordu.
+          const newAksiyon: Aksiyon = {
+            ...a,
+            id,
+            createdBy: a.createdBy ?? getCurrentUser(),
+            createdAt: a.createdAt ?? now(),
+            completedAt: a.completedAt ?? (a.status === "Achieved" ? now() : undefined),
+          };
           const aksiyonlar = [...s.aksiyonlar, newAksiyon];
           const projeler = recalcProjeProgress(s.projeler, aksiyonlar, newAksiyon.projeId);
           const syncP = syncToSupabase(
@@ -583,6 +603,13 @@ export const useDataStore = create<DataState>()(
               );
               if (suggested !== finalStatus) {
                 syncData.status = suggested;
+                // Otomatik Achieved geçişinde tarih de damgalanmalı.
+                // updateProje'deki eşdeğer blok bunu yapıyordu, aksiyon tarafı
+                // yapmıyordu: %100'e çekilen bir aksiyon statüyü Achieved'a
+                // çeviriyor ama tamamlanma tarihi hiç oluşmuyordu.
+                if (suggested === "Achieved" && !merged.completedAt) {
+                  syncData.completedAt = new Date().toISOString();
+                }
               }
             }
           }
@@ -845,16 +872,34 @@ export const useDataStore = create<DataState>()(
             a.status === "On Hold" || a.status === "Cancelled" || a.status === "Achieved";
           if (isLifecycle) return a;
           const suggested = suggestStatusFromProgress(a.progress ?? 0, a.startDate, a.endDate);
-          // Achieved OLMAYAN bir aksiyonda tamamlanma tarihi kalıntısı varsa o da
-          // temizlenmeli. Bu kalıntılar Achieved'dan çıkarken `undefined`
-          // gönderildiği (ve PATCH'ten düştüğü) için oluşmuş; statü zaten doğru
-          // olduğunda eski kod bu satıra hiç dokunmuyordu.
-          const staleCompletedAt = a.completedAt != null;
-          if (suggested === a.status && !staleCompletedAt) return a;
+
+          // Tamamlanma tarihi HEDEF statüyle tutarlı olmalı:
+          //   Achieved       → tarih OLMALI   (yoksa şimdi damgala, varsa dokunma)
+          //   Achieved değil → tarih OLMAMALI (varsa temizle)
+          // `undefined` = "dokunma", `null` = "NULL yap".
+          // Achieved dalı gerçekten erişilebilir: %100 ilerlemeli ama statüsü
+          // henüz Achieved olmayan aksiyon bu tazelemede Achieved'a geçiyor.
+          // Koşulsuz `completedAt: null` göndermek o kaydın tarihini hiç
+          // oluşmadan siliyordu.
+          const hasDate = a.completedAt != null;
+          const nextDate: string | null | undefined =
+            suggested === "Achieved"
+              ? hasDate ? undefined : new Date().toISOString()
+              : hasDate ? null : undefined;
+
+          if (suggested === a.status && nextDate === undefined) return a;
           changedAksiyonCount++;
-          const updated: Aksiyon = { ...a, status: suggested, completedAt: undefined };
+          const updated: Aksiyon = {
+            ...a,
+            status: suggested,
+            ...(nextDate !== undefined ? { completedAt: nextDate ?? undefined } : {}),
+          };
           syncToSupabase(
-            () => supabaseAdapter.updateAksiyon(a.id, { status: suggested, completedAt: null }),
+            () =>
+              supabaseAdapter.updateAksiyon(a.id, {
+                status: suggested,
+                ...(nextDate !== undefined ? { completedAt: nextDate } : {}),
+              }),
             { entity: "Aksiyon", action: "statü tazeleme", label: a.name }
           );
           return updated;

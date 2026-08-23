@@ -126,6 +126,38 @@ describe("refreshDerivedStatuses — yakınsama", () => {
     expect(useDataStore.getState().projeler[0].completedAt).toBe("2026-03-01T00:00:00.000Z");
   });
 
+  it("REGRESYON: %100'e ulaşıp otomatik Achieved olan aksiyona tarih BASIYOR", () => {
+    // Bu dal önceki sürümde koşulsuz `completedAt: null` gönderiyordu: aksiyon
+    // Achieved'a geçiyor ama tamamlanma tarihi hiç oluşmuyordu.
+    seedStaleProject();
+    useDataStore.setState((s) => ({
+      projeler: s.projeler.map((p) => ({ ...p, completedAt: undefined })),
+      aksiyonlar: s.aksiyonlar.map((a) => ({ ...a, progress: 100, status: "On Track" as const })),
+    }));
+    patches.length = 0;
+    const result = useDataStore.getState().refreshDerivedStatuses();
+
+    expect(result.aksiyonlar).toBe(1);
+    const aksiyonPatch = patches.find((p) => p.table === "aksiyonlar");
+    expect(aksiyonPatch!.body.status).toBe("Achieved");
+    expect(aksiyonPatch!.body.completed_at).not.toBeNull();
+    expect(typeof aksiyonPatch!.body.completed_at).toBe("string");
+    expect(useDataStore.getState().aksiyonlar[0].completedAt).toBeTruthy();
+  });
+
+  it("zaten tarihi olan Achieved aksiyonun tarihini yeniden yazmıyor", () => {
+    seedStaleProject();
+    useDataStore.setState((s) => ({
+      aksiyonlar: s.aksiyonlar.map((a) => ({
+        ...a, progress: 100, status: "On Track" as const,
+        completedAt: "2026-02-02T00:00:00.000Z",
+      })),
+    }));
+    patches.length = 0;
+    useDataStore.getState().refreshDerivedStatuses();
+    expect(useDataStore.getState().aksiyonlar[0].completedAt).toBe("2026-02-02T00:00:00.000Z");
+  });
+
   it("kalıntı completedAt'i olan aksiyonu da temizliyor", () => {
     // Aksiyon tarafında da 15 kayıt bu durumdaydı: statü doğru olduğu için
     // eski kod satıra hiç dokunmuyordu, tarih kalıyordu.

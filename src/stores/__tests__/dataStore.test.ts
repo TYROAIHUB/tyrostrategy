@@ -499,3 +499,57 @@ describe("Proje opsiyonel yatırım alanlarını temizleme", () => {
     expect(p.locationId).toBe("loc-9");
   });
 });
+
+describe("Tamamlanma tarihi damgası", () => {
+  const projeBase = {
+    name: "Bitmiş proje", source: "Kurumsal" as const, owner: "Cenk",
+    participants: ["Cenk"], department: "IT", progress: 100,
+    startDate: "2026-01-01", endDate: "2026-06-30",
+  };
+
+  it("doğrudan Tamamlandı olarak oluşturulan PROJEYE tarih basıyor", () => {
+    // Kod tarihi yalnızca GEÇİŞ anında damgalıyordu; doğrudan Achieved
+    // oluşturulan kayıtta geçiş olmadığı için tarih hiç oluşmuyordu.
+    useDataStore.getState().addProje({ ...projeBase, status: "Achieved" });
+    expect(useDataStore.getState().projeler[0].completedAt).toBeTruthy();
+  });
+
+  it("Tamamlandı OLMAYAN yeni projeye tarih basmıyor", () => {
+    useDataStore.getState().addProje({ ...projeBase, status: "On Track", progress: 40 });
+    expect(useDataStore.getState().projeler[0].completedAt).toBeUndefined();
+  });
+
+  it("doğrudan Tamamlandı olarak oluşturulan AKSİYONA tarih basıyor", () => {
+    useDataStore.getState().addProje({ ...projeBase, status: "On Track", progress: 0 });
+    const projeId = useDataStore.getState().projeler[0].id;
+    useDataStore.getState().addAksiyon({
+      projeId, name: "Bitmiş aksiyon", owner: "Cenk", status: "Achieved",
+      progress: 100, startDate: "2026-01-01", endDate: "2026-06-30",
+    });
+    expect(useDataStore.getState().aksiyonlar[0].completedAt).toBeTruthy();
+  });
+
+  it("dışarıdan verilen tarihi eziyor DEĞİL", () => {
+    useDataStore.getState().addProje({
+      ...projeBase, status: "Achieved", completedAt: "2025-12-31T00:00:00.000Z",
+    });
+    expect(useDataStore.getState().projeler[0].completedAt).toBe("2025-12-31T00:00:00.000Z");
+  });
+
+  it("aksiyon %100'e çekilince otomatik Achieved olup tarih damgalanıyor", () => {
+    useDataStore.getState().addProje({ ...projeBase, status: "On Track", progress: 0 });
+    const projeId = useDataStore.getState().projeler[0].id;
+    useDataStore.getState().addAksiyon({
+      projeId, name: "Aksiyon", owner: "Cenk", status: "On Track",
+      progress: 20, startDate: "2026-01-01", endDate: "2026-06-30",
+    });
+    const aksiyonId = useDataStore.getState().aksiyonlar[0].id;
+
+    // Kullanıcı yalnızca ilerlemeyi %100 yapıyor, statüye dokunmuyor
+    useDataStore.getState().updateAksiyon(aksiyonId, { progress: 100 });
+
+    const a = useDataStore.getState().aksiyonlar[0];
+    expect(a.status).toBe("Achieved");
+    expect(a.completedAt).toBeTruthy();
+  });
+});
