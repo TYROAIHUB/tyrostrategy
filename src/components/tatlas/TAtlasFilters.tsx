@@ -124,8 +124,10 @@ export default function TAtlasFilters({ filters, options, onChange, resultCount 
             `min-w-0 flex-1` ile kalan alanı veriyoruz ve lejant taşarsa
             KENDİ İÇİNDE yatay kayıyor. Böylece hiçbir genişlikte satır
             değiştirmiyor. */}
-        {/* Dikey ayraç — lejant iki satır olduğu için daha uzun */}
-        <span aria-hidden className="h-9 w-px shrink-0 rounded-full bg-tyro-border/60" />
+        {/* Dikey ayraç — lejant iki satır olduğu için daha uzun.
+            mx-2.5: satırın gap-2'sine ek boşluk; Sıfırla ile lejant arasında
+            belirgin bir ayrım oluşuyor (kullanıcı isteği). */}
+        <span aria-hidden className="mx-2.5 h-9 w-px shrink-0 rounded-full bg-tyro-border/60" />
         <div className="min-w-0 flex-1">
           <TAtlasLegend />
         </div>
