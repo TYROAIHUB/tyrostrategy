@@ -1174,11 +1174,6 @@
       "renderFailed": "Map could not be rendered — your browser may not support WebGL",
       "basemapFallback": "Remote base map unavailable, using the simple base layer"
     },
-    "legend": {
-      "title": "Legend",
-      "iconMeaning": "Icon — asset class",
-      "frameMeaning": "Frame color — project status"
-    },
     "filter": {
       "country": "Country",
       "reset": "Reset",

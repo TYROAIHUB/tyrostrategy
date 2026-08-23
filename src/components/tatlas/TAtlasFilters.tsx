@@ -17,6 +17,7 @@ import { statusColor } from "@/lib/colorUtils";
 import type { AtlasFilters, AtlasFilterOptions } from "@/lib/investmentPortfolio";
 import { hasActiveFilters } from "@/lib/investmentPortfolio";
 import type { EntityStatus } from "@/types";
+import TAtlasLegend from "./TAtlasLegend";
 
 /**
  * Filtre satırı (doküman §7).
@@ -116,6 +117,14 @@ export default function TAtlasFilters({ filters, options, onChange, resultCount 
         >
           {t("tatlas.filter.reset")}
         </Button>
+
+        {/* Lejant — haritanın üstündeki barda, Sıfırla'nın yanında.
+            Kullanıcı isteği: değerler popover ardında değil doğrudan görünsün.
+            Dar ekranda alt satıra sarıyor. */}
+        <span aria-hidden className="hidden h-5 w-px rounded-full bg-tyro-border/50 lg:block" />
+        <div className="min-w-0 basis-full lg:basis-auto">
+          <TAtlasLegend />
+        </div>
 
         {/* Filtrenin etkisi — haritadaki pin kümesiyle bu sayı her zaman aynı */}
         <span className="ml-auto shrink-0 text-[11px] font-semibold tabular-nums text-tyro-text-muted">

@@ -1174,11 +1174,6 @@
       "renderFailed": "Harita çizilemedi — tarayıcınız WebGL desteklemiyor olabilir",
       "basemapFallback": "Uzak harita altlığına erişilemedi, sade altlık kullanılıyor"
     },
-    "legend": {
-      "title": "Lejant",
-      "iconMeaning": "İkon — varlık sınıfı",
-      "frameMeaning": "Çerçeve rengi — proje statüsü"
-    },
     "filter": {
       "country": "Ülke",
       "reset": "Sıfırla",

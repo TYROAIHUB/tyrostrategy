@@ -11,7 +11,6 @@ import { cartoStyleUrl, buildBasemapStyle, FALLBACK_ATTRIBUTION } from "@/config
 import { assetClassIcon } from "@/config/assetClassIcons";
 import type { AtlasPoint } from "@/lib/investmentPortfolio";
 import type { Proje, EntityStatus } from "@/types";
-import TAtlasLegend from "./TAtlasLegend";
 import TAtlasPinPopup from "./TAtlasPinPopup";
 
 /**
@@ -379,11 +378,6 @@ export default function TAtlasMap({ points, onOpenProje }: Props) {
           onClick={fitToPoints}
           icon={<Crosshair size={15} />}
         />
-      </div>
-
-      {/* ── Sol alt: lejant (varsayılan katlanmış — doküman §5) ── */}
-      <div className="absolute bottom-3 left-3 z-10">
-        <TAtlasLegend />
       </div>
 
       {/* ── Yedek altlık devrede: harita sade görünüyorsa nedeni belli olsun ── */}
