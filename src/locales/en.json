@@ -1219,13 +1219,6 @@
       "approximate": "Location shown approximately at the country centre.",
       "ariaLabel": "Project summary card"
     },
-    "pending": {
-      "title": "Projects awaiting location",
-      "subtitle": "Not shown on the map, excluded from summary figures",
-      "noLocation": "{{count}} without a location",
-      "unknownCoords": "{{count}} with a city missing from the coordinate dictionary",
-      "showAll": "Show {{count}} more"
-    },
     "empty": {
       "noPortfolioTitle": "Investment portfolio is empty",
       "noPortfolioDesc": "T-Atlas shows projects that have an asset class. Assign an asset class and investment type to projects.",

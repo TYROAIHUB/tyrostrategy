@@ -13,7 +13,6 @@ import { usePermissions } from "@/hooks/usePermissions";
 import TAtlasMap from "@/components/tatlas/TAtlasMap";
 import TAtlasFilters from "@/components/tatlas/TAtlasFilters";
 import TAtlasSummary from "@/components/tatlas/TAtlasSummary";
-import TAtlasPendingLocations from "@/components/tatlas/TAtlasPendingLocations";
 import {
   selectInvestmentProjects,
   applyAtlasFilters,
@@ -75,7 +74,11 @@ export default function TAtlasPage() {
     [investmentProjects, filters, locationById]
   );
 
-  const { points, pending } = useMemo(
+  // Yalnızca `points` kullanılıyor: koordinatı çözülemeyen projeler
+  // (resolveAtlasPoints'in `pending` dizisi) haritadan ve özet hesaplarından
+  // zaten dışlanıyor; ayrı bir "konumu bekleyen projeler" kartı gösterilmiyor
+  // (kullanıcı isteği — sayfa salt harita + metrik görünümü).
+  const { points } = useMemo(
     () => resolveAtlasPoints(filteredProjects, locationById),
     [filteredProjects, locationById]
   );
@@ -163,8 +166,6 @@ export default function TAtlasPage() {
       {/* D — Portföy özeti: haritadan ayrılmadan görülebilecek şekilde altında */}
       <TAtlasSummary metrics={metrics} breakdowns={breakdowns} />
 
-      {/* E — Konumu bekleyen projeler */}
-      <TAtlasPendingLocations pending={pending} locations={locations} onOpenProje={openProje} />
 
       {/* Proje detayı — sağdan açılan panel (Projeler sayfasıyla aynı desen) */}
       <SlidingPanel

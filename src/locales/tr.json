@@ -1219,13 +1219,6 @@
       "approximate": "Konum ülke merkezine göre yaklaşık gösteriliyor.",
       "ariaLabel": "Proje künye kartı"
     },
-    "pending": {
-      "title": "Konumu bekleyen projeler",
-      "subtitle": "Haritada gösterilmiyor, özet hesaplarına dahil değil",
-      "noLocation": "{{count}} projede lokasyon girilmemiş",
-      "unknownCoords": "{{count}} projenin şehri koordinat sözlüğünde yok",
-      "showAll": "{{count}} tane daha göster"
-    },
     "empty": {
       "noPortfolioTitle": "Yatırım portföyü boş",
       "noPortfolioDesc": "T-Atlas, varlık sınıfı atanmış projeleri gösterir. Projelere varlık sınıfı ve yatırım tipi tanımlayın.",
