@@ -4,166 +4,21 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Database, Download, Upload, FileJson, FileSpreadsheet, FileText,
   CheckCircle, XCircle, AlertTriangle, Trash2, RefreshCw, ChevronDown,
-  Shield, Tag, Target, CircleCheckBig, Settings, Clock, Users,
+  Shield, Tag, Target, CircleCheckBig, Settings, Clock, Users, MapPin,
 } from "lucide-react";
 import { Button, Tooltip } from "@heroui/react";
 import { useDataStore } from "@/stores/dataStore";
 import { useRoleStore } from "@/stores/roleStore";
 import { useUIStore } from "@/stores/uiStore";
 import GlassCard from "@/components/ui/GlassCard";
-import type { Proje, Aksiyon, TagDefinition, EntityStatus, AppUser, UserRole } from "@/types";
+import type { Proje, Aksiyon, TagDefinition, LocationDefinition, AppUser } from "@/types";
+import {
+  buildSheetRows,
+  prepareImportRows,
+  arrayToCSV,
+  csvToArray,
+} from "@/lib/dataTransfer";
 import * as XLSX from "xlsx";
-
-// ===== Header maps — internal field ↔ user-visible Turkish label =====
-// Used by the export flow (rewrite keys to pretty labels) and by the
-// import flow (accept either the internal name or the Turkish header
-// so files from any era/source round-trip cleanly). When the app gets
-// a new column, add it here — single source of truth for the Excel
-// template.
-const PROJELER_HEADER_MAP: Record<string, string> = {
-  id: "ID",
-  name: "Proje Adı",
-  description: "Açıklama",
-  source: "İş Kolu",
-  status: "Durum",
-  owner: "Proje Lideri",
-  participants: "Proje Üyeleri",
-  department: "Departman",
-  progress: "İlerleme (%)",
-  startDate: "Başlangıç Tarihi",
-  endDate: "Bitiş Tarihi",
-  reviewDate: "Kontrol Tarihi",
-  tags: "Etiketler",
-  parentObjectiveId: "Üst Proje ID",
-  createdBy: "Oluşturan",
-  createdAt: "Oluşturulma",
-  updatedBy: "Güncelleyen",
-  updatedAt: "Son Güncelleme",
-  completedAt: "Tamamlanma",
-};
-const AKSIYONLAR_HEADER_MAP: Record<string, string> = {
-  id: "ID",
-  projeId: "Proje ID",
-  name: "Aksiyon Adı",
-  description: "Açıklama",
-  owner: "Sorumlu",
-  status: "Durum",
-  progress: "İlerleme (%)",
-  startDate: "Başlangıç Tarihi",
-  endDate: "Bitiş Tarihi",
-  sortOrder: "Sıra",
-  createdBy: "Oluşturan",
-  createdAt: "Oluşturulma",
-  updatedBy: "Güncelleyen",
-  updatedAt: "Son Güncelleme",
-  completedAt: "Tamamlanma",
-};
-const ETIKETLER_HEADER_MAP: Record<string, string> = {
-  id: "ID",
-  name: "Etiket Adı",
-  color: "Renk",
-};
-const KULLANICILAR_HEADER_MAP: Record<string, string> = {
-  id: "ID",
-  email: "E-posta",
-  displayName: "Ad Soyad",
-  department: "Departman",
-  role: "Rol",
-  locale: "Dil",
-  title: "Ünvan",
-  isActive: "Aktif",
-  createdAt: "Oluşturulma",
-  updatedAt: "Son Güncelleme",
-};
-const HEADER_MAPS: Record<string, Record<string, string>> = {
-  projeler: PROJELER_HEADER_MAP,
-  aksiyonlar: AKSIYONLAR_HEADER_MAP,
-  etiketler: ETIKETLER_HEADER_MAP,
-  kullanicilar: KULLANICILAR_HEADER_MAP,
-};
-
-const VALID_ROLES: ReadonlySet<UserRole> = new Set<UserRole>([
-  "Admin", "Proje Lideri", "Management",
-]);
-
-/**
- * Rewrite an exported row's keys from internal (startDate, …) to the
- * Turkish label ("Başlangıç Tarihi", …) for the given table. Keys not
- * in the map fall through unchanged so new fields stay visible instead
- * of getting silently dropped.
- */
-function applyExportLabels(tableId: string, data: Record<string, unknown>[]): Record<string, unknown>[] {
-  const map = HEADER_MAPS[tableId];
-  if (!map) return data;
-  return data.map((row) => {
-    const out: Record<string, unknown> = {};
-    for (const [k, v] of Object.entries(row)) out[map[k] ?? k] = v;
-    return out;
-  });
-}
-
-/**
- * Inverse of applyExportLabels: take a row that may have come in with
- * Turkish headers and rewrite back to the internal field names the app
- * expects. Header match is case-insensitive and trim-tolerant; any key
- * that already matches an internal name is passed through.
- */
-function applyImportAliases(tableId: string, row: Record<string, unknown>): Record<string, unknown> {
-  const map = HEADER_MAPS[tableId];
-  if (!map) return row;
-  const reverseLookup = new Map<string, string>();
-  for (const [internal, label] of Object.entries(map)) {
-    reverseLookup.set(label.toLowerCase().trim(), internal);
-    reverseLookup.set(internal.toLowerCase(), internal);
-  }
-  const out: Record<string, unknown> = {};
-  for (const [k, v] of Object.entries(row)) {
-    const internal = reverseLookup.get(k.toLowerCase().trim()) ?? k;
-    out[internal] = v;
-  }
-  return out;
-}
-
-/**
- * Per-entity row normalizer — runs AFTER header aliasing. Handles:
- *   • projeler / aksiyonlar: legacy status "Behind" → "High Risk"
- *     (renamed in migration 010; old templates still carry it).
- *   • projeler: participants + tags are exported as "A; B; C" strings,
- *     split back to arrays so junction rows get re-linked on save.
- *   • progress cast to Number (Excel sometimes reads as string).
- */
-function normalizeImportRow(tableId: string, row: Record<string, unknown>): Record<string, unknown> {
-  const r = { ...row };
-  const parseArr = (v: unknown): string[] => {
-    if (Array.isArray(v)) return v.map((x) => String(x).trim()).filter(Boolean);
-    if (typeof v === "string" && v.trim()) return v.split(/[;,]/).map((s) => s.trim()).filter(Boolean);
-    return [];
-  };
-  if (tableId === "projeler" || tableId === "aksiyonlar") {
-    if (r.status === "Behind") r.status = "High Risk" as EntityStatus;
-    if (r.progress !== undefined && typeof r.progress !== "number") {
-      const n = Number(r.progress);
-      if (!Number.isNaN(n)) r.progress = n;
-    }
-  }
-  if (tableId === "projeler") {
-    r.participants = parseArr(r.participants);
-    r.tags = parseArr(r.tags);
-  }
-  if (tableId === "kullanicilar") {
-    // Locale comes in as "tr" / "en" or "Türkçe"/"English" — normalize to code.
-    if (typeof r.locale === "string") {
-      const l = r.locale.toLowerCase().trim();
-      r.locale = l.startsWith("en") || l.startsWith("ing") ? "en" : "tr";
-    }
-    // isActive: Excel often gives "TRUE"/"Evet"/"1" — coerce to boolean.
-    if (r.isActive !== undefined && typeof r.isActive !== "boolean") {
-      const v = String(r.isActive).toLowerCase().trim();
-      r.isActive = v === "true" || v === "1" || v === "evet" || v === "yes" || v === "aktif";
-    }
-  }
-  return r;
-}
 
 // ===== Data table definitions =====
 interface DataTable {
@@ -199,6 +54,7 @@ export default function VeriYonetimiPage() {
   const aksiyonlar = useDataStore((s) => s.aksiyonlar);
   const tagDefinitions = useDataStore((s) => s.tagDefinitions);
   const users = useDataStore((s) => s.users);
+  const locations = useDataStore((s) => s.locations);
   const rolePermissions = useRoleStore((s) => s.permissions);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -269,11 +125,43 @@ export default function VeriYonetimiPage() {
       getData: () => tagDefinitions,
       setData: (data) => {
         const store = useDataStore.getState();
-        // Remove existing
-        store.tagDefinitions.forEach((t) => store.deleteTag(t.id));
-        (data as TagDefinition[]).forEach((t) => store.addTag(t.name, t.color));
+        // Mağazadaki gerçek adlar addTagDefinition/deleteTagDefinition; eskiden
+        // burada addTag/deleteTag çağrılıyordu — böyle bir metot olmadığı için
+        // etiket içe aktarma her denemede TypeError'a düşüyordu.
+        store.tagDefinitions.forEach((def) => store.deleteTagDefinition(def.id));
+        (data as TagDefinition[]).forEach((def) =>
+          store.addTagDefinition({ name: def.name, color: def.color }),
+        );
       },
       description: t("dataManagement.tagDefinitionsDesc"),
+    },
+    {
+      id: "lokasyonlar",
+      label: t("dataManagement.locations"),
+      icon: MapPin,
+      color: "#0f766e",
+      getCount: () => locations.length,
+      getData: () => locations,
+      // DİĞER TABLOLARDAN FARKLI: sil-ve-yeniden-ekle DEĞİL, BİRLEŞTİR.
+      // Lokasyon bir referans tablosu; projeler.location_id ona FK ile bağlı ve
+      // FK'nın davranışı ON DELETE SET NULL. Mevcut satırları silip yeniden
+      // eklemek yeni UUID üretir ve tüm projelerin lokasyonunu sessizce
+      // boşaltır. Bu yüzden içe aktarma yalnızca EKLER: ülke/şehir çifti
+      // (büyük-küçük harf ve boşluk toleranslı) zaten varsa atlanır.
+      setData: (data) => {
+        const store = useDataStore.getState();
+        const key = (c: string, s: string) => `${c.trim().toLowerCase()}|${s.trim().toLowerCase()}`;
+        const existing = new Set(store.locations.map((l) => key(l.country, l.city)));
+        (data as LocationDefinition[]).forEach((l) => {
+          const country = String(l.country ?? "").trim();
+          const city = String(l.city ?? "").trim();
+          if (!country || !city) return;
+          if (existing.has(key(country, city))) return;
+          existing.add(key(country, city));
+          store.addLocation({ country, city });
+        });
+      },
+      description: t("dataManagement.locationsDesc"),
     },
     {
       id: "roller",
@@ -378,8 +266,7 @@ export default function VeriYonetimiPage() {
       } else if (exportFormat === "csv") {
         for (const [key, data] of Object.entries(exportData)) {
           if (data.length === 0) continue;
-          const flat = flattenObjects(data as Record<string, unknown>[]);
-          const labeled = applyExportLabels(key, flat);
+          const labeled = buildSheetRows(key, data as Record<string, unknown>[], { locations });
           const csv = arrayToCSV(labeled);
           const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" }); // BOM for Turkish chars
           downloadBlob(blob, `${fileName}_${key}.csv`);
@@ -388,8 +275,7 @@ export default function VeriYonetimiPage() {
         const wb = XLSX.utils.book_new();
         for (const [key, data] of Object.entries(exportData)) {
           if (data.length === 0) continue;
-          const flat = flattenObjects(data as Record<string, unknown>[]);
-          const labeled = applyExportLabels(key, flat);
+          const labeled = buildSheetRows(key, data as Record<string, unknown>[], { locations });
           const ws = XLSX.utils.json_to_sheet(labeled);
           XLSX.utils.book_append_sheet(wb, ws, key.slice(0, 31)); // Sheet name max 31 chars
         }
@@ -414,7 +300,7 @@ export default function VeriYonetimiPage() {
       });
     }
     setProcessing(false);
-  }, [selectedTables, exportFormat, tables, addLog]);
+  }, [selectedTables, exportFormat, tables, locations, addLog, t]);
 
   // ===== IMPORT =====
   const handleImport = useCallback(async (file: File, tableId: string) => {
@@ -460,56 +346,16 @@ export default function VeriYonetimiPage() {
         return;
       }
 
-      // Rewrite incoming rows: Turkish headers → internal field names,
-      // then normalize values (legacy status, array split, etc.) so
-      // downstream validation + store writes see a canonical shape.
-      data = (data as Record<string, unknown>[]).map((row) =>
-        normalizeImportRow(tableId, applyImportAliases(tableId, row)),
+      // Başlık alias'ı → değer normalizasyonu → doğrulama: hepsi tek yerde
+      // (src/lib/dataTransfer.ts). Bulgular çevrilmemiş döner; i18n burada
+      // uygulanır ki kütüphane saf ve test edilebilir kalsın.
+      const prepared = prepareImportRows(tableId, data as Record<string, unknown>[], { locations });
+      data = prepared.rows;
+      errors.push(
+        ...prepared.issues.map((issue) =>
+          t("dataManagement.requiredField", { row: issue.row, field: issue.field }),
+        ),
       );
-
-      // Validate required fields (operates on internal field names
-      // after the alias + normalize pass above).
-      const requiredFields: Record<string, string[]> = {
-        projeler: ["name", "status", "startDate", "endDate"],
-        aksiyonlar: ["name", "projeId", "status", "startDate", "endDate"],
-        etiketler: ["name", "color"],
-        kullanicilar: ["email", "displayName", "role"],
-      };
-
-      const required = requiredFields[tableId] ?? [];
-      data.forEach((row, i) => {
-        const r = row as Record<string, unknown>;
-        required.forEach((field) => {
-          if (!r[field] && r[field] !== 0) {
-            errors.push(t("dataManagement.requiredField", { row: i + 1, field }));
-          }
-        });
-      });
-
-      // Enum sanity — flag unknown status values so the user gets a
-      // helpful hint instead of a CHECK-constraint error downstream.
-      const validStatuses = new Set<string>([
-        "On Track", "Achieved", "High Risk", "At Risk", "Not Started", "Cancelled", "On Hold",
-      ]);
-      if (tableId === "projeler" || tableId === "aksiyonlar") {
-        data.forEach((row, i) => {
-          const s = (row as Record<string, unknown>).status;
-          if (typeof s === "string" && !validStatuses.has(s)) {
-            errors.push(t("dataManagement.requiredField", { row: i + 1, field: `status=${s}` }));
-          }
-        });
-      }
-      // Role sanity check for users — the DB's users.role CHECK constraint
-      // rejects anything outside the allowlist. Flagging here gives the
-      // user a row number instead of a generic Postgres error later.
-      if (tableId === "kullanicilar") {
-        data.forEach((row, i) => {
-          const r = (row as Record<string, unknown>).role;
-          if (typeof r === "string" && !VALID_ROLES.has(r as UserRole)) {
-            errors.push(t("dataManagement.requiredField", { row: i + 1, field: `role=${r}` }));
-          }
-        });
-      }
 
       if (errors.length > 10) {
         addLog({
@@ -549,7 +395,7 @@ export default function VeriYonetimiPage() {
       });
     }
     setProcessing(false);
-  }, [tables, addLog]);
+  }, [tables, locations, addLog, t]);
 
   const triggerImport = (tableId: string) => {
     setImportTarget(tableId);
@@ -573,49 +419,6 @@ export default function VeriYonetimiPage() {
     a.download = filename;
     a.click();
     URL.revokeObjectURL(url);
-  }
-
-  function arrayToCSV(data: Record<string, unknown>[]): string {
-    if (data.length === 0) return "";
-    const flat = flattenObjects(data);
-    const headers = Object.keys(flat[0]);
-    const rows = flat.map((row) =>
-      headers.map((h) => {
-        const val = String(row[h] ?? "");
-        return val.includes(",") || val.includes('"') || val.includes("\n")
-          ? `"${val.replace(/"/g, '""')}"`
-          : val;
-      }).join(",")
-    );
-    return [headers.join(","), ...rows].join("\n");
-  }
-
-  function csvToArray(csv: string): Record<string, string>[] {
-    const lines = csv.replace(/\r\n/g, "\n").split("\n").filter(Boolean);
-    if (lines.length < 2) return [];
-    const headers = lines[0].split(",").map((h) => h.trim().replace(/^"|"$/g, ""));
-    return lines.slice(1).map((line) => {
-      const values = line.split(",").map((v) => v.trim().replace(/^"|"$/g, ""));
-      const obj: Record<string, string> = {};
-      headers.forEach((h, i) => { obj[h] = values[i] ?? ""; });
-      return obj;
-    });
-  }
-
-  function flattenObjects(data: Record<string, unknown>[]): Record<string, unknown>[] {
-    return data.map((item) => {
-      const flat: Record<string, unknown> = {};
-      for (const [key, val] of Object.entries(item)) {
-        if (Array.isArray(val)) {
-          flat[key] = val.join("; ");
-        } else if (val && typeof val === "object") {
-          flat[key] = JSON.stringify(val);
-        } else {
-          flat[key] = val;
-        }
-      }
-      return flat;
-    });
   }
 
   const formatIcons: Record<ExportFormat, typeof FileJson> = {

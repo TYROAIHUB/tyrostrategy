@@ -777,6 +777,8 @@
     "usersDesc": "Sistem kullanıcıları ve profil bilgileri",
     "tagDefinitions": "Etiket Tanımları",
     "tagDefinitionsDesc": "Parametrik etiket tanımları ve renkleri",
+    "locations": "Lokasyonlar",
+    "locationsDesc": "Ülke/şehir tanımları — içe aktarma yalnızca yeni kayıt ekler",
     "rolePermissions": "Rol Yetkileri",
     "rolePermissionsDesc": "Kullanıcı rolleri ve sayfa/işlem yetkileri",
     "uiSettings": "UI Ayarları",

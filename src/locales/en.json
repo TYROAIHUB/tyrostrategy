@@ -777,6 +777,8 @@
     "usersDesc": "System users and profile data",
     "tagDefinitions": "Tag Definitions",
     "tagDefinitionsDesc": "Parametric tag definitions and colors",
+    "locations": "Locations",
+    "locationsDesc": "Country/city definitions — import only appends new records",
     "rolePermissions": "Role Permissions",
     "rolePermissionsDesc": "User roles and page/operation permissions",
     "uiSettings": "UI Settings",
