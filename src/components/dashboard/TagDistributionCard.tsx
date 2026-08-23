@@ -123,13 +123,13 @@ export default function TagDistributionCard({ projeler }: Props) {
                 {/* Üst satır: sıra rozeti + portföy payı */}
                 <div className="flex items-start justify-between gap-2">
                   <span
-                    className="shrink-0 rounded-md px-1.5 py-0.5 text-[10px] font-bold tabular-nums"
+                    className="shrink-0 rounded-md px-1.5 py-0.5 text-[11px] font-bold tabular-nums"
                     style={{ backgroundColor: track, color: text }}
                   >
                     #{i + 1}
                   </span>
                   <span
-                    className="shrink-0 text-[15px] font-extrabold leading-none tabular-nums"
+                    className="shrink-0 text-[17px] font-extrabold leading-none tabular-nums"
                     style={{ color: text }}
                   >
                     %{pct}
@@ -139,14 +139,14 @@ export default function TagDistributionCard({ projeler }: Props) {
                 {/* Alt satır: seviye adı + adet */}
                 <div className="mt-2 flex items-end justify-between gap-3">
                   <span
-                    className="min-w-0 flex-1 truncate text-[13px] font-bold"
+                    className="min-w-0 flex-1 truncate text-[14.5px] font-bold"
                     style={{ color: text }}
                     title={name}
                   >
                     {name}
                   </span>
                   <span
-                    className="shrink-0 text-[11.5px] font-semibold tabular-nums"
+                    className="shrink-0 text-[12.5px] font-semibold tabular-nums"
                     style={{ color: softText }}
                   >
                     {count} {t("dashboard.project").toLowerCase()}
