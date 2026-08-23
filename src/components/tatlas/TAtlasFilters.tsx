@@ -118,13 +118,12 @@ export default function TAtlasFilters({ filters, options, onChange, resultCount 
           {t("tatlas.filter.reset")}
         </Button>
 
-        {/* Lejant — haritanın üstündeki barda, Sıfırla'nın yanında.
-            Kullanıcı isteği: değerler popover ardında değil doğrudan görünsün.
-            Dar ekranda alt satıra sarıyor. */}
-        <span aria-hidden className="hidden h-5 w-px rounded-full bg-tyro-border/50 lg:block" />
-        <div className="min-w-0 basis-full lg:basis-auto">
-          <TAtlasLegend />
-        </div>
+        {/* Lejant — Sıfırla'nın SAĞINDA, aynı satırda (kullanıcı isteği:
+            alt satıra değil sıfırlanın sağına). Araya kalıcı bir ayraç
+            konuyor; basis-full KALDIRILDI, aksi halde lejant kendi satırına
+            düşüyordu. Yer yetmezse flex-wrap doğal olarak sarar. */}
+        <span aria-hidden className="h-5 w-px shrink-0 rounded-full bg-tyro-border/60" />
+        <TAtlasLegend />
 
         {/* Filtrenin etkisi — haritadaki pin kümesiyle bu sayı her zaman aynı */}
         <span className="ml-auto shrink-0 text-[11px] font-semibold tabular-nums text-tyro-text-muted">

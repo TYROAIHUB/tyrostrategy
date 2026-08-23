@@ -60,7 +60,9 @@ export default function TAtlasLegend() {
         })}
       </div>
 
-      <span aria-hidden className="hidden h-4 w-px rounded-full bg-tyro-border/50 sm:block" />
+      {/* Varlık sınıfı ile statü lejantı arasındaki ayraç — her ekranda
+          görünür (kullanıcı isteği), yalnızca sm+ değil. */}
+      <span aria-hidden className="h-4 w-px shrink-0 rounded-full bg-tyro-border/60" />
 
       {/* ── Çerçeve rengi = statü ── */}
       <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1">

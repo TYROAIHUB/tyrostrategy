@@ -23,7 +23,7 @@
     "pinSidebar": "Sidebar'ı sabitle",
     "unpinSidebar": "Sidebar'ı serbest bırak",
     "help": "Yardım",
-    "tAtlas": "Yatırım haritası"
+    "tAtlas": "Yatırım Haritası"
   },
   "sections": {
     "mainMenu": "Ana Menü",
@@ -186,7 +186,7 @@
       "goHome": "Ana Sayfaya Dön"
     },
     "tatlas": {
-      "title": "Yatırım haritası",
+      "title": "Yatırım Haritası",
       "subtitle": "Yatırım portföyünün coğrafi dağılımı ve portföy metrikleri"
     }
   },
