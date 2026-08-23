@@ -342,7 +342,9 @@
     "completedProjects": "Tamamlanan Proje",
     "awaitingReview": "Kontrol Bekleyen",
     "avgProgressLabel": "Ort. İlerleme",
-    "actionsShort": "{{count}} aks."
+    "actionsShort": "{{count}} aks.",
+    "statusRefreshed": "Statü tazelendi",
+    "statusRefreshedDetail": "{{aksiyonlar}} aksiyon, {{projeler}} proje"
   },
   "login": {
     "welcome": "Hoş Geldiniz",

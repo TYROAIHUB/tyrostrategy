@@ -120,6 +120,13 @@ export default function WorkspacePage() {
         ]);
         useDataStore.setState({ projeler, aksiyonlar, tagDefinitions: tags, users });
 
+        // Tarih bazlı statüleri TAZE veri üzerinde yeniden hesapla.
+        // Statü hesabı yalnızca yazma anında çalışıyor; kimse kaydı
+        // düzenlemezse zaman ilerledikçe bayatlıyor (bitişi yaklaşan bir
+        // aksiyon "Yolunda" kalıyor). Bu buton manuel tazeleme yolu —
+        // zamanlanmış iş devreye girene kadar tek tetikleyici.
+        const recalc = useDataStore.getState().refreshDerivedStatuses();
+
         const { toast } = await import("@/stores/toastStore");
         toast.success(t("workspace.refreshSuccess"), {
           message: t("workspace.refreshSuccessDetail", {
@@ -127,11 +134,24 @@ export default function WorkspacePage() {
             aksiyonlar: aksiyonlar.length,
             users: users.length,
           }),
+          details:
+            recalc.aksiyonlar > 0 || recalc.projeler > 0
+              ? [
+                  {
+                    label: t("workspace.statusRefreshed"),
+                    value: t("workspace.statusRefreshedDetail", {
+                      aksiyonlar: recalc.aksiyonlar,
+                      projeler: recalc.projeler,
+                    }),
+                  },
+                ]
+              : undefined,
         });
       } else {
         // Mock mode: reload from initial data
         const { getInitialData, getInitialTagDefinitions } = await import("@/lib/data/mock-adapter");
         useDataStore.setState({ ...getInitialData(), tagDefinitions: getInitialTagDefinitions() });
+        useDataStore.getState().refreshDerivedStatuses();
       }
     } catch (err) {
       console.error("[Refresh] Failed:", err);

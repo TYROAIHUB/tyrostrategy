@@ -342,7 +342,9 @@
     "completedProjects": "Completed Projects",
     "awaitingReview": "Awaiting Review",
     "avgProgressLabel": "Avg. Progress",
-    "actionsShort": "{{count}} actions"
+    "actionsShort": "{{count}} actions",
+    "statusRefreshed": "Statuses refreshed",
+    "statusRefreshedDetail": "{{aksiyonlar}} actions, {{projeler}} projects"
   },
   "login": {
     "welcome": "Welcome",

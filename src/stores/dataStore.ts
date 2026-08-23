@@ -155,6 +155,11 @@ interface DataState {
 
   // Data consistency
   fixDataConsistency: () => void;
+  /** Tarih bazlı statüleri TAZELER (manuel tetikleme).
+   *  Kullanıcının girdiği ilerlemeye DOKUNMAZ; yalnızca statüyü progress +
+   *  tarihlerden yeniden hesaplar ve projelere yukarı yayar.
+   *  Döndürdüğü sayılar toast'ta gösterilir. */
+  refreshDerivedStatuses: () => { aksiyonlar: number; projeler: number };
 }
 
 // Client-generated ID. users + tag_definitions tabloları UUID kolonu —
@@ -767,6 +772,82 @@ export const useDataStore = create<DataState>()(
           (t) => t.name.toLocaleLowerCase("tr") === tagName.toLocaleLowerCase("tr")
         ),
       getLocationById: (id) => get().locations.find((l) => l.id === id),
+
+      /**
+       * Tarih bazlı statü tazeleme — "Verileri yenile" butonundan tetiklenir.
+       *
+       * NEDEN GEREKLİ: aksiyon statüsü progress + tarihlerden hesaplanıyor ve
+       * hesap YALNIZCA yazma anında çalışıyor. Kimse kaydı düzenlemezse zaman
+       * ilerledikçe statü bayatlıyor: bitişi yaklaşan %20'lik bir aksiyon
+       * "Yolunda" olarak kalıyor, oysa "Yüksek Riskte" olması gerekiyor.
+       * Proje statüsü de aksiyon statülerinden geldiği için bayat girdi bayat
+       * çıktı üretiyor.
+       *
+       * fixDataConsistency BU İŞ İÇİN UYGUN DEĞİL: o ters yönde çalışıp
+       * statüye bakarak İLERLEMEYİ uyduruyor (ör. "Yolunda" + %0 → %15).
+       * Burada kullanıcının girdiği ilerlemeye dokunmuyoruz.
+       *
+       * Kural seti updateAksiyon ile BİREBİR AYNI tutuldu — yenile butonuna
+       * basmak, her kaydı tek tek düzenlemekle aynı sonucu vermeli:
+       *   • On Hold / Cancelled / Achieved → dokunma (lifecycle kararları)
+       *   • aksi halde statü = suggestStatusFromProgress(progress, tarihler)
+       * Sonra aksiyonu olan TÜM projeler yeniden hesaplanıyor; bu, yalnızca
+       * proje düzenlemesinde tazelenen statünün yanında bayat kalan proje
+       * ilerlemesini de düzeltiyor.
+       */
+      refreshDerivedStatuses: () => {
+        const state = get();
+        let changedAksiyonCount = 0;
+
+        const nextAksiyonlar = state.aksiyonlar.map((a) => {
+          const isLifecycle =
+            a.status === "On Hold" || a.status === "Cancelled" || a.status === "Achieved";
+          if (isLifecycle) return a;
+          const suggested = suggestStatusFromProgress(a.progress ?? 0, a.startDate, a.endDate);
+          if (suggested === a.status) return a;
+          changedAksiyonCount++;
+          const updated: Aksiyon = { ...a, status: suggested };
+          syncToSupabase(
+            () => supabaseAdapter.updateAksiyon(a.id, { status: suggested }),
+            { entity: "Aksiyon", action: "statü tazeleme", label: a.name }
+          );
+          return updated;
+        });
+
+        // Aksiyonu olan her projeyi yeniden hesapla; yalnızca gerçekten
+        // değişenleri say ve DB'ye yaz.
+        let nextProjeler = state.projeler;
+        const projeIdsWithAksiyon = new Set(nextAksiyonlar.map((a) => a.projeId));
+        let changedProjeCount = 0;
+        for (const projeId of projeIdsWithAksiyon) {
+          const before = nextProjeler.find((p) => p.id === projeId);
+          nextProjeler = recalcProjeProgress(nextProjeler, nextAksiyonlar, projeId);
+          const after = nextProjeler.find((p) => p.id === projeId);
+          if (!before || !after) continue;
+          if (
+            before.progress !== after.progress ||
+            before.status !== after.status ||
+            before.completedAt !== after.completedAt
+          ) {
+            changedProjeCount++;
+            syncToSupabase(
+              () =>
+                supabaseAdapter.updateProje(after.id, {
+                  progress: after.progress,
+                  status: after.status,
+                  completedAt: after.completedAt,
+                }),
+              { entity: "Proje", action: "statü tazeleme", label: after.name }
+            );
+          }
+        }
+
+        set({ aksiyonlar: nextAksiyonlar, projeler: nextProjeler });
+        console.log(
+          `[refreshDerivedStatuses] ${changedAksiyonCount} aksiyon, ${changedProjeCount} proje güncellendi`
+        );
+        return { aksiyonlar: changedAksiyonCount, projeler: changedProjeCount };
+      },
 
       // One-time data consistency fix
       fixDataConsistency: () => {
