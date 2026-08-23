@@ -154,8 +154,11 @@ describe("dataTransfer — içe aktarma", () => {
   });
 
   it("türetilmiş Lokasyon kolonunu mağazaya yazmıyor", () => {
-    const { rows } = prepareImportRows("projeler",
-      [{ "Proje Adı": "A", "Lokasyon": "Türkiye / İstanbul" }], CTX);
+    const { rows } = prepareImportRows("projeler", [{
+      "Proje Adı": "A", "Durum": "On Track",
+      "Başlangıç Tarihi": "2026-01-01", "Bitiş Tarihi": "2026-12-31",
+      "Lokasyon": "Türkiye / İstanbul",
+    }], CTX);
     expect(rows[0]).not.toHaveProperty("location");
   });
 
@@ -167,8 +170,10 @@ describe("dataTransfer — içe aktarma", () => {
   });
 
   it("açık Lokasyon ID kolonu etiketi yeniyor", () => {
-    const { rows } = prepareImportRows("projeler",
-      [{ name: "A", "Lokasyon ID": "loc-2", "Lokasyon": "Türkiye / İstanbul" }], CTX);
+    const { rows } = prepareImportRows("projeler", [{
+      name: "A", status: "On Track", startDate: "x", endDate: "y",
+      "Lokasyon ID": "loc-2", "Lokasyon": "Türkiye / İstanbul",
+    }], CTX);
     expect(rows[0].locationId).toBe("loc-2");
   });
 
@@ -176,7 +181,7 @@ describe("dataTransfer — içe aktarma", () => {
     const { rows, issues } = prepareImportRows("projeler",
       [{ name: "A", status: "On Track", startDate: "x", endDate: "y", location: "Mars / Olympus" }], CTX);
     expect(rows[0].locationId).toBeUndefined();
-    expect(issues).toEqual([{ row: 1, field: "location=Mars / Olympus" }]);
+    expect(issues).toEqual([{ row: 1, field: "location=Mars / Olympus", blocking: false }]);
   });
 
   it('arayüzden kopyalanan "KOD — Ad" metninden kodu ayıklıyor', () => {
@@ -192,7 +197,7 @@ describe("dataTransfer — içe aktarma", () => {
   it("geçersiz sabit seçimi satır numarasıyla bildiriyor", () => {
     const { issues } = prepareImportRows("projeler",
       [{ name: "A", status: "On Track", startDate: "x", endDate: "y", assetClass: "AST-YOK" }], CTX);
-    expect(issues).toEqual([{ row: 1, field: "assetClass=AST-YOK" }]);
+    expect(issues).toEqual([{ row: 1, field: "assetClass=AST-YOK", blocking: true }]);
   });
 
   it("negatif ve alfabetik CAPEX'i bildiriyor, sessizce silmiyor", () => {
@@ -215,7 +220,41 @@ describe("dataTransfer — içe aktarma", () => {
   it("lokasyon tablosunda ülke/şehir zorunlu", () => {
     const { issues } = prepareImportRows("lokasyonlar",
       [{ "Ülke": "Türkiye", "Şehir": "" }], CTX);
-    expect(issues).toEqual([{ row: 1, field: "city" }]);
+    expect(issues).toEqual([{ row: 1, field: "city", blocking: true }]);
+  });
+
+  it("yazılamayacak satırı mağazaya göndermiyor, atlanan olarak sayıyor", () => {
+    // Önceden bu satır da yazılıyordu: PostgREST CHECK ile reddediyor, kayıt
+    // optimistik olarak ekranda görünüyor ve ilk yenilemede kayboluyordu.
+    const { rows, issues, skipped } = prepareImportRows("projeler", [
+      { name: "Geçerli", status: "On Track", startDate: "x", endDate: "y" },
+      { name: "Bozuk", status: "On Track", startDate: "x", endDate: "y", assetClass: "AST-YOK" },
+      { name: "Eksik durum", startDate: "x", endDate: "y" },
+    ], CTX);
+    expect(rows).toHaveLength(1);
+    expect(rows[0].name).toBe("Geçerli");
+    expect(skipped).toBe(2);
+    expect(issues.filter((i) => i.blocking).map((i) => i.row)).toEqual([2, 3]);
+  });
+
+  it("uyarı seviyesindeki bulgu satırı engellemiyor", () => {
+    // Çözülemeyen lokasyon ETİKETİ satırı geçersiz kılmaz — yalnızca o hücre boş
+    // kalır. Kullanıcı yine haberdar edilir ama kayıt içe aktarılır.
+    const { rows, issues, skipped } = prepareImportRows("projeler",
+      [{ name: "A", status: "On Track", startDate: "x", endDate: "y", location: "Mars / Olympus" }], CTX);
+    expect(rows).toHaveLength(1);
+    expect(skipped).toBe(0);
+    expect(issues[0].blocking).toBe(false);
+  });
+
+  it("bilinmeyen lokasyon UUID'sini FK hatasına gitmeden yakalıyor", () => {
+    // Başka ortamdan gelen JSON yedeğinde tipik: location_id bir FK, yazım
+    // 23503 ile döner ve kullanıcı satır numarası görmez.
+    const { rows, issues, skipped } = prepareImportRows("projeler",
+      [{ name: "A", status: "On Track", startDate: "x", endDate: "y", locationId: "baska-ortamdan" }], CTX);
+    expect(rows).toHaveLength(0);
+    expect(skipped).toBe(1);
+    expect(issues).toEqual([{ row: 1, field: "locationId=baska-ortamdan", blocking: true }]);
   });
 
   it("eski 'Behind' statüsünü hâlâ çeviriyor", () => {

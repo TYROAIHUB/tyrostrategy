@@ -790,6 +790,8 @@
     "importNoRecords": "No records found in file to import.",
     "importValidationError": "{{count}} validation errors found. Import cancelled.",
     "importSuccessWithWarnings": "{{count}} records imported, {{warnings}} warnings.",
+    "importSkippedRows": "{{count}} records imported, {{skipped}} rows skipped due to invalid values.",
+    "importAllRowsSkipped": "No rows imported: {{count}} rows contain invalid values.",
     "importSuccess": "{{count}} records imported successfully.",
     "importError": "Import error: {{message}}",
     "invalidJsonFormat": "Invalid JSON format — array expected.",

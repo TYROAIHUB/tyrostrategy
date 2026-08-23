@@ -424,6 +424,13 @@ export interface ImportIssue {
   row: number;
   /** Alan adı ya da "status=Foo" gibi açıklayıcı ifade. */
   field: string;
+  /**
+   * true = satır veritabanına YAZILAMAZ (NOT NULL / CHECK / FK ihlali), bu yüzden
+   * atlanır. Önceden böyle satırlar da mağazaya yazılıyordu; PostgREST 23514
+   * veya 23503 ile reddediyor, kullanıcı ise "başarıyla içe aktarıldı" görüyordu.
+   * false = uyarı; satır yazılır, yalnızca o hücre boş kalır.
+   */
+  blocking: boolean;
 }
 
 /**
@@ -433,42 +440,57 @@ export interface ImportIssue {
 export function collectImportIssues(
   tableId: string,
   rows: Record<string, unknown>[],
+  ctx: TransferContext,
 ): ImportIssue[] {
   const issues: ImportIssue[] = [];
   const required = REQUIRED_FIELDS[tableId] ?? [];
+  const knownLocationIds = new Set(ctx.locations.map((l) => l.id));
 
   rows.forEach((row, i) => {
     const line = i + 1;
+    // Zorunlu alan eksikse satır NOT NULL ihlaline düşer → yazılamaz.
     for (const field of required) {
-      if (!row[field] && row[field] !== 0) issues.push({ row: line, field });
+      if (!row[field] && row[field] !== 0) issues.push({ row: line, field, blocking: true });
     }
 
     if (tableId === "projeler" || tableId === "aksiyonlar") {
       const s = row.status;
-      if (typeof s === "string" && !VALID_STATUSES.has(s)) issues.push({ row: line, field: `status=${s}` });
+      if (typeof s === "string" && !VALID_STATUSES.has(s)) {
+        issues.push({ row: line, field: `status=${s}`, blocking: true });
+      }
     }
 
     if (tableId === "projeler") {
       if (row.assetClass !== undefined && !isAssetClass(row.assetClass)) {
-        issues.push({ row: line, field: `assetClass=${String(row.assetClass)}` });
+        issues.push({ row: line, field: `assetClass=${String(row.assetClass)}`, blocking: true });
       }
       if (row.actionType !== undefined && !isActionType(row.actionType)) {
-        issues.push({ row: line, field: `actionType=${String(row.actionType)}` });
+        issues.push({ row: line, field: `actionType=${String(row.actionType)}`, blocking: true });
       }
       // capex_usd CHECK kısıtı negatifi reddediyor — burada yakala.
       if (row.capexUsd !== undefined) {
         const n = Number(row.capexUsd);
-        if (Number.isNaN(n) || n < 0) issues.push({ row: line, field: `capexUsd=${String(row.capexUsd)}` });
+        if (Number.isNaN(n) || n < 0) {
+          issues.push({ row: line, field: `capexUsd=${String(row.capexUsd)}`, blocking: true });
+        }
       }
-      // Çözülemeyen lokasyon etiketi: sessizce düşürmek yerine bildir.
+      // Bilinmeyen lokasyon UUID'si: location_id bir FK, yazım 23503 ile döner.
+      // Başka bir ortamdan gelen JSON yedeğinde tipik durum.
+      if (typeof row.locationId === "string" && row.locationId && !knownLocationIds.has(row.locationId)) {
+        issues.push({ row: line, field: `locationId=${row.locationId}`, blocking: true });
+      }
+      // Çözülemeyen lokasyon ETİKETİ engelleyici değil: satır geçerli, yalnızca
+      // lokasyon hücresi boş kalıyor. Sessizce düşürmemek için bildiriyoruz.
       if (typeof row.location === "string" && row.location.trim()) {
-        issues.push({ row: line, field: `location=${row.location.trim()}` });
+        issues.push({ row: line, field: `location=${row.location.trim()}`, blocking: false });
       }
     }
 
     if (tableId === "kullanicilar") {
       const r = row.role;
-      if (typeof r === "string" && !VALID_ROLES.has(r as UserRole)) issues.push({ row: line, field: `role=${r}` });
+      if (typeof r === "string" && !VALID_ROLES.has(r as UserRole)) {
+        issues.push({ row: line, field: `role=${r}`, blocking: true });
+      }
     }
   });
 
@@ -477,8 +499,12 @@ export function collectImportIssues(
 
 /** `prepareImportRows` sonucu — mağazaya yazılacak satırlar + kullanıcıya gösterilecek bulgular. */
 export interface PreparedImport {
+  /** Yalnızca yazılabilir satırlar; engelleyici bulgusu olanlar çıkarılmıştır. */
   rows: Record<string, unknown>[];
+  /** Engelleyici olan da olmayan da, hepsi — kullanıcı hepsini görsün. */
   issues: ImportIssue[];
+  /** Engelleyici bulgu yüzünden atlanan satır sayısı. */
+  skipped: number;
 }
 
 /**
@@ -492,11 +518,20 @@ export function prepareImportRows(
   ctx: TransferContext,
 ): PreparedImport {
   const normalized = raw.map((row) => normalizeImportRow(tableId, applyImportAliases(tableId, row), ctx));
-  const issues = collectImportIssues(tableId, normalized);
-  const rows = normalized.map((row) => {
-    if (!("location" in row)) return row;
-    const { location: _label, ...rest } = row;
-    return rest;
-  });
-  return { rows, issues };
+  const issues = collectImportIssues(tableId, normalized, ctx);
+
+  // Yazılamayacak satırları mağazaya hiç göndermiyoruz. Eskiden gönderiliyordu:
+  // PostgREST kısıt ihlaliyle reddediyor, optimistik yazım yüzünden kayıt
+  // ekranda görünüyor ve ilk yenilemede kayboluyordu — kullanıcıya ise
+  // "başarıyla içe aktarıldı" deniyordu.
+  const blockedRows = new Set(issues.filter((i) => i.blocking).map((i) => i.row));
+  const rows = normalized
+    .filter((_row, i) => !blockedRows.has(i + 1))
+    .map((row) => {
+      if (!("location" in row)) return row;
+      const { location: _label, ...rest } = row;
+      return rest;
+    });
+
+  return { rows, issues, skipped: blockedRows.size };
 }

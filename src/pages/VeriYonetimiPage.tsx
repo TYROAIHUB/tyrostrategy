@@ -357,6 +357,23 @@ export default function VeriYonetimiPage() {
         ),
       );
 
+      // Tek satır bile yazılamıyorsa setData'ya HİÇ girmiyoruz: setData
+      // sil-ve-yeniden-ekle yapıyor, boş listeyle çağırmak mevcut tabloyu
+      // silip yerine hiçbir şey koymamak olurdu.
+      if (data.length === 0) {
+        addLog({
+          type: "import",
+          table: table.label,
+          format: file.name.split(".").pop()?.toUpperCase() ?? "?",
+          status: "error",
+          message: t("dataManagement.importAllRowsSkipped", { count: prepared.skipped }),
+          recordCount: 0,
+          errors: errors.slice(0, 10),
+        });
+        setProcessing(false);
+        return;
+      }
+
       if (errors.length > 10) {
         addLog({
           type: "import",
@@ -379,9 +396,11 @@ export default function VeriYonetimiPage() {
         table: table.label,
         format: file.name.split(".").pop()?.toUpperCase() ?? "?",
         status: errors.length > 0 ? "warning" : "success",
-        message: errors.length > 0
-          ? t("dataManagement.importSuccessWithWarnings", { count: data.length, warnings: errors.length })
-          : t("dataManagement.importSuccess", { count: data.length }),
+        message: prepared.skipped > 0
+          ? t("dataManagement.importSkippedRows", { count: data.length, skipped: prepared.skipped })
+          : errors.length > 0
+            ? t("dataManagement.importSuccessWithWarnings", { count: data.length, warnings: errors.length })
+            : t("dataManagement.importSuccess", { count: data.length }),
         recordCount: data.length,
         errors: errors.length > 0 ? errors : undefined,
       });

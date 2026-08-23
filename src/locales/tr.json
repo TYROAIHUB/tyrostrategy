@@ -790,6 +790,8 @@
     "importNoRecords": "Dosyada içe aktarılacak kayıt bulunamadı.",
     "importValidationError": "{{count}} doğrulama hatası bulundu. İçe aktarma iptal edildi.",
     "importSuccessWithWarnings": "{{count}} kayıt aktarıldı, {{warnings}} uyarı.",
+    "importSkippedRows": "{{count}} kayıt içe aktarıldı, {{skipped}} satır geçersiz değer nedeniyle atlandı.",
+    "importAllRowsSkipped": "Hiçbir satır içe aktarılamadı: {{count}} satır geçersiz değer içeriyor.",
     "importSuccess": "{{count}} kayıt başarıyla içe aktarıldı.",
     "importError": "İçe aktarma hatası: {{message}}",
     "invalidJsonFormat": "Geçersiz JSON formatı — dizi (array) bekleniyor.",
