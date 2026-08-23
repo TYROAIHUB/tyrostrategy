@@ -83,6 +83,15 @@ function syncUserLocale(userName: string, locale: string) {
   });
 }
 
+/* Varsayılanlar store'dan ÖNCE tanımlı olmalı: store initializer'ı bunları
+   okuyor. Aşağıda tanımlıyken `Cannot access 'DEFAULT_BEHIND_THRESHOLD' before
+   initialization` (TDZ) hatası veriyordu ve uiStore'u import eden tüm test
+   dosyaları yüklenemiyordu. */
+const DEFAULT_COMPANY_NAME = "Tiryaki Agro";
+const DEFAULT_ALLOW_MULTIPLE_TAGS = true;
+const DEFAULT_BEHIND_THRESHOLD = 20;
+const DEFAULT_ATRISK_THRESHOLD = 10;
+
 export const useUIStore = create<UIState>((set, get) => ({
   sidebarCollapsed: false,
   commandPaletteOpen: false,
@@ -96,8 +105,12 @@ export const useUIStore = create<UIState>((set, get) => ({
   locale: (localStorage.getItem("tyro-locale") as "tr" | "en") || "tr",
   companyName: localStorage.getItem("tyro-company-name") || "Tiryaki Agro",
   allowMultipleTags: localStorage.getItem("tyro-allow-multiple-tags") !== "false",
-  behindThreshold: Number(localStorage.getItem("tyro-behind-threshold")) || 20,
-  atRiskThreshold: Number(localStorage.getItem("tyro-atrisk-threshold")) || 10,
+  // parseThreshold: `Number(x) || default` yazımı 0'ı falsy sayıp varsayılana
+  // düşürüyordu — 0 geçerli bir eşik (her sapma yüksek risk). Ayrıca bu
+  // değerler yalnızca ilk boyama için sıcak önbellek; kanonik kaynak
+  // app_settings ve reloadUISettingsFromDb açılışta üzerine yazıyor.
+  behindThreshold: parseThreshold(localStorage.getItem("tyro-behind-threshold"), DEFAULT_BEHIND_THRESHOLD),
+  atRiskThreshold: parseThreshold(localStorage.getItem("tyro-atrisk-threshold"), DEFAULT_ATRISK_THRESHOLD),
   setCompanyName: (name) => {
     localStorage.setItem("tyro-company-name", name);
     syncSetting("company_name", name);
@@ -164,10 +177,6 @@ export const useUIStore = create<UIState>((set, get) => ({
 // Deterministic defaults — used as the merge base so two browsers with
 // different localStorage histories converge on identical state once the
 // DB fetch lands. DB always wins; localStorage is a warm cache only.
-const DEFAULT_COMPANY_NAME = "Tiryaki Agro";
-const DEFAULT_ALLOW_MULTIPLE_TAGS = true;
-const DEFAULT_BEHIND_THRESHOLD = 20;
-const DEFAULT_ATRISK_THRESHOLD = 10;
 
 /**
  * Force-refresh every DB-backed UI setting from Supabase, bypassing
@@ -175,6 +184,14 @@ const DEFAULT_ATRISK_THRESHOLD = 10;
  * so the Ayarlar page can call it on mount — same pattern as
  * roleStore.reloadFromDb for the Güvenlik page.
  */
+/** Eşik ayrıştırma — 0 dahil geçerli sayıları korur, boş/bozuk girdide
+ *  varsayılana düşer. */
+function parseThreshold(raw: string | null, fallback: number): number {
+  if (raw === null || raw.trim() === "") return fallback;
+  const n = Number(raw);
+  return Number.isFinite(n) && n >= 0 ? n : fallback;
+}
+
 export async function reloadUISettingsFromDb(): Promise<void> {
   if (!isSupabaseMode) return;
   try {

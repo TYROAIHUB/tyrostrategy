@@ -7,6 +7,7 @@ import {
   Target, Crosshair, CircleCheckBig, Calendar, CalendarCheck, Users, Building2, Globe, Clock, Check, MapPin, Banknote, Boxes, Hammer,
 } from "lucide-react";
 import { useDataStore } from "@/stores/dataStore";
+import { useUIStore } from "@/stores/uiStore";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useSidebarTheme } from "@/hooks/useSidebarTheme";
 import StatusBadge from "@/components/ui/StatusBadge";
@@ -307,8 +308,9 @@ function DetailPanel({
       if (totalDuration > 0) {
         const expectedProgress = Math.min(100, Math.max(0, ((now - startMs) / totalDuration) * 100));
         const diff = expectedProgress - progress;
-        const behindT = Number(localStorage.getItem("tyro-behind-threshold")) || 20;
-        const atRiskT = Number(localStorage.getItem("tyro-atrisk-threshold")) || 10;
+        // Eşikler uiStore'dan — app_settings kaynaklı; dataStore'daki aynı
+        // hesapla tutarlı kalması için tek kaynak.
+        const { behindThreshold: behindT, atRiskThreshold: atRiskT } = useUIStore.getState();
         if (diff > behindT) status = "High Risk";
         else if (diff > atRiskT) status = "At Risk";
         else status = "On Track";

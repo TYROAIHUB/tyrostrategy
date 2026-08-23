@@ -1,5 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { useDataStore } from "../dataStore";
+import { useUIStore } from "../uiStore";
+import type { Aksiyon, Proje } from "@/types";
 
 // Mock mock-adapter
 vi.mock("@/lib/data/mock-adapter", () => ({
@@ -265,5 +267,152 @@ describe("Location CRUD", () => {
 
     expect(useDataStore.getState().getLocationById(id)?.city).toBe("Umm Qasr");
     expect(useDataStore.getState().getLocationById("yok")).toBeUndefined();
+  });
+});
+
+// ===== refreshDerivedStatuses — tarih bazlı statü tazeleme =====
+// "Verileri yenile" butonunun çağırdığı fonksiyon. Toplu yazım yaptığı için
+// kuralları test ile kilitliyoruz.
+describe("refreshDerivedStatuses", () => {
+  const DAY = 24 * 60 * 60 * 1000;
+  const iso = (offsetDays: number) =>
+    new Date(Date.now() + offsetDays * DAY).toISOString().slice(0, 10);
+
+  /** Süresinin %50'si geçmiş bir aksiyon — beklenen ilerleme ≈ %50 */
+  function halfElapsed(over: Partial<Aksiyon> & { id: string }): Aksiyon {
+    return {
+      projeId: "P1",
+      name: `Aksiyon ${over.id}`,
+      owner: "Sahip",
+      progress: 0,
+      status: "On Track",
+      startDate: iso(-50),
+      endDate: iso(+50),
+      ...over,
+    } as Aksiyon;
+  }
+
+  function seedProje(): Proje {
+    return {
+      id: "P1",
+      name: "Test Proje",
+      source: "Kurumsal",
+      status: "On Track",
+      owner: "Sahip",
+      participants: [],
+      department: "BT",
+      progress: 0,
+      startDate: iso(-50),
+      endDate: iso(+50),
+    } as Proje;
+  }
+
+  beforeEach(() => {
+    // Eşikler app_settings'ten geliyor; testte store'a doğrudan yazıyoruz.
+    // Canlı değerlerle aynı: 15 / 5.
+    useUIStore.setState({ behindThreshold: 15, atRiskThreshold: 5 });
+  });
+
+  it("beklenenin 15 puan altındaki aksiyonu Yüksek Riskte yapar", () => {
+    // beklenen ≈ 50, ilerleme 30 → fark 20 > 15
+    useDataStore.setState({
+      projeler: [seedProje()],
+      aksiyonlar: [halfElapsed({ id: "A1", progress: 30, status: "On Track" })],
+    });
+    const res = useDataStore.getState().refreshDerivedStatuses();
+    expect(useDataStore.getState().aksiyonlar[0].status).toBe("High Risk");
+    expect(res.aksiyonlar).toBe(1);
+  });
+
+  it("beklenenin 5-15 puan altındaki aksiyonu Riskte yapar", () => {
+    // beklenen ≈ 50, ilerleme 42 → fark 8 → 5 < 8 <= 15
+    useDataStore.setState({
+      projeler: [seedProje()],
+      aksiyonlar: [halfElapsed({ id: "A1", progress: 42, status: "On Track" })],
+    });
+    useDataStore.getState().refreshDerivedStatuses();
+    expect(useDataStore.getState().aksiyonlar[0].status).toBe("At Risk");
+  });
+
+  it("planında olan aksiyonu Yolunda bırakır ve değişiklik saymaz", () => {
+    useDataStore.setState({
+      projeler: [seedProje()],
+      aksiyonlar: [halfElapsed({ id: "A1", progress: 48, status: "On Track" })],
+    });
+    const res = useDataStore.getState().refreshDerivedStatuses();
+    expect(useDataStore.getState().aksiyonlar[0].status).toBe("On Track");
+    expect(res.aksiyonlar).toBe(0);
+  });
+
+  it("lifecycle statülerine DOKUNMAZ (Askıda / İptal / Tamamlandı)", () => {
+    // Üçü de fena geride ama statüleri korunmalı — manuel kararlar
+    useDataStore.setState({
+      projeler: [seedProje()],
+      aksiyonlar: [
+        halfElapsed({ id: "A1", progress: 0, status: "On Hold" }),
+        halfElapsed({ id: "A2", progress: 0, status: "Cancelled" }),
+        halfElapsed({ id: "A3", progress: 0, status: "Achieved" }),
+      ],
+    });
+    const res = useDataStore.getState().refreshDerivedStatuses();
+    const byId = new Map(useDataStore.getState().aksiyonlar.map((a) => [a.id, a.status]));
+    expect(byId.get("A1")).toBe("On Hold");
+    expect(byId.get("A2")).toBe("Cancelled");
+    expect(byId.get("A3")).toBe("Achieved");
+    expect(res.aksiyonlar).toBe(0);
+  });
+
+  it("kullanıcının girdiği ilerlemeye dokunmaz", () => {
+    useDataStore.setState({
+      projeler: [seedProje()],
+      aksiyonlar: [halfElapsed({ id: "A1", progress: 30, status: "On Track" })],
+    });
+    useDataStore.getState().refreshDerivedStatuses();
+    // Statü değişti ama progress aynı kaldı (fixDataConsistency'nin tersi)
+    expect(useDataStore.getState().aksiyonlar[0].progress).toBe(30);
+  });
+
+  it("projeye yukarı yayar: ilerleme ortalaması + escalation", () => {
+    useDataStore.setState({
+      projeler: [seedProje()],
+      aksiyonlar: [
+        halfElapsed({ id: "A1", progress: 30, status: "On Track" }), // → High Risk
+        halfElapsed({ id: "A2", progress: 50, status: "On Track" }), // → On Track
+      ],
+    });
+    const res = useDataStore.getState().refreshDerivedStatuses();
+    const proje = useDataStore.getState().projeler[0];
+    expect(proje.progress).toBe(40);          // (30 + 50) / 2
+    expect(proje.status).toBe("High Risk");   // bir aksiyon Yüksek Riskte
+    expect(res.projeler).toBe(1);
+  });
+
+  it("askıdaki projenin statüsünü korur ama ilerlemesini günceller", () => {
+    useDataStore.setState({
+      projeler: [{ ...seedProje(), status: "On Hold" }],
+      aksiyonlar: [halfElapsed({ id: "A1", progress: 60, status: "On Track" })],
+    });
+    useDataStore.getState().refreshDerivedStatuses();
+    const proje = useDataStore.getState().projeler[0];
+    expect(proje.status).toBe("On Hold");
+    expect(proje.progress).toBe(60);
+  });
+
+  it("eşikler store'dan okunur — eşik gevşetilince statü değişmez", () => {
+    // fark 20; eşik 25 olursa artık Yüksek Riskte değil
+    useUIStore.setState({ behindThreshold: 25, atRiskThreshold: 22 });
+    useDataStore.setState({
+      projeler: [seedProje()],
+      aksiyonlar: [halfElapsed({ id: "A1", progress: 30, status: "On Track" })],
+    });
+    useDataStore.getState().refreshDerivedStatuses();
+    expect(useDataStore.getState().aksiyonlar[0].status).toBe("On Track");
+  });
+
+  it("aksiyonu olmayan projeye dokunmaz", () => {
+    useDataStore.setState({ projeler: [seedProje()], aksiyonlar: [] });
+    const res = useDataStore.getState().refreshDerivedStatuses();
+    expect(res).toEqual({ aksiyonlar: 0, projeler: 0 });
+    expect(useDataStore.getState().projeler[0].progress).toBe(0);
   });
 });

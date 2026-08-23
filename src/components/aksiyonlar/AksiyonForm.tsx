@@ -117,8 +117,10 @@ export default function AksiyonForm({ aksiyon, defaultProjeId, onSuccess, onClos
     const elapsed = now - startMs;
     const expectedProgress = Math.min(100, Math.max(0, (elapsed / totalDuration) * 100));
     const diff = expectedProgress - progress;
-    const behindT = Number(localStorage.getItem("tyro-behind-threshold")) || 20;
-    const atRiskT = Number(localStorage.getItem("tyro-atrisk-threshold")) || 10;
+    // Eşikler uiStore'dan — app_settings tablosundan besleniyor. Aynı hesabı
+    // yapan dataStore.suggestStatusFromProgress ile AYNI kaynağı okumalı,
+    // yoksa önizleme ile kaydedilen statü ayrışır.
+    const { behindThreshold: behindT, atRiskThreshold: atRiskT } = useUIStore.getState();
     if (diff > behindT) return "High Risk";
     if (diff > atRiskT) return "At Risk";
     return "On Track";                  // Planda → Yolunda

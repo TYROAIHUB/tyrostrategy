@@ -15,6 +15,7 @@ import { toast } from "@/stores/toastStore";
 import i18n from "@/lib/i18n";
 import { departments } from "@/config/departments";
 import { isSupabaseMode } from "@/lib/supabaseMode";
+import { useUIStore } from "@/stores/uiStore";
 
 /**
  * Fire-and-forget Supabase sync — doesn't block UI.
@@ -235,9 +236,15 @@ function suggestStatusFromProgress(progress: number, startDate: string, endDate:
   const elapsed = now - startMs;
   const expectedProgress = Math.min(100, Math.max(0, (elapsed / totalDuration) * 100));
   const diff = expectedProgress - progress;
-  // Thresholds from settings (lazy import to avoid circular dep)
-  const behindT = Number(localStorage.getItem("tyro-behind-threshold")) || 20;
-  const atRiskT = Number(localStorage.getItem("tyro-atrisk-threshold")) || 10;
+  /* Eşikler uiStore'dan — o da app_settings tablosundan besleniyor
+     (reloadUISettingsFromDb açılışta ve her yenilemede çalışıyor).
+     ÖNCE localStorage'dan okunuyordu; DB gerçek kaynak olduğu hâlde önbellekten
+     okumak tutarsızdı ve `Number(x) || 20` yazımı yüzünden 0 eşiği imkânsızdı
+     (0 falsy). Koddaki "circular dep" gerekçesi de geçersizmiş: uiStore
+     dataStore'u import etmiyor, döngü yok. */
+  const { behindThreshold, atRiskThreshold } = useUIStore.getState();
+  const behindT = behindThreshold;
+  const atRiskT = atRiskThreshold;
   if (diff > behindT) return "High Risk";
   if (diff > atRiskT) return "At Risk";
   // Risk eşiklerinin altında: progress=0 ise "Not Started" (henüz başlanmamış,
