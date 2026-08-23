@@ -3,18 +3,13 @@ import { useMsal } from "@azure/msal-react";
 import { InteractionRequiredAuthError } from "@azure/msal-browser";
 import { useNavigate } from "react-router-dom";
 import { loginRequest } from "@/lib/auth/msalConfig";
+import { prefersRedirect, POPUP_BLOCKED_CODES } from "@/lib/auth/browserAuthMode";
 import { useUIStore } from "@/stores/uiStore";
 import { useDataStore, fetchAllFromSupabase } from "@/stores/dataStore";
 import { setSupabaseUserContext } from "@/lib/supabase";
 import { supabaseAdapter } from "@/lib/data/supabaseAdapter";
 import { isSupabaseMode } from "@/lib/supabaseMode";
 
-/** Detect mobile / tablet browsers where popups are unreliable */
-function isMobile(): boolean {
-  return /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(
-    navigator.userAgent,
-  );
-}
 
 /** Wait for users to appear in the store (Supabase may still be loading) */
 function waitForUsers(maxMs = 5000): Promise<typeof useDataStore.getState extends () => infer R ? R["users"] : never> {
@@ -85,15 +80,28 @@ export function useMsalLogin() {
         }
       }
 
-      // 2. If silent didn't work, use redirect on mobile, popup on desktop
+      // 2. Sessiz alım işe yaramadıysa etkileşimli giriş.
       if (!email) {
-        if (isMobile()) {
-          // Redirect flow — page will reload after auth, AuthGuard handles the rest
+        if (prefersRedirect()) {
+          // Redirect flow — sayfa yenilenir, gerisini AuthGuard tamamlar
           await instance.loginRedirect(loginRequest);
-          return; // page navigates away
+          return; // sayfa buradan ayrılıyor
         }
-        const result = await instance.loginPopup(loginRequest);
-        email = (result.account.username || "").toLowerCase().trim();
+        try {
+          const result = await instance.loginPopup(loginRequest);
+          email = (result.account.username || "").toLowerCase().trim();
+        } catch (popupErr) {
+          // Popup engellendiyse "Microsoft pencerenizi kontrol edin" ekranında
+          // sonsuza kadar beklemek yerine redirect'e düşüyoruz. Bu, tarayıcı
+          // tespitinin kaçırdığı her durumu da kurtaran emniyet ağı.
+          const code = (popupErr as { errorCode?: string }).errorCode ?? "";
+          if (POPUP_BLOCKED_CODES.has(code)) {
+            console.warn(`[MSAL] Popup engellendi (${code}) — redirect akışına geçiliyor`);
+            await instance.loginRedirect(loginRequest);
+            return;
+          }
+          throw popupErr;
+        }
       }
 
       // 3. X-User-Email header'ını ÖNCE set et — migration 018 RLS policy'leri
@@ -120,7 +128,7 @@ export function useMsalLogin() {
         // Context'i temizle — gelecek isteklerde yanlış email kullanılmasın
         setSupabaseUserContext(null);
         // Clear MSAL session — use redirect on mobile
-        if (isMobile()) {
+        if (prefersRedirect()) {
           await instance.logoutRedirect({ onRedirectNavigate: () => false }).catch(() => {});
         } else {
           await instance.logoutPopup({ onRedirectNavigate: () => false }).catch(() => {});
