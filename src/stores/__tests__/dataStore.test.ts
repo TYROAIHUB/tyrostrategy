@@ -553,3 +553,69 @@ describe("Tamamlanma tarihi damgası", () => {
     expect(a.completedAt).toBeTruthy();
   });
 });
+
+describe("Proje lideri değişince aksiyon sahipleri de güncellenir", () => {
+  const projeBase = {
+    source: "Kurumsal" as const, status: "On Track" as const,
+    participants: [], department: "IT", progress: 0,
+    startDate: "2026-01-01", endDate: "2026-12-31",
+  };
+  const aksiyonBase = {
+    status: "On Track" as const, progress: 0,
+    startDate: "2026-01-01", endDate: "2026-12-31",
+  };
+
+  /** İki proje + her birine iki aksiyon kurar, id'leri döner. */
+  function seed() {
+    const st = useDataStore.getState();
+    st.addProje({ ...projeBase, name: "A projesi", owner: "Arzu Örsel" });
+    st.addProje({ ...projeBase, name: "B projesi", owner: "Mete Sayın" });
+    const [a, b] = useDataStore.getState().projeler;
+    for (const [p, ad] of [[a, "A"], [b, "B"]] as const) {
+      for (const i of [1, 2]) {
+        useDataStore.getState().addAksiyon({
+          ...aksiyonBase, projeId: p.id, name: `${ad}${i}`, owner: p.owner, sortOrder: i,
+        });
+      }
+    }
+    return { aId: a.id, bId: b.id };
+  }
+
+  it("lider değişince o projenin aksiyonları yeni lidere geçiyor", () => {
+    // Canlıda kayan senaryo buydu: P26-0180'in lideri Elif Balcı'ya döndü ama
+    // aksiyonlar Büşra Kaplan'da kaldı.
+    const { aId } = seed();
+    useDataStore.getState().updateProje(aId, { owner: "Tarkan Yılmaz" });
+
+    const aksiyonlar = useDataStore.getState().aksiyonlar.filter((x) => x.projeId === aId);
+    expect(aksiyonlar).toHaveLength(2);
+    expect(aksiyonlar.every((x) => x.owner === "Tarkan Yılmaz")).toBe(true);
+  });
+
+  it("DİĞER projenin aksiyonlarına dokunmuyor", () => {
+    const { aId, bId } = seed();
+    useDataStore.getState().updateProje(aId, { owner: "Tarkan Yılmaz" });
+
+    const bAksiyonlar = useDataStore.getState().aksiyonlar.filter((x) => x.projeId === bId);
+    expect(bAksiyonlar.every((x) => x.owner === "Mete Sayın")).toBe(true);
+  });
+
+  it("lider dışında bir alan güncellenince aksiyon sahipleri değişmiyor", () => {
+    const { aId } = seed();
+    const oncekiRef = useDataStore.getState().aksiyonlar;
+
+    useDataStore.getState().updateProje(aId, { name: "Yeni ad" });
+
+    const aksiyonlar = useDataStore.getState().aksiyonlar;
+    expect(aksiyonlar.filter((x) => x.projeId === aId).every((x) => x.owner === "Arzu Örsel")).toBe(true);
+    // Dizi referansı da korunmalı — gereksiz render tetiklenmesin.
+    expect(aksiyonlar).toBe(oncekiRef);
+  });
+
+  it("aynı lider tekrar yazılınca gereksiz değişiklik üretmiyor", () => {
+    const { aId } = seed();
+    const oncekiRef = useDataStore.getState().aksiyonlar;
+    useDataStore.getState().updateProje(aId, { owner: "Arzu Örsel" });
+    expect(useDataStore.getState().aksiyonlar).toBe(oncekiRef);
+  });
+});

@@ -492,7 +492,38 @@ export const useDataStore = create<DataState>()(
             () => supabaseAdapter.updateProje(id, syncData),
             { entity: "Proje", action: "güncelleme", label: projeName }
           );
-          return { projeler };
+
+          // ── Lider değişikliğini aksiyonlara yansıt ────────────────────────
+          // Kurum kuralı (kullanıcı kararı 2026-08-27): bir aksiyonun sahibi
+          // HER ZAMAN bağlı olduğu projenin lideridir. Aksiyon oluşturulurken
+          // lider zaten devralınıyor, ama sonradan proje lideri DEĞİŞİRSE
+          // aksiyonlar eski isimde kalıyordu — canlıda iki proje bu şekilde
+          // kaymıştı (P26-0062 Emrah Erenler→Tarkan Yılmaz, P26-0180
+          // Büşra Kaplan→Elif Balcı). Raporlar artık lideri projeden türetiyor
+          // ama aksiyon listesi, aksiyon detayı ve dışa aktarım hâlâ aksiyonun
+          // kendi alanını okuyor; bu yüzden alanın kendisini de hizalıyoruz.
+          let aksiyonlar = s.aksiyonlar;
+          const yeniLider = syncData.owner;
+          if (before && yeniLider && yeniLider !== before.owner) {
+            const kayanlar = s.aksiyonlar.filter(
+              (a) => a.projeId === id && a.owner !== yeniLider
+            );
+            if (kayanlar.length > 0) {
+              aksiyonlar = s.aksiyonlar.map((a) =>
+                a.projeId === id && a.owner !== yeniLider ? { ...a, owner: yeniLider } : a
+              );
+              for (const a of kayanlar) {
+                syncToSupabase(
+                  () => supabaseAdapter.updateAksiyon(a.id, { owner: yeniLider }),
+                  { entity: "Aksiyon", action: "sorumlu güncelleme", label: a.name }
+                );
+              }
+            }
+          }
+
+          // Referans korunuyorsa (değişiklik yoksa) zustand gereksiz render
+          // tetiklemesin diye aynı diziyi geri veriyoruz.
+          return aksiyonlar === s.aksiyonlar ? { projeler } : { projeler, aksiyonlar };
         }),
       deleteProje: (id) => {
         const state = get();
