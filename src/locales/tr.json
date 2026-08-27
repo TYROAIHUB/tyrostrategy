@@ -254,6 +254,7 @@
   "validation": {
     "minChars": "En az 3 karakter giriniz",
     "ownerRequired": "Proje sahibi zorunludur",
+    "responsibleRequired": "Sorumlu zorunludur",
     "sourceRequired": "İş kolu zorunludur",
     "statusRequired": "Durum zorunludur",
     "startDateRequired": "Başlangıç tarihi zorunludur",

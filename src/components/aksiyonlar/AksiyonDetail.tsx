@@ -179,7 +179,11 @@ export default function AksiyonDetail({
       <div className="rounded-xl bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-tyro-border/30 dark:border-white/10 shadow-[0_4px_20px_rgba(0,0,0,0.08)] overflow-hidden divide-y divide-tyro-border/20">
         <div className="grid grid-cols-2 divide-x divide-tyro-border/15">
           <InfoCell label={t("common.sortOrder", "Sıra No")} value={currentAksiyon.sortOrder ? `#${currentAksiyon.sortOrder}` : "—"} />
-          <InfoCell label={t("common.owner")} value={currentAksiyon.owner} />
+          {/* AKSİYONUN sorumlusu — `common.owner` "Proje Lideri" demek ve buraya
+              yanlış etiketi basıyordu: P26-0079 gibi lideri Arzu Örsel olan bir
+              projede aksiyon sorumlusu Büşra Kaplan "Proje Lideri" diye
+              görünüyordu. Doğru anahtar `common.responsible` = "Sorumlu". */}
+          <InfoCell label={t("common.responsible")} value={currentAksiyon.owner} />
         </div>
         <div className="grid grid-cols-2 divide-x divide-tyro-border/15">
           <InfoCell label={t("common.startDate")} value={formatDate(currentAksiyon.startDate)} />

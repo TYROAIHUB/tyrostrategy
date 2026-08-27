@@ -254,6 +254,7 @@
   "validation": {
     "minChars": "Enter at least 3 characters",
     "ownerRequired": "Owner is required",
+    "responsibleRequired": "Responsible is required",
     "sourceRequired": "Business line is required",
     "statusRequired": "Status is required",
     "startDateRequired": "Start date is required",

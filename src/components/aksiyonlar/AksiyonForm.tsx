@@ -21,7 +21,7 @@ const createAksiyonSchema = (t: TFunction) =>
   z.object({
     name: z.string().min(1, t("validation.actionNameRequired")),
     description: z.string().optional(),
-    owner: z.string().min(1, t("validation.ownerRequired")),
+    owner: z.string().min(1, t("validation.responsibleRequired")),
     projeId: z.string().min(1, t("validation.objectiveRequired")),
     progress: z.number().min(0).max(100),
     status: z.enum(["On Track", "At Risk", "High Risk", "Achieved", "Not Started", "Cancelled", "On Hold"]),
@@ -210,7 +210,8 @@ export default function AksiyonForm({ aksiyon, defaultProjeId, onSuccess, onClos
         if (data.name !== aksiyon.name) details.push({ label: t("common.name"), value: data.name });
         if (data.progress !== aksiyon.progress) details.push({ label: t("common.progress"), value: `%${data.progress}` });
         if (data.status !== aksiyon.status) details.push({ label: t("common.status"), value: data.status });
-        if (data.owner !== aksiyon.owner) details.push({ label: t("common.owner"), value: data.owner });
+        // Aksiyonun SORUMLUSU — `common.owner` "Proje Lideri" demek.
+        if (data.owner !== aksiyon.owner) details.push({ label: t("common.responsible"), value: data.owner });
         if (data.sortOrder !== aksiyon.sortOrder) details.push({ label: t("common.sortOrder", "Sıra"), value: `#${data.sortOrder}` });
         if (data.startDate !== aksiyon.startDate) details.push({ label: t("common.startDate"), value: data.startDate });
         if (data.endDate !== aksiyon.endDate) details.push({ label: t("common.endDate"), value: data.endDate });
@@ -229,7 +230,7 @@ export default function AksiyonForm({ aksiyon, defaultProjeId, onSuccess, onClos
           message: data.name,
           details: [
             { label: t("common.proje", "Proje"), value: parentProje?.name ?? "—" },
-            { label: t("common.owner"), value: data.owner },
+            { label: t("common.responsible"), value: data.owner },
             { label: t("common.dateRange", "Tarih"), value: `${formatDate(data.startDate)} → ${formatDate(data.endDate)}` },
             { label: t("common.status"), value: data.status },
           ],

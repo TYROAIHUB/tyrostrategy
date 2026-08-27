@@ -43,7 +43,9 @@ export default function AksiyonlarPage() {
   const columns = [
     { uid: "name", name: t("forms.action.name") },
     { uid: "description", name: t("common.description") },
-    { uid: "owner", name: t("common.owner") },
+    // Bu kolon AKSİYONUN sorumlusunu gösteriyor; `common.owner` ise
+    // "Proje Lideri" demek — başlık yanlış kişiyi işaret ediyordu.
+    { uid: "owner", name: t("common.responsible") },
     { uid: "proje", name: t("nav.objectives") },
     { uid: "progress", name: t("common.progress") },
     { uid: "status", name: t("common.status") },
