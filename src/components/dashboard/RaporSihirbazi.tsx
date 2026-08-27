@@ -1889,10 +1889,10 @@ ${clone.outerHTML}
                                           <div className="flex-1 min-w-0">
                                             <p className="text-[12px] font-semibold text-tyro-text-primary leading-snug break-words">{a.name}</p>
                                             <p className="text-[11px] text-tyro-text-secondary mt-0.5">
-                                              // Kurum kuralı: aksiyonun sahibi HER ZAMAN projenin lideridir. Raporda
-                                              // aksiyonun kendi `owner` alanı yerine bağlı olduğu projenin liderini
-                                              // gösteriyoruz — proje lideri değişince rapor kendiliğinden doğru kalır,
-                                              // eski bir kayıttaki bayat isim rapora sızmaz.
+                                              {/* Aksiyon sahibi = bağlı olduğu PROJENİN lideri (kurum kuralı).
+                                                  Aksiyonun kendi `owner` alanı kullanılmıyor: proje lideri
+                                                  değişince rapor kendiliğinden doğru kalsın, eski kayıttaki
+                                                  bayat isim çıktıya sızmasın diye. */}
                                               {h.owner || a.owner} · {new Date(a.startDate).toLocaleDateString(dateLocale)} → {new Date(a.endDate).toLocaleDateString(dateLocale)}
                                             </p>
                                           </div>
