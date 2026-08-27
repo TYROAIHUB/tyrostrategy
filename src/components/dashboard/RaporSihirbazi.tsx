@@ -917,10 +917,14 @@ ${clone.outerHTML}
     });
     // Sheet 3: Actions
     const ws3 = wb.addWorksheet(t("dashboard.actionsSheet"));
-    ws3.addRow([t("dashboard.actionName"), t("dashboard.projectName"), t("dashboard.responsibleCol"), t("dashboard.statusLabel"), t("dashboard.progressPercent"), t("dashboard.startDateCol"), t("dashboard.endDateCol")]);
+    // Kurum kuralı: aksiyonun sahibi HER ZAMAN projenin lideridir. Raporda
+    // aksiyonun kendi `owner` alanı yerine bağlı olduğu projenin liderini
+    // gösteriyoruz — proje lideri değişince rapor kendiliğinden doğru kalır,
+    // eski bir kayıttaki bayat isim rapora sızmaz.
+    ws3.addRow([t("dashboard.actionName"), t("dashboard.projectName"), t("dashboard.projectLeader"), t("dashboard.statusLabel"), t("dashboard.progressPercent"), t("dashboard.startDateCol"), t("dashboard.endDateCol")]);
     reportAksiyonlar.forEach((a) => {
       const h = reportProjeler.find((hh) => hh.id === a.projeId);
-      ws3.addRow([a.name, h?.name || "", a.owner, STATUS_TR[a.status], a.progress, a.startDate, a.endDate]);
+      ws3.addRow([a.name, h?.name || "", h?.owner ?? a.owner, STATUS_TR[a.status], a.progress, a.startDate, a.endDate]);
     });
     const buf = await wb.xlsx.writeBuffer();
     saveAs(new Blob([buf]), getFileName("xlsx"));
@@ -1885,7 +1889,11 @@ ${clone.outerHTML}
                                           <div className="flex-1 min-w-0">
                                             <p className="text-[12px] font-semibold text-tyro-text-primary leading-snug break-words">{a.name}</p>
                                             <p className="text-[11px] text-tyro-text-secondary mt-0.5">
-                                              {a.owner} · {new Date(a.startDate).toLocaleDateString(dateLocale)} → {new Date(a.endDate).toLocaleDateString(dateLocale)}
+                                              // Kurum kuralı: aksiyonun sahibi HER ZAMAN projenin lideridir. Raporda
+                                              // aksiyonun kendi `owner` alanı yerine bağlı olduğu projenin liderini
+                                              // gösteriyoruz — proje lideri değişince rapor kendiliğinden doğru kalır,
+                                              // eski bir kayıttaki bayat isim rapora sızmaz.
+                                              {h.owner || a.owner} · {new Date(a.startDate).toLocaleDateString(dateLocale)} → {new Date(a.endDate).toLocaleDateString(dateLocale)}
                                             </p>
                                           </div>
 
