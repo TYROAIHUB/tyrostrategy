@@ -16,6 +16,7 @@ import KPICard from "@/components/dashboard/KPICard";
 import { statusColor } from "@/lib/colorUtils";
 import { getStatusLabel } from "@/lib/constants";
 import { formatCapex, formatCapexCompact } from "@/lib/money";
+import { SHOW_CAPEX_ON_ATLAS } from "@/config/tatlasDisplay";
 import {
   assetClassLabel,
   actionTypeLabel,
@@ -91,7 +92,11 @@ export default function TAtlasSummary({ metrics, breakdowns }: Props) {
         <SectionTitle icon={PieChart}>{t("tatlas.summary.cards")}</SectionTitle>
         {/* Rapor sayfasındaki KPI kartlarıyla aynı bileşen ve aynı ızgara
             ritmi — sayfalar arası görünüm tutarlı kalsın. */}
-        <div className="grid grid-cols-1 items-stretch gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 sm:gap-5">
+        <div
+          className={`grid grid-cols-1 items-stretch gap-4 sm:grid-cols-2 lg:grid-cols-3 sm:gap-5 ${
+            SHOW_CAPEX_ON_ATLAS ? "xl:grid-cols-6" : "xl:grid-cols-5"
+          }`}
+        >
           <div className="flex">
             <KPICard
               label={t("tatlas.metric.projectCount")}
@@ -101,16 +106,18 @@ export default function TAtlasSummary({ metrics, breakdowns }: Props) {
               contextText={t("tatlas.metric.projectCountNote")}
             />
           </div>
-          <div className="flex">
-            <KPICard
-              label={t("tatlas.metric.totalCapex")}
-              value={metrics.totalCapex}
-              displayValue={formatCapexCompact(metrics.totalCapex, locale) || "0 USD"}
-              icon={<Banknote size={20} />}
-              color={METRIC_COLOR.capex}
-              contextText={capexNote ?? formatCapex(metrics.totalCapex, locale)}
-            />
-          </div>
+          {SHOW_CAPEX_ON_ATLAS && (
+            <div className="flex">
+              <KPICard
+                label={t("tatlas.metric.totalCapex")}
+                value={metrics.totalCapex}
+                displayValue={formatCapexCompact(metrics.totalCapex, locale) || "0 USD"}
+                icon={<Banknote size={20} />}
+                color={METRIC_COLOR.capex}
+                contextText={capexNote ?? formatCapex(metrics.totalCapex, locale)}
+              />
+            </div>
+          )}
           <div className="flex">
             <KPICard
               label={t("tatlas.metric.countryCount")}
@@ -156,7 +163,11 @@ export default function TAtlasSummary({ metrics, breakdowns }: Props) {
       {/* ── Kırılım panelleri ── */}
       <section>
         <SectionTitle icon={Boxes}>{t("tatlas.summary.breakdowns")}</SectionTitle>
-        <div className="grid grid-cols-1 gap-3 lg:grid-cols-2 xl:grid-cols-3">
+        <div
+          className={`grid grid-cols-1 gap-3 lg:grid-cols-2 ${
+            SHOW_CAPEX_ON_ATLAS ? "xl:grid-cols-3" : "xl:grid-cols-2"
+          }`}
+        >
           <StatusDistributionPanel rows={breakdowns.byStatus} total={metrics.projectCount} />
 
           <BreakdownPanel
@@ -191,37 +202,43 @@ export default function TAtlasSummary({ metrics, breakdowns }: Props) {
             locale={locale}
           />
 
-          <BreakdownPanel
-            icon={Globe2}
-            color={DIM_COLOR.capex}
-            title={t("tatlas.panel.capexByCountry")}
-            rows={breakdowns.byCountry}
-            labelOf={(k) => k}
-            mode="capex"
-            locale={locale}
-          />
-          <BreakdownPanel
-            icon={Hammer}
-            color={DIM_COLOR.capex}
-            title={t("tatlas.panel.capexByActionType")}
-            rows={breakdowns.byActionType}
-            labelOf={(k) => actionTypeLabel(k, t) || k}
-            tooltipOf={(k) => actionTypeCodeAndLabel(k, t)}
-            badgeOf={(k) => k}
-            mode="capex"
-            locale={locale}
-          />
-          <BreakdownPanel
-            icon={Boxes}
-            color={DIM_COLOR.capex}
-            title={t("tatlas.panel.capexByAssetClass")}
-            rows={breakdowns.byAssetClass}
-            labelOf={(k) => assetClassLabel(k, t) || k}
-            tooltipOf={(k) => assetClassCodeAndLabel(k, t)}
-            badgeOf={(k) => k}
-            mode="capex"
-            locale={locale}
-          />
+          {/* CAPEX kırılımları — bkz. src/config/tatlasDisplay.ts. Veri
+              girilmeye başlandığında o bayrak `true` yapılınca geri gelir. */}
+          {SHOW_CAPEX_ON_ATLAS && (
+            <>
+            <BreakdownPanel
+              icon={Globe2}
+              color={DIM_COLOR.capex}
+              title={t("tatlas.panel.capexByCountry")}
+              rows={breakdowns.byCountry}
+              labelOf={(k) => k}
+              mode="capex"
+              locale={locale}
+            />
+            <BreakdownPanel
+              icon={Hammer}
+              color={DIM_COLOR.capex}
+              title={t("tatlas.panel.capexByActionType")}
+              rows={breakdowns.byActionType}
+              labelOf={(k) => actionTypeLabel(k, t) || k}
+              tooltipOf={(k) => actionTypeCodeAndLabel(k, t)}
+              badgeOf={(k) => k}
+              mode="capex"
+              locale={locale}
+            />
+            <BreakdownPanel
+              icon={Boxes}
+              color={DIM_COLOR.capex}
+              title={t("tatlas.panel.capexByAssetClass")}
+              rows={breakdowns.byAssetClass}
+              labelOf={(k) => assetClassLabel(k, t) || k}
+              tooltipOf={(k) => assetClassCodeAndLabel(k, t)}
+              badgeOf={(k) => k}
+              mode="capex"
+              locale={locale}
+            />
+            </>
+          )}
         </div>
       </section>
     </div>
