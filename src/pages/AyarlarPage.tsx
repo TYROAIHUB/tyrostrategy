@@ -165,6 +165,22 @@ export default function AyarlarPage() {
         </SettingsRow>
       </SettingsCard>
 
+      {/* ── Statü otomasyonu (bilgilendirme) ── */}
+      {/* Salt okunur: burada ayar yok, kullanıcıya statülerin NASIL ve NE ZAMAN
+          tazelendiğini anlatıyoruz. Eşikler hemen yukarıdaki "Kurallar"
+          kartında olduğu için bilinçli olarak onun ardına konuldu. */}
+      <SettingsCard title={t("settings.statusAutomation")}>
+        <SettingsRow label={t("settings.autoRefresh")} description={t("settings.autoRefreshDesc")}>
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-600">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> {t("settings.autoRefreshSchedule")}
+          </span>
+        </SettingsRow>
+        <SettingsRow label={t("settings.manualRefresh")} description={t("settings.manualRefreshDesc")}>
+          <span className="text-[13px] font-semibold text-tyro-text-secondary">{t("settings.manualRefreshWhere")}</span>
+        </SettingsRow>
+        <p className="text-[10px] text-tyro-text-muted px-5 pb-3">{t("settings.statusAutomationHelp")}</p>
+      </SettingsCard>
+
       {/* ── Entegrasyon ── */}
       <SettingsCard title={t("settings.integrations")}>
         <SettingsRow label="Supabase (PostgreSQL)" description={t("settings.supabaseDesc")}>

@@ -1,0 +1,50 @@
+# Haftalık statü tazeleme — her pazartesi 08:00 (Türkiye saati).
+#
+# Neden gerekli: aksiyon ve proje statüleri TAKVİME bağlı. Bir kaydın
+# ilerlemesi hiç değişmese bile gün geçtikçe beklenen ilerlemenin gerisine
+# düşer ve statüsünün değişmesi gerekir. Kimse anasayfadaki "Verileri yenile"
+# butonuna basmazsa bu bayatlar.
+#
+# Hesabı yapan kural src/lib/statusRules.ts'te ve uygulamayla ORTAK — kopya yok.
+#
+# GitHub Pages ile ilgisi yok: Pages statik dosya servis ediyor, bu ise ayrı bir
+# Actions işi. Public repoda Actions ücretsiz ve süresiz.
+#
+# NOT: GitHub, 60 gün hiç hareket görmeyen repolarda zamanlanmış işleri
+# otomatik durdurur. Durursa Actions sekmesinden tek tıkla geri açılır.
+name: Weekly status refresh
+
+on:
+  schedule:
+    # 05:00 UTC = 08:00 Türkiye. Türkiye yıl boyu UTC+3 sabit, yaz/kış kayması yok.
+    - cron: "0 5 * * 1"
+  # Actions sekmesinden elle de tetiklenebilir.
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Sadece rapor — hiçbir şey yazma"
+        type: boolean
+        default: false
+
+concurrency:
+  group: status-refresh
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      # React 19 ile wx-react-gantt'ın peer aralığı çakışıyor; repo genelinde
+      # kullanılan bayrak bu.
+      - run: npm ci --legacy-peer-deps
+
+      - name: Statüleri tazele
+        run: npx tsx scripts/refresh-statuses.ts ${{ inputs.dry_run && '' || '--apply' }}

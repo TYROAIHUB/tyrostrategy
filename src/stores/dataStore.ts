@@ -11,6 +11,12 @@ import {
 import { DEFAULT_TAG_COLOR } from "@/config/tagColors";
 import { supabaseAdapter } from "@/lib/data/supabaseAdapter";
 import { setSupabaseUserContext } from "@/lib/supabase";
+import {
+  suggestStatusFromProgress as suggestStatusPure,
+  rollUpProje,
+  planStatusRefresh,
+  type StatusThresholds,
+} from "@/lib/statusRules";
 import { toast } from "@/stores/toastStore";
 import i18n from "@/lib/i18n";
 import { departments } from "@/config/departments";
@@ -236,33 +242,16 @@ function now(): string {
  * 2026-05-08). Şimdi tarih bazlı risk hesabı progress=0 için de çalışıyor;
  * sadece risk eşiklerinin ALTINDAYSA "Not Started" döner (örn. proje
  * başlangıcına yakın, henüz geç kalınmamış). */
-function suggestStatusFromProgress(progress: number, startDate: string, endDate: string): EntityStatus {
-  if (progress >= 100) return "Achieved";
-  if (!startDate || !endDate) {
-    return progress === 0 ? "Not Started" : "On Track";
-  }
-  const now = Date.now();
-  const startMs = new Date(startDate).getTime();
-  const endMs = new Date(endDate).getTime();
-  const totalDuration = endMs - startMs;
-  if (totalDuration <= 0) return progress === 0 ? "Not Started" : "On Track";
-  const elapsed = now - startMs;
-  const expectedProgress = Math.min(100, Math.max(0, (elapsed / totalDuration) * 100));
-  const diff = expectedProgress - progress;
-  /* Eşikler uiStore'dan — o da app_settings tablosundan besleniyor
-     (reloadUISettingsFromDb açılışta ve her yenilemede çalışıyor).
-     ÖNCE localStorage'dan okunuyordu; DB gerçek kaynak olduğu hâlde önbellekten
-     okumak tutarsızdı ve `Number(x) || 20` yazımı yüzünden 0 eşiği imkânsızdı
-     (0 falsy). Koddaki "circular dep" gerekçesi de geçersizmiş: uiStore
-     dataStore'u import etmiyor, döngü yok. */
+/** Eşikleri mağazadan okuyup SAF kurala devreden ince sarmalayıcı.
+ *  Kuralın kendisi src/lib/statusRules.ts'te — haftalık zamanlanmış iş de
+ *  (scripts/refresh-statuses.ts) aynı fonksiyonu çağırıyor, kopya yok. */
+function currentThresholds(): StatusThresholds {
   const { behindThreshold, atRiskThreshold } = useUIStore.getState();
-  const behindT = behindThreshold;
-  const atRiskT = atRiskThreshold;
-  if (diff > behindT) return "High Risk";
-  if (diff > atRiskT) return "At Risk";
-  // Risk eşiklerinin altında: progress=0 ise "Not Started" (henüz başlanmamış,
-  // gecikme de yok). Aksi halde "On Track".
-  return progress === 0 ? "Not Started" : "On Track";
+  return { behindThreshold, atRiskThreshold };
+}
+
+function suggestStatusFromProgress(progress: number, startDate: string, endDate: string): EntityStatus {
+  return suggestStatusPure(progress, startDate, endDate, currentThresholds());
 }
 
 /** Recalculate a Proje's progress + status from its aksiyonlar.
@@ -291,33 +280,19 @@ function recalcProjeProgress(
 ): Proje[] {
   const related = aksiyonlar.filter((a) => a.projeId === projeId);
   if (related.length === 0) return projeler;
-  const avg = Math.round(
-    related.reduce((sum, a) => sum + a.progress, 0) / related.length
-  );
-  const hasHighRisk = related.some((a) => a.status === "High Risk");
-  const hasAtRisk = related.some((a) => a.status === "At Risk");
-  const allAchieved = related.every((a) => a.status === "Achieved");
   return projeler.map((h) => {
     if (h.id !== projeId) return h;
-    const updated: Partial<Proje> = { progress: avg };
-    // Lifecycle status'leri otomatik recalc'tan koru — manuel kararlar.
-    if (h.status === "On Hold" || h.status === "Cancelled") {
-      return { ...h, ...updated };
-    }
-    if (hasHighRisk) {
-      updated.status = "High Risk";
-      updated.completedAt = undefined;
-    } else if (hasAtRisk) {
-      updated.status = "At Risk";
-      updated.completedAt = undefined;
-    } else if (allAchieved) {
-      updated.status = "Achieved";
-      if (h.status !== "Achieved") updated.completedAt = new Date().toISOString();
-    } else {
-      updated.status = "On Track";
-      updated.completedAt = undefined;
-    }
-    return { ...h, ...updated };
+    const rolled = rollUpProje(h, related);
+    if (!rolled) return h;
+    // `completedAt` üç değerli: string = yaz, null = temizle, undefined = dokunma.
+    // Yerel durumda null tutmuyoruz (bkz. nullsToUndefined), o yüzden null'ı
+    // undefined'a çevirip anahtarı yine de basıyoruz — alan temizlensin.
+    return {
+      ...h,
+      progress: rolled.progress,
+      status: rolled.status,
+      ...(rolled.completedAt !== undefined ? { completedAt: rolled.completedAt ?? undefined } : {}),
+    };
   });
 }
 
@@ -896,83 +871,53 @@ export const useDataStore = create<DataState>()(
        */
       refreshDerivedStatuses: () => {
         const state = get();
-        let changedAksiyonCount = 0;
+        // Kuralın TAMAMI src/lib/statusRules.ts'te. Haftalık zamanlanmış iş
+        // (scripts/refresh-statuses.ts) da bu aynı fonksiyonu çağırıyor —
+        // formülün iki kopyası olmadığı için ikisi asla sapamaz.
+        const plan = planStatusRefresh(state.projeler, state.aksiyonlar, currentThresholds());
 
-        const nextAksiyonlar = state.aksiyonlar.map((a) => {
-          const isLifecycle =
-            a.status === "On Hold" || a.status === "Cancelled" || a.status === "Achieved";
-          if (isLifecycle) return a;
-          const suggested = suggestStatusFromProgress(a.progress ?? 0, a.startDate, a.endDate);
-
-          // Tamamlanma tarihi HEDEF statüyle tutarlı olmalı:
-          //   Achieved       → tarih OLMALI   (yoksa şimdi damgala, varsa dokunma)
-          //   Achieved değil → tarih OLMAMALI (varsa temizle)
-          // `undefined` = "dokunma", `null` = "NULL yap".
-          // Achieved dalı gerçekten erişilebilir: %100 ilerlemeli ama statüsü
-          // henüz Achieved olmayan aksiyon bu tazelemede Achieved'a geçiyor.
-          // Koşulsuz `completedAt: null` göndermek o kaydın tarihini hiç
-          // oluşmadan siliyordu.
-          const hasDate = a.completedAt != null;
-          const nextDate: string | null | undefined =
-            suggested === "Achieved"
-              ? hasDate ? undefined : new Date().toISOString()
-              : hasDate ? null : undefined;
-
-          if (suggested === a.status && nextDate === undefined) return a;
-          changedAksiyonCount++;
-          const updated: Aksiyon = {
-            ...a,
-            status: suggested,
-            ...(nextDate !== undefined ? { completedAt: nextDate ?? undefined } : {}),
-          };
+        for (const c of plan.aksiyonlar) {
           syncToSupabase(
             () =>
-              supabaseAdapter.updateAksiyon(a.id, {
-                status: suggested,
-                ...(nextDate !== undefined ? { completedAt: nextDate } : {}),
+              supabaseAdapter.updateAksiyon(c.id, {
+                status: c.status,
+                ...(c.completedAt !== undefined ? { completedAt: c.completedAt } : {}),
               }),
-            { entity: "Aksiyon", action: "statü tazeleme", label: a.name }
+            { entity: "Aksiyon", action: "statü tazeleme", label: c.name }
           );
-          return updated;
-        });
-
-        // Aksiyonu olan her projeyi yeniden hesapla; yalnızca gerçekten
-        // değişenleri say ve DB'ye yaz.
-        let nextProjeler = state.projeler;
-        const projeIdsWithAksiyon = new Set(nextAksiyonlar.map((a) => a.projeId));
-        let changedProjeCount = 0;
-        for (const projeId of projeIdsWithAksiyon) {
-          const before = nextProjeler.find((p) => p.id === projeId);
-          nextProjeler = recalcProjeProgress(nextProjeler, nextAksiyonlar, projeId);
-          const after = nextProjeler.find((p) => p.id === projeId);
-          if (!before || !after) continue;
-          if (
-            before.progress !== after.progress ||
-            before.status !== after.status ||
-            before.completedAt !== after.completedAt
-          ) {
-            changedProjeCount++;
-            syncToSupabase(
-              () =>
-                supabaseAdapter.updateProje(after.id, {
-                  progress: after.progress,
-                  status: after.status,
-                  // ?? null KRİTİK: recalc, Achieved'dan çıkan projede bunu
-                  // temizliyor ama `undefined` PATCH'ten düşüyordu. Bu yüzden
-                  // "Verileri yenile" her basışta aynı sayıyı gösteriyor,
-                  // asla yakınsamıyordu.
-                  completedAt: after.completedAt ?? null,
-                }),
-              { entity: "Proje", action: "statü tazeleme", label: after.name }
-            );
-          }
+        }
+        for (const c of plan.projeler) {
+          syncToSupabase(
+            () =>
+              supabaseAdapter.updateProje(c.id, {
+                progress: c.progress,
+                status: c.status,
+                ...(c.completedAt !== undefined ? { completedAt: c.completedAt } : {}),
+              }),
+            { entity: "Proje", action: "statü tazeleme", label: c.name }
+          );
         }
 
-        set({ aksiyonlar: nextAksiyonlar, projeler: nextProjeler });
+        const projeDegisim = new Map(plan.projeler.map((c) => [c.id, c]));
+        const projeler =
+          projeDegisim.size === 0
+            ? state.projeler
+            : state.projeler.map((p) => {
+                const c = projeDegisim.get(p.id);
+                if (!c) return p;
+                return {
+                  ...p,
+                  progress: c.progress,
+                  status: c.status,
+                  ...(c.completedAt !== undefined ? { completedAt: c.completedAt ?? undefined } : {}),
+                };
+              });
+
+        set({ aksiyonlar: plan.nextAksiyonlar, projeler });
         console.log(
-          `[refreshDerivedStatuses] ${changedAksiyonCount} aksiyon, ${changedProjeCount} proje güncellendi`
+          `[refreshDerivedStatuses] ${plan.aksiyonlar.length} aksiyon, ${plan.projeler.length} proje güncellendi`
         );
-        return { aksiyonlar: changedAksiyonCount, projeler: changedProjeCount };
+        return { aksiyonlar: plan.aksiyonlar.length, projeler: plan.projeler.length };
       },
 
       // One-time data consistency fix
