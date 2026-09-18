@@ -675,7 +675,7 @@
     "autoRefreshSchedule": "Every Monday 08:00",
     "manualRefresh": "Manual refresh",
     "manualRefreshDesc": "The same calculation can be run instantly when an interim update is needed",
-    "manualRefreshWhere": "Home → Refresh data",
+    "manualRefreshWhere": "Home",
     "statusAutomationHelp": "Statuses depend on the calendar as well as the progress percentage: even an untouched record can fall behind its expected progress as days pass. The refresh corrects that drift using the thresholds above. It never overrides manual On hold, Cancelled or Achieved decisions.",
     "integrations": "Integrations",
     "supabaseDesc": "Database and real-time data service",

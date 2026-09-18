@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Input, Select, SelectItem, Switch, Button, Popover, PopoverTrigger, PopoverContent, Tabs, Tab } from "@heroui/react";
-import { Plus, Trash2, Pencil, Check, X, Tag, MapPin, Settings, Bell, Plug, Info } from "lucide-react";
+import { Plus, Trash2, Pencil, Check, X, Tag, MapPin, Settings, Bell, Plug, Info, RefreshCw } from "lucide-react";
 import { useUIStore, reloadUISettingsFromDb } from "@/stores/uiStore";
 import { useDataStore } from "@/stores/dataStore";
 import { useSidebarTheme } from "@/hooks/useSidebarTheme";
@@ -176,7 +176,18 @@ export default function AyarlarPage() {
           </span>
         </SettingsRow>
         <SettingsRow label={t("settings.manualRefresh")} description={t("settings.manualRefreshDesc")}>
-          <span className="text-[13px] font-semibold text-tyro-text-secondary">{t("settings.manualRefreshWhere")}</span>
+          {/* Butonun GÖRÜNÜMÜNÜ taklit ediyoruz — kullanıcı anasayfada neye
+              basacağını tarif okumadan tanısın. Etiket, butonun kendi i18n
+              anahtarından (`workspace.refreshData`) geliyor; buton adı
+              değişirse burası kendiliğinden takip eder, metin kopyası yok. */}
+          <span className="flex items-center gap-1.5 text-[12px] text-tyro-text-muted whitespace-nowrap">
+            {t("settings.manualRefreshWhere")}
+            <span aria-hidden>→</span>
+            <span className="inline-flex items-center gap-1.5 rounded-lg border border-tyro-border bg-tyro-surface px-2 py-1 text-[12px] font-medium text-tyro-text-secondary">
+              <RefreshCw size={13} className="shrink-0" />
+              {t("workspace.refreshData")}
+            </span>
+          </span>
         </SettingsRow>
         <p className="text-[10px] text-tyro-text-muted px-5 pb-3">{t("settings.statusAutomationHelp")}</p>
       </SettingsCard>

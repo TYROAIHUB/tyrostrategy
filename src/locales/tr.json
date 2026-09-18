@@ -675,7 +675,7 @@
     "autoRefreshSchedule": "Her pazartesi 08:00",
     "manualRefresh": "Manuel tazeleme",
     "manualRefreshDesc": "Ara güncelleme gerekirse aynı hesap anında çalıştırılabilir",
-    "manualRefreshWhere": "Anasayfa → Verileri yenile",
+    "manualRefreshWhere": "Anasayfa",
     "statusAutomationHelp": "Statüler yalnızca ilerleme yüzdesine değil, takvimdeki konuma da bakar: bir kayıt hiç güncellenmese bile gün geçtikçe beklenen ilerlemenin gerisine düşebilir. Tazeleme bu sapmayı yukarıdaki eşiklere göre düzeltir. El ile verilen Askıda, İptal ve Tamamlandı kararlarına dokunmaz.",
     "integrations": "Entegrasyonlar",
     "supabaseDesc": "Veritabanı ve gerçek zamanlı veri servisi",
