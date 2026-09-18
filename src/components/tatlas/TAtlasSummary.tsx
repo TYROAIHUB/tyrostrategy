@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Crosshair,
@@ -11,6 +11,8 @@ import {
   Hammer,
   PieChart,
   type LucideIcon,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import KPICard from "@/components/dashboard/KPICard";
 import { statusColor } from "@/lib/colorUtils";
@@ -314,6 +316,14 @@ function StatusDistributionPanel({ rows, total }: { rows: BreakdownRow[]; total:
   );
 }
 
+/**
+ * Kırılım panelinde katlanmadan gösterilen satır sayısı.
+ * Kullanıcı isteği: ülke listesi 11 satırla paneli aşırı uzatıyor ve yanındaki
+ * durum paneliyle dengesiz duruyordu. İlk 3 gösterilip gerisi ok ile açılıyor.
+ * Satır sayısı bunun altındaysa (yatırım tipi, varlık sınıfı) ok hiç çıkmıyor.
+ */
+const COLLAPSED_ROW_COUNT = 3;
+
 /* ── Adet / CAPEX kırılımı ── */
 function BreakdownPanel({
   icon,
@@ -339,11 +349,16 @@ function BreakdownPanel({
   locale: string;
 }) {
   const { t } = useTranslation();
+  const [expanded, setExpanded] = useState(false);
   const visible = mode === "capex" ? rows.filter((r) => r.capex > 0) : rows;
+  // `max` DAİMA tüm satırlar üzerinden: böylece açıp kapatınca ilk üç satırın
+  // bar genişlikleri değişmiyor, karşılaştırma sabit kalıyor.
   const max = Math.max(
     1,
     ...visible.map((r) => (mode === "capex" ? r.capex : r.count))
   );
+  const collapsible = visible.length > COLLAPSED_ROW_COUNT;
+  const shown = collapsible && !expanded ? visible.slice(0, COLLAPSED_ROW_COUNT) : visible;
 
   return (
     <Panel icon={icon} color={color} title={title}>
@@ -353,7 +368,7 @@ function BreakdownPanel({
         <p className="py-1.5 text-[11px] text-tyro-text-muted">{t("tatlas.panel.noCapex")}</p>
       ) : (
         <ul className="flex flex-col gap-2">
-          {visible.map((r) => {
+          {shown.map((r) => {
             const val = mode === "capex" ? r.capex : r.count;
             return (
               <li key={r.key} className="flex flex-col gap-1">
@@ -388,6 +403,28 @@ function BreakdownPanel({
               </li>
             );
           })}
+          {collapsible && (
+            <li className="pt-0.5">
+              <button
+                type="button"
+                onClick={() => setExpanded((v) => !v)}
+                className="flex w-full items-center justify-center gap-1 rounded-md py-1 text-[11px] font-semibold text-tyro-text-muted transition-colors hover:bg-tyro-bg hover:text-tyro-text-secondary cursor-pointer"
+                aria-expanded={expanded}
+              >
+                {expanded ? (
+                  <>
+                    {t("common.showLess")}
+                    <ChevronUp size={13} strokeWidth={2.2} />
+                  </>
+                ) : (
+                  <>
+                    {t("tatlas.panel.showAll", { count: visible.length })}
+                    <ChevronDown size={13} strokeWidth={2.2} />
+                  </>
+                )}
+              </button>
+            </li>
+          )}
         </ul>
       )}
     </Panel>

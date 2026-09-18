@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent, within } from "@testing-library/react";
 import TAtlasSummary from "../tatlas/TAtlasSummary";
 import { SHOW_CAPEX_ON_ATLAS } from "@/config/tatlasDisplay";
 import type { AtlasBreakdowns, PortfolioMetrics } from "@/lib/investmentPortfolio";
@@ -96,5 +96,45 @@ describe("TAtlasSummary — CAPEX gizleme", () => {
     expect(grid!.className).toContain(SHOW_CAPEX_ON_ATLAS ? "xl:grid-cols-6" : "xl:grid-cols-5");
     // Kart adedi de kolon sayısıyla uyumlu olmalı
     expect(grid!.children.length).toBe(SHOW_CAPEX_ON_ATLAS ? 6 : 5);
+  });
+});
+
+describe("TAtlasSummary — kırılım paneli katlama", () => {
+  // Kullanıcı isteği: 11 ülkelik liste paneli aşırı uzatıyordu. İlk 3 gösterilip
+  // gerisi ok ile açılıyor.
+  const ULKELER = ["Türkiye", "Irak", "Kazakistan", "Venezuela", "ABD", "Almanya", "Cibuti"];
+  const cokUlke = {
+    ...breakdowns,
+    byCountry: ULKELER.map((key, i) => ({ key, count: 10 - i, capex: 0 })),
+  };
+
+  it("3'ten fazla satırda yalnızca ilk 3'ü gösteriyor", () => {
+    render(<TAtlasSummary metrics={metrics} breakdowns={cokUlke} />);
+    for (const k of ULKELER.slice(0, 3)) expect(screen.queryByText(k), k).not.toBeNull();
+    for (const k of ULKELER.slice(3)) expect(screen.queryByText(k), k).toBeNull();
+  });
+
+  it("düğme toplam sayıyı gösteriyor ve tıklayınca hepsi açılıyor", () => {
+    render(<TAtlasSummary metrics={metrics} breakdowns={cokUlke} />);
+    const dugme = screen.getByRole("button", { name: /tatlas\.panel\.showAll/ });
+    expect(dugme.getAttribute("aria-expanded")).toBe("false");
+
+    fireEvent.click(dugme);
+
+    for (const k of ULKELER) expect(screen.queryByText(k), k).not.toBeNull();
+    expect(screen.getByRole("button", { name: /common\.showLess/ })).toBeTruthy();
+  });
+
+  it("tekrar tıklayınca kapanıyor", () => {
+    render(<TAtlasSummary metrics={metrics} breakdowns={cokUlke} />);
+    fireEvent.click(screen.getByRole("button", { name: /tatlas\.panel\.showAll/ }));
+    fireEvent.click(screen.getByRole("button", { name: /common\.showLess/ }));
+    expect(screen.queryByText("Cibuti")).toBeNull();
+  });
+
+  it("3 veya daha az satırda düğme HİÇ çıkmıyor", () => {
+    // Yatırım tipi (2 satır) ve varlık sınıfı (1 satır) panelleri etkilenmemeli.
+    render(<TAtlasSummary metrics={metrics} breakdowns={breakdowns} />);
+    expect(screen.queryByRole("button", { name: /tatlas\.panel\.showAll/ })).toBeNull();
   });
 });

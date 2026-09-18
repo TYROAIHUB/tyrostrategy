@@ -1221,7 +1221,8 @@
       "capexByCountry": "CAPEX by country",
       "capexByActionType": "CAPEX by investment type",
       "capexByAssetClass": "CAPEX by asset class",
-      "noCapex": "No CAPEX data in this breakdown"
+      "noCapex": "No CAPEX data in this breakdown",
+      "showAll": "Show all ({{count}})"
     },
     "popup": {
       "groupCount": "{{count}} projects at this location",

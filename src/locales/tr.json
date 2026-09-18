@@ -1221,7 +1221,8 @@
       "capexByCountry": "Ülkeye göre CAPEX",
       "capexByActionType": "Yatırım tipine göre CAPEX",
       "capexByAssetClass": "Varlık sınıfına göre CAPEX",
-      "noCapex": "Bu kırılımda CAPEX verisi yok"
+      "noCapex": "Bu kırılımda CAPEX verisi yok",
+      "showAll": "Tümünü göster ({{count}})"
     },
     "popup": {
       "groupCount": "Bu konumda {{count}} proje",
