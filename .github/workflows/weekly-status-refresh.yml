@@ -47,4 +47,20 @@ jobs:
       - run: npm ci --legacy-peer-deps
 
       - name: Statüleri tazele
-        run: npx tsx scripts/refresh-statuses.ts ${{ inputs.dry_run && '' || '--apply' }}
+        # DİKKAT — burada bir tuzak var, ilk koşuda tam buna yakalandık:
+        # GitHub ifadelerinde BOŞ STRING falsy'dir, yani
+        #   ${{ inputs.dry_run && '' || '--apply' }}
+        # kuru çalıştırmada bile '--apply' üretiyor ve bayrak TERS çalışıyordu.
+        # Kabuk koşulu bu tuzağı tamamen ortadan kaldırıyor.
+        # Zamanlanmış (schedule) koşuda `inputs` tanımsızdır → DRY_RUN boş →
+        # `--apply` ile çalışır, istediğimiz de bu.
+        env:
+          DRY_RUN: ${{ inputs.dry_run }}
+        run: |
+          if [ "$DRY_RUN" = "true" ]; then
+            echo "🔍 Kuru çalıştırma — veritabanına hiçbir şey yazılmayacak"
+            npx tsx scripts/refresh-statuses.ts
+          else
+            echo "⚠ Uygulama modu — değişiklikler yazılacak"
+            npx tsx scripts/refresh-statuses.ts --apply
+          fi

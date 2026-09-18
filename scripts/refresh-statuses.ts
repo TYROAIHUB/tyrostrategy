@@ -41,7 +41,13 @@ const DEFAULT_THRESHOLDS: StatusThresholds = { behindThreshold: 15, atRiskThresh
 async function api<T>(q: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${URL}/${q}`, { headers: H, ...init });
   if (!res.ok) throw new Error(`${init?.method ?? "GET"} ${q} → ${res.status} ${(await res.text()).slice(0, 250)}`);
-  return res.json() as Promise<T>;
+  // PostgREST, `Prefer: return=representation` gönderilmediğinde 204 döner —
+  // gövde BOŞTUR ve `res.json()` "Unexpected end of JSON input" ile patlar.
+  // PATCH'lerde yanıt gövdesine ihtiyacımız yok; ilk CI koşusu tam burada
+  // çöktü ve iş yarıda kaldı.
+  if (res.status === 204) return undefined as T;
+  const text = await res.text();
+  return (text ? JSON.parse(text) : undefined) as T;
 }
 
 async function all<T>(table: string, select: string): Promise<T[]> {
