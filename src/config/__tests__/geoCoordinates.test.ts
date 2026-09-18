@@ -92,3 +92,50 @@ describe("dictionary sanity", () => {
     }
   });
 });
+
+describe("Investment Map yüklemesinin lokasyonları (2026-09-18)", () => {
+  // Kullanıcının Excel'indeki 19 benzersiz lokasyon. Yükleme öncesi 5'i HİÇ
+  // çözülmüyordu (proje haritada görünmüyordu), 6'sı ülke merkezine düşüyordu.
+  // Bu test o gerilemeyi kilitliyor: hepsi çözülmeli ve biri hariç hepsi
+  // ülke merkezinden FARKLI bir noktaya oturmalı.
+  const LOKASYONLAR: [string, string][] = [
+    ["Venezuela", "Karakas"], ["Türkiye", "Çorum"], ["Kazakistan", "Astana"],
+    ["Umman", "Sohar"], ["Venezuela", "Zulia"], ["Irak", "Basra"],
+    ["Irak", "Umm Qasr"], ["Irak", "Baghdad"], ["Cibuti", "Tadjourah"],
+    ["Türkiye", "İzmir"], ["Almanya", "Premnitz"], ["Suriye", "Tartus"],
+    ["ABD", "New Orleans"], ["Kazakistan", "Petropavlovsk"], ["Türkiye", "Mersin"],
+    ["ABD", "Kaliforniya"], ["Gana", "Tema"], ["Sudan", "Port Sudan"],
+  ];
+
+  it("hepsi bir koordinata çözülüyor — haritada görünmeyen proje kalmıyor", () => {
+    for (const [country, city] of LOKASYONLAR) {
+      expect(resolveCoordinates(country, city), `${country}/${city}`).not.toBeNull();
+    }
+  });
+
+  it("hepsi ülke merkezinden farklı, gerçek şehir noktasına oturuyor", () => {
+    for (const [country, city] of LOKASYONLAR) {
+      const sehir = resolveCoordinates(country, city)!;
+      const ulke = resolveCoordinates(country, "");
+      expect(
+        !ulke || sehir.lat !== ulke.lat || sehir.lon !== ulke.lon,
+        `${country}/${city} ülke merkezine düşüyor`,
+      ).toBe(true);
+    }
+  });
+
+  it("REGRESYON: sözlükte hiç olmayan 5 ülke artık tanınıyor", () => {
+    // Umman, Cibuti, Suriye, Gana, Sudan öncesinde ne şehir ne ülke olarak vardı.
+    for (const country of ["Umman", "Cibuti", "Suriye", "Gana", "Sudan"]) {
+      expect(resolveCoordinates(country, ""), country).not.toBeNull();
+    }
+  });
+
+  it("eyalet adları makul noktalara bağlandı", () => {
+    // Zulia → Maracaibo (eyalet başkenti), Kaliforniya → eyaletin coğrafi merkezi.
+    const zulia = resolveCoordinates("Venezuela", "Zulia")!;
+    expect(zulia.lon).toBeLessThan(-70); // Maracaibo, Karakas'ın çok batısında
+    const ca = resolveCoordinates("ABD", "Kaliforniya")!;
+    expect(ca.lon).toBeLessThan(-110); // Batı kıyısı, Washington DC değil
+  });
+});

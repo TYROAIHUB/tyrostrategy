@@ -135,6 +135,23 @@ const CITY_RECORDS: CityRecord[] = [
   { country: "Pakistan", city: "Karaçi", lat: 24.8607, lon: 67.0011, aliases: ["karaci", "karachi"] },
   { country: "Arjantin", city: "Rosario", lat: -32.9587, lon: -60.6930 },
   { country: "Brezilya", city: "Santos", lat: -23.9608, lon: -46.3336 },
+  // ── Investment Map yüklemesi (kullanıcı Excel'i, 2026-09-18) ──
+  // Bu 10 nokta o listedeki lokasyonların haritada DOĞRU yere oturması için
+  // eklendi. Öncesinde 5'i hiç çözülmüyordu (proje haritada görünmüyordu),
+  // 5'i ise ülke merkezine düşüyordu.
+  { country: "Umman", city: "Sohar", lat: 24.3467, lon: 56.7300, aliases: ["sohar", "suhar"] },
+  { country: "Cibuti", city: "Tadjourah", lat: 11.7869, lon: 42.8822, aliases: ["tadjourah", "tacura"] },
+  { country: "Suriye", city: "Tartus", lat: 34.8890, lon: 35.8866, aliases: ["tartus", "tartous"] },
+  { country: "Gana", city: "Tema", lat: 5.6698, lon: -0.0166, aliases: ["tema"] },
+  { country: "Sudan", city: "Port Sudan", lat: 19.6158, lon: 37.2164, aliases: ["portsudan", "port sudan", "bursudan"] },
+  { country: "Venezuela", city: "Karakas", lat: 10.4806, lon: -66.9036, aliases: ["karakas", "caracas"] },
+  // Zulia bir eyalet; başkenti Maracaibo'nun koordinatı kullanıldı.
+  { country: "Venezuela", city: "Zulia", lat: 10.6427, lon: -71.6125, aliases: ["zulia", "maracaibo"] },
+  { country: "Almanya", city: "Premnitz", lat: 52.5333, lon: 12.3667, aliases: ["premnitz"] },
+  { country: "Kazakistan", city: "Petropavlovsk", lat: 54.8833, lon: 69.1667, aliases: ["petropavlovsk", "petropavl"] },
+  // Kaliforniya bir eyalet; eyaletin coğrafi merkezi (Central Valley) alındı —
+  // listedeki proje bir antep fıstığı tesisi, bölge olarak da oraya denk geliyor.
+  { country: "ABD", city: "Kaliforniya", lat: 36.7783, lon: -119.4179, aliases: ["kaliforniya", "california"] },
 ];
 
 // ── Ülkeler (kaba fallback) ─────────────────────────────────────────────
@@ -183,6 +200,12 @@ const COUNTRY_RECORDS: CountryRecord[] = [
   { name: "İngiltere", lat: 51.51, lon: -0.13, aliases: ["uk", "united kingdom", "gbr", "gb", "ingiltere"] },
   { name: "Polonya", lat: 52.23, lon: 21.01, aliases: ["poland", "pol", "pl"] },
   { name: "İran", lat: 35.69, lon: 51.39, aliases: ["iran", "irn", "ir"] },
+  // ── Investment Map yüklemesi (2026-09-18) — sözlükte hiç yoktu ──
+  { name: "Umman", lat: 23.5859, lon: 58.4059, aliases: ["oman", "omn", "om", "umman"] },
+  { name: "Cibuti", lat: 11.5721, lon: 43.1456, aliases: ["djibouti", "dji", "dj", "cibuti"] },
+  { name: "Suriye", lat: 33.5138, lon: 36.2765, aliases: ["syria", "syr", "sy", "suriye"] },
+  { name: "Gana", lat: 5.6037, lon: -0.1870, aliases: ["ghana", "gha", "gh", "gana"] },
+  { name: "Sudan", lat: 15.5007, lon: 32.5599, aliases: ["sudan", "sdn", "sd"] },
 ];
 
 // ── Lookup tabloları (modül yüklenirken bir kez kurulur) ────────────────
