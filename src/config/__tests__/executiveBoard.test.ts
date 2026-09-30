@@ -19,9 +19,11 @@ describe("executiveLabel — matris satır etiketi", () => {
   });
 });
 
-describe("executiveTooltip — kısaltma gösterilince bağlam kaybolmasın", () => {
-  it("tam ad ve uzun ünvanı birlikte veriyor", () => {
-    expect(executiveTooltip("Bahadır Açık")).toBe("Bahadır Açık — Başkan Yardımcısı / Operasyon");
+describe("executiveTooltip — kişi adı GÖSTERİLMEZ", () => {
+  it("kısa ünvanı olan üyede adı değil, uzun ünvanı veriyor", () => {
+    // Kullanıcı isteği: "Bahadır açık yazmasın orada üzerine gelince de".
+    expect(executiveTooltip("Bahadır Açık")).toBe("Başkan Yardımcısı / Operasyon");
+    expect(executiveTooltip("Bahadır Açık")).not.toContain("Bahadır");
   });
 
   it("listede olmayan ad olduğu gibi dönüyor", () => {

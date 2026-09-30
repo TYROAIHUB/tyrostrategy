@@ -265,6 +265,11 @@ export default function BreakdownMatrixCard({ projeler }: Props) {
             )}
             {(expanded ? matrix : matrix.slice(0, INITIAL_ROWS)).flatMap(({ key, counts, total, rawValues }) => {
               const isExecRow = dim === "exec";
+              // Satırda ve TÜM tooltip'lerde gösterilecek etiket. Üst yönetim
+              // boyutunda kişi adı yerine kısa ünvan geçiyor; diğer boyutlarda
+              // anahtar zaten departman/lider/iş kolu adı, olduğu gibi kalıyor.
+              // Adın hücre tooltip'lerinden sızmaması için tek yerden türetiliyor.
+              const rowLabel = isExecRow ? executiveLabel(key) : key;
               const isOpen = isExecRow && expandedExecs.has(key);
               const subRows = isOpen ? subRowsByExec.get(key) ?? [] : [];
               return [
@@ -284,7 +289,7 @@ export default function BreakdownMatrixCard({ projeler }: Props) {
                         )}
                         {/* Kısa ünvan varsa onu göster (CEO, COO…), yoksa adı.
                             Eşleştirme anahtarı `key` (= ad) olarak kalıyor. */}
-                        <span className="truncate">{executiveLabel(key)}</span>
+                        <span className="truncate">{rowLabel}</span>
                       </button>
                     ) : (
                       <span>{key}</span>
@@ -299,7 +304,7 @@ export default function BreakdownMatrixCard({ projeler }: Props) {
                         key={s}
                         className="px-1 py-1 cursor-pointer"
                         onClick={() => navigateToCell(rawValues, s)}
-                        title={`${key} × ${getStatusLabel(s, t)} → ${n} ${t("dashboard.project").toLowerCase()}`}
+                        title={`${rowLabel} × ${getStatusLabel(s, t)} → ${n} ${t("dashboard.project").toLowerCase()}`}
                       >
                         <div
                           className="h-10 flex items-center justify-center rounded-lg tabular-nums text-[13px] font-bold transition-all hover:brightness-95 hover:scale-[1.03]"
@@ -325,7 +330,7 @@ export default function BreakdownMatrixCard({ projeler }: Props) {
                   <td
                     className="px-1 py-1 border-l-2 border-tyro-border/60 cursor-pointer"
                     onClick={() => navigateToCell(rawValues, null)}
-                    title={`${key} → ${total} ${t("dashboard.project").toLowerCase()}`}
+                    title={`${rowLabel} → ${total} ${t("dashboard.project").toLowerCase()}`}
                   >
                     <div
                       className="h-10 flex items-center justify-center rounded-lg tabular-nums text-[13px] font-bold transition-all hover:brightness-95 hover:scale-[1.03]"
@@ -359,7 +364,7 @@ export default function BreakdownMatrixCard({ projeler }: Props) {
                           key={s}
                           className="px-1 py-0.5 cursor-pointer"
                           onClick={() => navigateToSubCell(sr.rawOwners, sr.rawDepts, s)}
-                          title={`${key} → ${sr.key} × ${getStatusLabel(s, t)} → ${n} ${t("dashboard.project").toLowerCase()}`}
+                          title={`${rowLabel} → ${sr.key} × ${getStatusLabel(s, t)} → ${n} ${t("dashboard.project").toLowerCase()}`}
                         >
                           <div
                             className="h-8 flex items-center justify-center rounded-md tabular-nums text-[12px] font-semibold transition-all hover:brightness-95"
@@ -385,7 +390,7 @@ export default function BreakdownMatrixCard({ projeler }: Props) {
                     <td
                       className="px-1 py-0.5 border-l-2 border-tyro-border/60 cursor-pointer"
                       onClick={() => navigateToSubCell(sr.rawOwners, sr.rawDepts, null)}
-                      title={`${key} → ${sr.key} → ${sr.total} ${t("dashboard.project").toLowerCase()}`}
+                      title={`${rowLabel} → ${sr.key} → ${sr.total} ${t("dashboard.project").toLowerCase()}`}
                     >
                       <div
                         className="h-8 flex items-center justify-center rounded-md tabular-nums text-[12px] font-semibold transition-all hover:brightness-95"

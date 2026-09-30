@@ -160,9 +160,14 @@ export function executiveLabel(name: string): string {
   return EXECUTIVE_BOARD.find((e) => e.name === name)?.shortTitle ?? name;
 }
 
-/** Tooltip metni: tam ad + varsa uzun ünvan. Kısaltma gösterilince bağlam kaybolmasın. */
+/**
+ * Tooltip metni. Kişinin ADI BİLEREK GÖSTERİLMEZ (kullanıcı isteği
+ * 2026-09-30: "Bahadır açık yazmasın orada üzerine gelince de").
+ * Uzun ünvan varsa o, yoksa kısa ünvan. İkisi de yoksa geriye ad kalıyor —
+ * ama o durumda satır zaten adı gösteriyor, yeni bir bilgi açığa çıkmıyor.
+ */
 export function executiveTooltip(name: string): string {
   const exec = EXECUTIVE_BOARD.find((e) => e.name === name);
   if (!exec) return name;
-  return exec.title ? `${exec.name} — ${exec.title}` : exec.name;
+  return exec.title ?? exec.shortTitle ?? exec.name;
 }
