@@ -23,8 +23,18 @@ export interface ExecutiveMember {
   name: string;
   /** Canonical email — gelecek migration için işaret */
   email: string;
-  /** Tooltip için opsiyonel ünvan */
+  /** Tooltip için opsiyonel ünvan — uzun tanım ("Başkan Yardımcısı / Operasyon") */
   title?: string;
+  /**
+   * Matris satırında ADIN YERİNE gösterilecek kısa ünvan ("CEO", "COO").
+   *
+   * Kullanıcı isteği 2026-09-30: Proje Dağılım Matrisi'nin Üst Yönetim
+   * sekmesinde kişi adı yerine ünvan görünsün. `title` uzun tanımlar tuttuğu
+   * ve tooltip'te kullanıldığı için ayrı bir alan açıldı; ikisi bir arada
+   * yaşıyor. Boş bırakılan üyede satır yine ADI gösterir, yani liste eksik
+   * kısaltmayla bozulmaz.
+   */
+  shortTitle?: string;
   /** Bu üyeye bağlı proje liderlerinin display_name listesi */
   subordinates: string[];
 }
@@ -34,12 +44,14 @@ export const EXECUTIVE_BOARD: ExecutiveMember[] = [
     name: "Süleyman Tiryakioğlu",
     email: "suleyman.t@tiryaki.com.tr",
     title: "CEO",
+    shortTitle: "CEO",
     subordinates: ["Süleyman Tiryakioğlu"],
   },
   {
     name: "Bahadır Açık",
     email: "bahadir.acik@tiryaki.com.tr",
     title: "Başkan Yardımcısı / Operasyon",
+    shortTitle: "COO",
     subordinates: [
       "Arzu Miray Çelen",
       "Bahadır Açık",
@@ -136,4 +148,21 @@ export function findExecutiveByOwner(ownerName: string | undefined | null): Exec
     if (exec.subordinates.includes(trimmed)) return exec;
   }
   return null;
+}
+
+/**
+ * Matris satırında gösterilecek etiket: kısa ünvan varsa o, yoksa adın kendisi.
+ *
+ * Eşleştirme anahtarı DAİMA `name` olarak kalıyor (satır açma/kapama ve
+ * proje.owner karşılaştırması ona bağlı); değişen yalnızca GÖSTERİM.
+ */
+export function executiveLabel(name: string): string {
+  return EXECUTIVE_BOARD.find((e) => e.name === name)?.shortTitle ?? name;
+}
+
+/** Tooltip metni: tam ad + varsa uzun ünvan. Kısaltma gösterilince bağlam kaybolmasın. */
+export function executiveTooltip(name: string): string {
+  const exec = EXECUTIVE_BOARD.find((e) => e.name === name);
+  if (!exec) return name;
+  return exec.title ? `${exec.name} — ${exec.title}` : exec.name;
 }

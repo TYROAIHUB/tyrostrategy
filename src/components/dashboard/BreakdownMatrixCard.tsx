@@ -7,7 +7,7 @@ import { useSidebarTheme } from "@/hooks/useSidebarTheme";
 import { STATUS_HEX, STATUS_HEX_DARK, STATUS_ORDER } from "@/lib/statusColors";
 import { getStatusLabel } from "@/lib/constants";
 import { deptLabel } from "@/config/departments";
-import { EXECUTIVE_BOARD, findExecutiveByOwner } from "@/config/executiveBoard";
+import { EXECUTIVE_BOARD, findExecutiveByOwner, executiveLabel, executiveTooltip } from "@/config/executiveBoard";
 import type { Proje, EntityStatus } from "@/types";
 
 type Dim = "exec" | "dept" | "leader" | "source";
@@ -275,14 +275,16 @@ export default function BreakdownMatrixCard({ projeler }: Props) {
                         type="button"
                         onClick={() => toggleExecExpand(key)}
                         className="flex items-center gap-1.5 w-full text-left hover:text-tyro-navy transition-colors cursor-pointer"
-                        title={isOpen ? t("common.showLess") : t("dashboard.expandDeptBreakdown")}
+                        title={`${executiveTooltip(key)} · ${isOpen ? t("common.showLess") : t("dashboard.expandDeptBreakdown")}`}
                       >
                         {isOpen ? (
                           <ChevronDown size={13} className="shrink-0 text-tyro-text-muted" />
                         ) : (
                           <ChevronRight size={13} className="shrink-0 text-tyro-text-muted" />
                         )}
-                        <span className="truncate">{key}</span>
+                        {/* Kısa ünvan varsa onu göster (CEO, COO…), yoksa adı.
+                            Eşleştirme anahtarı `key` (= ad) olarak kalıyor. */}
+                        <span className="truncate">{executiveLabel(key)}</span>
                       </button>
                     ) : (
                       <span>{key}</span>
