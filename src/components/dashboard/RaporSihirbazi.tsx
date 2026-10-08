@@ -29,6 +29,7 @@ import type { Proje, Aksiyon, EntityStatus, Source } from "@/types";
 import { deptLabel } from "@/config/departments";
 import { STATUS_ICON } from "@/config/statusIcons";
 import { isOwnReportTemplate } from "@/lib/templateOwnership";
+import { resolveShowReviewDate } from "@/lib/reportTemplateConfig";
 
 // ===== Status helpers =====
 // Kokpit ekranıyla (MasterDetailView) BİREBİR aynı renkler — kullanıcı
@@ -166,6 +167,9 @@ export default function RaporSihirbazi() {
      *  başkasına ait olanları işaretlemekte kullanılıyor. Yerel (Supabase
      *  dışı) şablonlarda bulunmayabilir, o yüzden opsiyonel. */
     ownerEmail?: string;
+    /** Kontrol tarihi sütunu raporda görünsün mü? Eski şablonlarda yok →
+     *  yükleyenler `?? true` ile varsayılana düşer. */
+    showReviewDate?: boolean;
   }
 
   // Current user email — needed for owner_email in Supabase
@@ -238,6 +242,18 @@ export default function RaporSihirbazi() {
   const [dateTo, setDateTo] = useState("");
   const [exportOpen, setExportOpen] = useState(false);
   const [hideActionsInExport, setHideActionsInExport] = useState(false);
+  /**
+   * Proje kartında "Kontrol tarihi" satırı görünsün mü?
+   *
+   * Kullanıcı isteği 2026-10-08: rapordaki projelerin son kontrol tarihi
+   * görünmeli ama gizlenebilmeli. Varsayılan AÇIK — istek "gözükmeli,
+   * ancak gizlenebilir durumda olmalı" şeklindeydi.
+   *
+   * REPORT_SECTIONS'a bilinçli olarak EKLENMEDİ: orası numaralandırılan
+   * rapor bölümlerinin listesi ve numOf() görünür bölüm sırasını oradan
+   * türetiyor; araya bir alan anahtarı koymak bölüm numaralarını kaydırırdı.
+   */
+  const [showReviewDate, setShowReviewDate] = useState(true);
 
   // ===== Anlık Yönetici İçgörüleri Düzenleme =====
   // Kullanıcı (geri bildirim 2026-05-08) AI'ın ürettiği "Yapay Zeka
@@ -270,6 +286,7 @@ export default function RaporSihirbazi() {
         ? null
         : new Set(tmpl.selectedProjeIds)
     );
+    setShowReviewDate(resolveShowReviewDate(tmpl.showReviewDate));
     setActiveTemplateId(tmpl.id);
   };
 
@@ -281,6 +298,7 @@ export default function RaporSihirbazi() {
     deptFilter,
     selectedProjeIds: selectedProjeIds === null ? null : Array.from(selectedProjeIds),
     sections,
+    showReviewDate,
     datePreset,
     dateFrom,
     dateTo,
@@ -963,9 +981,9 @@ ${clone.outerHTML}
     const ws2 = wb.addWorksheet(t("dashboard.projectsSheet"));
     // Proje açıklaması raporda gösterilmiyor — kullanıcı isteği (2026-05-03):
     // proje adı yeterli, açıklama tüm çıktılardan çıkarıldı.
-    ws2.addRow([t("dashboard.projectName"), t("dashboard.leaderCol"), t("dashboard.departmentCol"), t("dashboard.sourceCol"), t("dashboard.statusLabel"), t("dashboard.progressPercent"), t("dashboard.startDateCol"), t("dashboard.endDateCol")]);
+    ws2.addRow([t("dashboard.projectName"), t("dashboard.leaderCol"), t("dashboard.departmentCol"), t("dashboard.sourceCol"), t("dashboard.statusLabel"), t("dashboard.progressPercent"), t("dashboard.startDateCol"), t("dashboard.endDateCol"), ...(showReviewDate ? [t("kokpit.reviewDateShort")] : [])]);
     reportProjeler.forEach((h) => {
-      ws2.addRow([h.name, h.owner, deptLabel(h.department, t), h.source, STATUS_TR[h.status], calcProjeProgress(h, aksiyonlar), h.startDate, h.endDate]);
+      ws2.addRow([h.name, h.owner, deptLabel(h.department, t), h.source, STATUS_TR[h.status], calcProjeProgress(h, aksiyonlar), h.startDate, h.endDate, ...(showReviewDate ? [h.reviewDate ?? ""] : [])]);
     });
     // Sheet 3: Actions
     const ws3 = wb.addWorksheet(t("dashboard.actionsSheet"));
@@ -1002,6 +1020,9 @@ ${clone.outerHTML}
       const p = calcProjeProgress(h, aksiyonlar);
       children.push(new Paragraph({ text: h.name, heading: HeadingLevel.HEADING_2 }));
       children.push(new Paragraph({ children: [new TextRun({ text: `${t("dashboard.leaderCol")}: ${h.owner} · ${h.source} · ${deptLabel(h.department, t)} · %${p} · ${STATUS_TR[h.status]}` })] }));
+      if (showReviewDate) {
+        children.push(new Paragraph({ children: [new TextRun({ text: `${t("kokpit.reviewDateShort")}: ${h.reviewDate ? new Date(h.reviewDate).toLocaleDateString(dateLocale) : "—"}` })] }));
+      }
       children.push(new Paragraph({ text: "" }));
     });
     const doc = new Document({ sections: [{ children }] });
@@ -1263,11 +1284,25 @@ ${clone.outerHTML}
                       className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-tyro-border/20 hover:bg-tyro-bg/50 cursor-pointer transition-colors"
                     >
                       {sections[s.id] ? <Eye size={12} className="text-tyro-gold shrink-0" /> : <EyeOff size={12} className="text-tyro-text-muted shrink-0" />}
-                      <span className={`text-[10px] ${sections[s.id] ? "text-tyro-text-primary font-medium" : "text-tyro-text-muted"}`}>
+                      <span className={`text-[11px] ${sections[s.id] ? "text-tyro-text-primary font-medium" : "text-tyro-text-muted"}`}>
                         {s.label}
                       </span>
                     </button>
                   ))}
+                  {/* Kontrol tarihi bir BÖLÜM değil, proje kartındaki bir alan —
+                      ama kullanıcı için davranışı diğer göz düğmeleriyle aynı
+                      olduğundan aynı ızgarada duruyor. REPORT_SECTIONS'a
+                      eklenmemesinin nedeni için showReviewDate'e bakın. */}
+                  <button
+                    onClick={() => setShowReviewDate((v) => !v)}
+                    aria-pressed={showReviewDate}
+                    className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-tyro-border/20 hover:bg-tyro-bg/50 cursor-pointer transition-colors"
+                  >
+                    {showReviewDate ? <Eye size={12} className="text-tyro-gold shrink-0" /> : <EyeOff size={12} className="text-tyro-text-muted shrink-0" />}
+                    <span className={`text-[11px] ${showReviewDate ? "text-tyro-text-primary font-medium" : "text-tyro-text-muted"}`}>
+                      {t("kokpit.reviewDateShort")}
+                    </span>
+                  </button>
                 </div>
               </div>
             </div>
@@ -1821,6 +1856,14 @@ ${clone.outerHTML}
                           <p className="text-[12px] text-tyro-text-secondary mt-1.5">
                             {new Date(h.startDate).toLocaleDateString(dateLocale)} → {new Date(h.endDate).toLocaleDateString(dateLocale)}
                           </p>
+                          {showReviewDate && (
+                            <p className="text-[12px] text-tyro-text-muted mt-1">
+                              {t("kokpit.reviewDateShort")}:{" "}
+                              <span className="font-semibold text-tyro-text-primary">
+                                {h.reviewDate ? new Date(h.reviewDate).toLocaleDateString(dateLocale) : "—"}
+                              </span>
+                            </p>
+                          )}
                         </div>
                         <div className="flex items-center gap-2 shrink-0">
                           <span className="text-[20px] font-extrabold tabular-nums" style={{ color: STATUS_COLOR[h.status] }}>{p}%</span>

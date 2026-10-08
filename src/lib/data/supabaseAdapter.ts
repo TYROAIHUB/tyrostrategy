@@ -4,6 +4,7 @@
  */
 import { supabase } from "@/lib/supabase";
 import { sameEmail } from "@/lib/templateOwnership";
+import { resolveShowReviewDate } from "@/lib/reportTemplateConfig";
 import type { DataService } from "./dataService";
 import type { Proje, ProjeUpdate, Aksiyon, AksiyonUpdate, TagDefinition, LocationDefinition, EntityStatus, Source, AppUser, AppSetting, UserRole } from "@/types";
 
@@ -276,6 +277,8 @@ export interface AppReportTemplate {
   /** null = tüm projeler seçili (varsayılan); string[] = belirli proje ID'leri */
   selectedProjeIds: string[] | null;
   sections: Record<string, boolean>;
+  /** Proje kartında "Kontrol tarihi" satırı görünsün mü (varsayılan: evet). */
+  showReviewDate: boolean;
   datePreset: string;
   dateFrom: string;
   dateTo: string;
@@ -301,6 +304,9 @@ function dbToTemplate(row: DbReportTemplate): AppReportTemplate {
     deptFilter: (c.deptFilter as string) ?? "all",
     selectedProjeIds,
     sections: (c.sections as Record<string, boolean>) ?? {},
+    // Eski şablonlarda alan yok → varsayılan AÇIK (kullanıcı isteği: görünsün,
+    // isteyen gizlesin). Yalnızca açıkça false kaydedilmişse gizlenir.
+    showReviewDate: resolveShowReviewDate(c.showReviewDate),
     datePreset: (c.datePreset as string) ?? "all",
     dateFrom: (c.dateFrom as string) ?? "",
     dateTo: (c.dateTo as string) ?? "",
