@@ -112,6 +112,14 @@
     "actionType": "Yatırım tipi",
     "close": "Kapat"
   },
+  "update": {
+    "title": "Yeni sürüm hazır",
+    "description": "Son geliştirmeleri görmek için sayfayı yenileyin",
+    "action": "Yenile",
+    "dismiss": "Kapat",
+    "staleTitle": "Uygulama güncellendi",
+    "staleDescription": "Bu sekme eski bir sürümü çalıştırıyordu. Devam etmek için sayfayı yenilemeniz yeterli."
+  },
   "roles": {
     "admin": "Admin",
     "projectLeader": "Proje Lideri",

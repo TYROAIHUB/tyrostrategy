@@ -112,6 +112,14 @@
     "actionType": "Investment type",
     "close": "Close"
   },
+  "update": {
+    "title": "A new version is ready",
+    "description": "Refresh the page to get the latest improvements",
+    "action": "Refresh",
+    "dismiss": "Dismiss",
+    "staleTitle": "The app has been updated",
+    "staleDescription": "This tab was running an older version. Just refresh the page to continue."
+  },
   "roles": {
     "admin": "Admin",
     "projectLeader": "Project Leader",

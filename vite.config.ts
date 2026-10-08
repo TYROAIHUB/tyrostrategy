@@ -18,6 +18,31 @@ const BUILD_HASH = (() => {
   }
 })();
 
+/**
+ * `version.json` — build çıktısına yazılan sürüm parmak izi.
+ *
+ * Çalışan sekme bunu etkileşim anlarında (sayfa geçişi, sekmeye dönüş)
+ * `cache: "no-store"` ile yoklayıp kendi `__BUILD_HASH__` değeriyle
+ * karşılaştırıyor; farklıysa "yeni sürüm hazır" şeridi çıkıyor.
+ *
+ * Neden ayrı bir dosya: index.html'i ayrıştırmak kırılgan olurdu (chunk adları
+ * değişebilir), service worker ise yalnızca önbellek kovasını yönetiyor ve
+ * açık sekmeye haber vermiyor.
+ */
+function emitVersionJson() {
+  return {
+    name: "tyro-emit-version",
+    apply: "build" as const,
+    generateBundle(this: { emitFile: (f: { type: "asset"; fileName: string; source: string }) => void }) {
+      this.emitFile({
+        type: "asset",
+        fileName: "version.json",
+        source: JSON.stringify({ hash: BUILD_HASH, builtAt: new Date().toISOString() }),
+      });
+    },
+  };
+}
+
 const chunkMap: Record<string, string[]> = {
   "chunk-react": ["react", "react-dom", "react-router-dom", "react-is"],
   "chunk-ui": ["@heroui/react", "framer-motion", "lucide-react"],
@@ -33,7 +58,7 @@ const chunkMap: Record<string, string[]> = {
 
 export default defineConfig(({ mode }) => ({
   base: mode === "production" ? "./" : "/",
-  plugins: [react(), tailwindcss()],
+  plugins: [react(), tailwindcss(), emitVersionJson()],
   define: {
     __BUILD_HASH__: JSON.stringify(BUILD_HASH),
   },

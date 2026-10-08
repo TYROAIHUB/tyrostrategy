@@ -1,5 +1,5 @@
 import { Component, type ReactNode } from "react";
-import { AlertTriangle, RefreshCw } from "lucide-react";
+import { AlertTriangle, RefreshCw, Sparkles } from "lucide-react";
 import i18n from "@/lib/i18n";
 
 interface Props {
@@ -10,6 +10,29 @@ interface Props {
 interface State {
   hasError: boolean;
   error: Error | null;
+}
+
+/**
+ * Yeni deploy sonrası eski sekmenin tembel chunk'ı yükleyememesi.
+ *
+ * Uygulama sayfaları `lazy()` ile yükleniyor ve her deploy'da dosya adları
+ * değişiyor. Açık kalan bir sekme yeni bir sayfaya geçmek istediğinde artık
+ * var olmayan bir dosyayı ister ve import REDDEDİLİR. Bu bir uygulama hatası
+ * değil, sadece sekmenin bayatlamış olmasıdır — kullanıcıya kırmızı bir hata
+ * ekranı yerine "güncellendi, yenileyin" demek doğrusu.
+ *
+ * Tarayıcılar bu durumu farklı metinlerle bildiriyor, o yüzden kalıp listesi.
+ */
+function isStaleChunkError(error: Error | null): boolean {
+  if (!error) return false;
+  const text = `${error.name} ${error.message}`.toLowerCase();
+  return (
+    text.includes("dynamically imported module") ||
+    text.includes("importing a module script failed") ||
+    text.includes("chunkloaderror") ||
+    text.includes("failed to fetch dynamically") ||
+    text.includes("error loading dynamically imported module")
+  );
 }
 
 export default class ErrorBoundary extends Component<Props, State> {
@@ -30,6 +53,31 @@ export default class ErrorBoundary extends Component<Props, State> {
   render() {
     if (this.state.hasError) {
       if (this.props.fallback) return this.props.fallback;
+
+      // Bayat sekme — hata değil, güncelleme. Sakin ve yönlendirici bir ekran.
+      if (isStaleChunkError(this.state.error)) {
+        return (
+          <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 p-8 text-center">
+            <div className="w-14 h-14 rounded-2xl bg-tyro-gold/12 flex items-center justify-center text-tyro-gold">
+              <Sparkles size={26} strokeWidth={2.2} />
+            </div>
+            <h2 className="text-lg font-bold text-tyro-text-primary">
+              {i18n.t("update.staleTitle")}
+            </h2>
+            <p className="text-sm text-tyro-text-muted max-w-md">
+              {i18n.t("update.staleDescription")}
+            </p>
+            <button
+              type="button"
+              onClick={() => window.location.reload()}
+              className="mt-2 flex items-center gap-2 px-4 py-2 rounded-lg bg-tyro-navy text-white text-sm font-semibold hover:opacity-90 transition-opacity cursor-pointer"
+            >
+              <RefreshCw size={14} />
+              {i18n.t("update.action")}
+            </button>
+          </div>
+        );
+      }
 
       return (
         <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 p-8 text-center">

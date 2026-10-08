@@ -6,6 +6,7 @@ import type { RolePermissions } from "@/types";
 import { getFirstAccessiblePath } from "@/lib/navOrder";
 import ErrorBoundary from "@/components/shared/ErrorBoundary";
 import OfflineBanner from "@/components/shared/OfflineBanner";
+import UpdateBanner from "@/components/shared/UpdateBanner";
 
 // Lazy load pages
 const LoginPage = lazy(() => import("@/pages/LoginPage"));
@@ -69,6 +70,9 @@ export default function App() {
     <ErrorBoundary>
     <OfflineBanner />
     <HashRouter>
+      {/* Router'ın İÇİNDE olmalı: güncelleme kontrolü sayfa geçişlerinde
+          tetikleniyor ve bunun için useLocation'a ihtiyaç duyuyor. */}
+      <UpdateBanner />
       <Suspense fallback={<Loading />}>
         <Routes>
           <Route path="/login" element={<LoginPage />} />
