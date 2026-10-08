@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-TYRO Strategy — enterprise strategic project + action management SaaS for Tiryaki Agro. React 19 + TypeScript + Vite + Supabase + MSAL (Azure AD). Production at `https://tyrostrategy.ttech.business/`. Two GitHub remotes: `origin` (tyrostrategy/tyrostrategy.github.io) + `tyroai` (TYROAIHUB/tyrostrategy) — both deploy to GitHub Pages, push to both on every change.
+TYRO Strategy — enterprise strategic project + action management SaaS for Tiryaki Agro. React 19 + TypeScript + Vite + Supabase + MSAL (Azure AD). Production at `https://tyrostrategy.ttech.business/`. Single GitHub remote: `origin` → **TYROAIHUB/tyrostrategy**, which deploys to GitHub Pages. All work ships here and nowhere else.
 
 ## Detailed rule files
 
@@ -93,12 +93,13 @@ Pure UI / i18n / styling commits are skipped — no wasted egress. Smoke fail ab
 
 ## Push workflow
 
-Two remotes need to be pushed for every change:
+One remote, one target — **TYROAIHUB/tyrostrategy**:
 
 ```bash
 git push origin main
-git push tyroai main
 ```
+
+The old second remote (`tyroai`, and the `tyrostrategy/tyrostrategy.github.io` mirror) is gone; do not re-add it or push anywhere else.
 
 GitHub Pages on TYROAIHUB occasionally races with the previous deployment ("in progress" lock) — re-run via `gh run rerun <run_id> -R TYROAIHUB/tyrostrategy --failed`, or push an empty commit to force a fresh SHA when the Pages deploy state is stuck.
 
