@@ -27,6 +27,8 @@ import {
 } from "@/hooks/useSupabaseData";
 import type { Proje, Aksiyon, EntityStatus, Source } from "@/types";
 import { deptLabel } from "@/config/departments";
+import { STATUS_ICON } from "@/config/statusIcons";
+import { isOwnReportTemplate } from "@/lib/templateOwnership";
 
 // ===== Status helpers =====
 // Kokpit ekranıyla (MasterDetailView) BİREBİR aynı renkler — kullanıcı
@@ -180,6 +182,20 @@ export default function RaporSihirbazi() {
   const updateMutation = useUpdateReportTemplate(currentUser.email);
   const deleteMutation = useDeleteReportTemplate(currentUser.email);
 
+  /**
+   * Şablon bu kullanıcıya mı ait?
+   *
+   * Kullanıcı kuralı 2026-10-08: "diğer adminin oluşturduğu şablonu
+   * görebilmeliyim ama silmemeliyim." Görünürlük ile yazma yetkisi ayrı:
+   * admin hepsini GÖRÜR + yükleyip kullanır, ama yalnızca KENDİ şablonunu
+   * siler/üzerine yazar. ownerEmail yoksa (yerel/mock şablon) sahibi
+   * kullanıcının kendisidir.
+   */
+  const isOwnTemplate = useCallback(
+    (tmpl: { ownerEmail?: string }) => isOwnReportTemplate(tmpl.ownerEmail, currentUser.email),
+    [currentUser.email]
+  );
+
   // localStorage fallback (mock mode)
   const TEMPLATES_KEY = "tyro-report-templates";
   const loadLocalTemplates = (): ReportTemplate[] => {
@@ -302,9 +318,19 @@ export default function RaporSihirbazi() {
     }
   };
 
+  /** Seçili şablonun üzerine yazılabilir mi? Başkasınınkine hayır. */
+  const canEditActiveTemplate = useMemo(() => {
+    if (!activeTemplateId) return false;
+    const tmpl = templates.find((t) => t.id === activeTemplateId);
+    return !tmpl || isOwnTemplate(tmpl);
+  }, [activeTemplateId, templates, isOwnTemplate]);
+
   // Update existing template with current filters
   const updateActiveTemplate = () => {
     if (!activeTemplateId) return;
+    // Başkasının şablonunun üzerine yazma da silme ile aynı sınıfta: engelle.
+    const target = templates.find((t) => t.id === activeTemplateId);
+    if (target && !isOwnTemplate(target)) return;
     if (isSupabaseMode) {
       updateMutation.mutate({ id: activeTemplateId, input: { name: templates.find((t) => t.id === activeTemplateId)?.name ?? "", ...currentConfig() } });
     } else {
@@ -320,6 +346,10 @@ export default function RaporSihirbazi() {
 
   // Delete template
   const deleteTemplate = (id: string) => {
+    // Başkasının şablonu silinemez. Buton zaten gizli; bu ikinci bariyer
+    // kodun başka bir yerinden yanlışlıkla çağrılmaya karşı.
+    const target = templates.find((t) => t.id === id);
+    if (target && !isOwnTemplate(target)) return;
     if (isSupabaseMode) {
       deleteMutation.mutate(id);
     } else {
@@ -1053,7 +1083,9 @@ ${clone.outerHTML}
                     >
                       {t("dashboard.custom")}
                     </button>
-                    {templates.map((tmpl) => (
+                    {templates.map((tmpl) => {
+                      const own = isOwnTemplate(tmpl);
+                      return (
                       <div key={tmpl.id} className="relative group">
                         <button
                           onClick={() => loadTemplate(tmpl)}
@@ -1065,7 +1097,7 @@ ${clone.outerHTML}
                               ? `${tmpl.name} — ${tmpl.ownerEmail}`
                               : tmpl.name
                           }
-                          className={`px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-all cursor-pointer pr-7 ${
+                          className={`px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-all cursor-pointer ${own ? "pr-7" : "pr-3"} ${
                             activeTemplateId === tmpl.id ? "text-white shadow-sm" : "bg-tyro-bg text-tyro-text-secondary hover:bg-tyro-border/30"
                           }`}
                           style={activeTemplateId === tmpl.id ? { backgroundColor: accentColor } : undefined}
@@ -1075,14 +1107,19 @@ ${clone.outerHTML}
                             <Users size={10} className="inline ml-1 -mt-0.5 opacity-70" aria-label={t("dashboard.sharedTemplate")} />
                           )}
                         </button>
-                        <button
-                          onClick={(e) => { e.stopPropagation(); deleteTemplate(tmpl.id); }}
-                          className="absolute top-1/2 -translate-y-1/2 right-1.5 w-4 h-4 rounded-full flex items-center justify-center text-[9px] opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer hover:bg-red-100 text-red-500"
-                        >
-                          <X size={10} />
-                        </button>
+                        {own && (
+                          <button
+                            onClick={(e) => { e.stopPropagation(); deleteTemplate(tmpl.id); }}
+                            aria-label={t("dashboard.deleteTemplate")}
+                            title={t("dashboard.deleteTemplate")}
+                            className="absolute top-1/2 -translate-y-1/2 right-1.5 w-4 h-4 rounded-full flex items-center justify-center text-[9px] opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer hover:bg-red-100 text-red-500"
+                          >
+                            <X size={10} />
+                          </button>
+                        )}
                       </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               )}
@@ -1141,23 +1178,30 @@ ${clone.outerHTML}
 
               {/* Durum */}
               <div>
-                <label className="block text-[11px] font-bold text-tyro-text-secondary mb-2 uppercase tracking-wider">{t("dashboard.status")}</label>
+                <label className="block text-[11px] font-bold text-tyro-text-secondary mb-2 uppercase tracking-wider">{t("dashboard.statusLabel")}</label>
                 <div className="flex flex-wrap gap-2">
-                  {(Object.keys(STATUS_TR) as EntityStatus[]).map((s) => (
-                    <button
-                      key={s}
-                      onClick={() => toggleStatus(s)}
-                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-all cursor-pointer ${
-                        statusFilters.has(s)
-                          ? "text-white shadow-sm"
-                          : "bg-tyro-bg text-tyro-text-secondary hover:bg-tyro-border/30"
-                      }`}
-                      style={statusFilters.has(s) ? { backgroundColor: STATUS_COLOR[s] } : undefined}
-                    >
-                      <span className="w-2 h-2 rounded-full" style={{ backgroundColor: statusFilters.has(s) ? "white" : STATUS_COLOR[s] }} />
-                      {STATUS_TR[s]}
-                    </button>
-                  ))}
+                  {/* Çipte artık her statünün KENDİ ikonu var (eskiden hepsi
+                      aynı noktaydı, yalnızca renk değişiyordu). Tek kaynak:
+                      config/statusIcons.ts — StatusBadge ile aynı eşleme. */}
+                  {(Object.keys(STATUS_TR) as EntityStatus[]).map((s) => {
+                    const selected = statusFilters.has(s);
+                    const Icon = STATUS_ICON[s];
+                    return (
+                      <button
+                        key={s}
+                        onClick={() => toggleStatus(s)}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-all cursor-pointer ${
+                          selected
+                            ? "text-white shadow-sm"
+                            : "bg-tyro-bg text-tyro-text-secondary hover:bg-tyro-border/30"
+                        }`}
+                        style={selected ? { backgroundColor: STATUS_COLOR[s] } : undefined}
+                      >
+                        <Icon size={12} strokeWidth={2.2} style={{ color: selected ? "white" : STATUS_COLOR[s] }} />
+                        {STATUS_TR[s]}
+                      </button>
+                    );
+                  })}
                 </div>
                 {statusFilters.size > 0 && (
                   <button onClick={() => setStatusFilters(new Set())} className="text-[10px] text-tyro-text-muted hover:text-tyro-text-secondary mt-1 cursor-pointer">
@@ -1241,7 +1285,7 @@ ${clone.outerHTML}
                       <Bookmark size={12} />
                       {t("dashboard.saveTemplate")}
                     </button>
-                    {activeTemplateId && (
+                    {activeTemplateId && canEditActiveTemplate && (
                       <button
                         onClick={() => { updateActiveTemplate(); }}
                         className="px-3 py-1.5 rounded-lg text-[11px] font-semibold text-tyro-gold border border-tyro-gold/30 hover:bg-tyro-gold/5 cursor-pointer transition-colors flex items-center gap-1.5"

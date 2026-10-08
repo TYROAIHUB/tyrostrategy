@@ -484,6 +484,7 @@
     "reportTemplate": "Rapor Şablonu",
     "custom": "Özel",
     "saveTemplate": "Şablon Kaydet",
+    "deleteTemplate": "Şablonu sil",
     "updateTemplate": "Şablonu Güncelle",
     "templateNamePlaceholder": "Şablon adı...",
     "close": "Kapat",
@@ -610,7 +611,7 @@
     "laleRuleTitle": "LALE iş kolu kısıtlaması",
     "laleRuleDesc": "İş kolu 'LALE' olan projeler sadece Admin rolündeki kullanıcılara görünür. Diğer roller için dashboard sayıları, kokpit listeleri, raporlar, dışa aktarımlar ve API çağrıları dahil hiçbir görünümde gözükmez.",
     "templateShareRuleTitle": "Rapor şablonları",
-    "templateShareRuleDesc": "Rapor Konfigürasyonu'nda gelişmiş filtreye kaydedilen şablonları Admin rolündeki kullanıcılar, kimin kaydettiğinden bağımsız olarak görür ve kullanabilir. Diğer roller yalnızca kendi kaydettiği şablonları görür. Başkasına ait şablonlar listede bir kullanıcı simgesiyle işaretlenir."
+    "templateShareRuleDesc": "Rapor Konfigürasyonu'nda gelişmiş filtreye kaydedilen şablonları Admin rolündeki kullanıcılar, kimin kaydettiğinden bağımsız olarak görür ve kullanabilir. Diğer roller yalnızca kendi kaydettiği şablonları görür. Başkasına ait şablonlar listede bir kullanıcı simgesiyle işaretlenir. Silme ve üzerine yazma yetkisi yalnızca şablonun sahibindedir: başkasına ait bir şablonda silme düğmesi ve güncelleme düğmesi gösterilmez, bu kural veritabanı kuralıyla da ayrıca güvence altındadır."
   },
   "profile": {
     "title": "Profil",

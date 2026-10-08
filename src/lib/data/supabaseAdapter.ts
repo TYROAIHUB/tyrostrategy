@@ -3,6 +3,7 @@
  * Maps snake_case DB columns to camelCase app types.
  */
 import { supabase } from "@/lib/supabase";
+import { sameEmail } from "@/lib/templateOwnership";
 import type { DataService } from "./dataService";
 import type { Proje, ProjeUpdate, Aksiyon, AksiyonUpdate, TagDefinition, LocationDefinition, EntityStatus, Source, AppUser, AppSetting, UserRole } from "@/types";
 
@@ -305,6 +306,37 @@ function dbToTemplate(row: DbReportTemplate): AppReportTemplate {
     dateTo: (c.dateTo as string) ?? "",
     updatedAt: row.updated_at,
   };
+}
+
+/**
+ * Şablon sahibi bu kullanıcı mı? Yazma işlemlerinin ön koşulu.
+ *
+ * Admin TÜM şablonları görür (fetchReportTemplates/includeAllOwners) ama
+ * yalnızca kendi şablonunu değiştirip silebilir — kullanıcı kuralı
+ * 2026-10-08. RLS de aynı kuralı uyguluyor (migration 028); buradaki kontrol
+ * ikinci bariyer ve anlamlı bir hata üretir: RLS reddi PostgREST tarafında
+ * hata değil, "0 satır etkilendi" olarak sessizce döner.
+ *
+ * Karşılaştırma küçük harfe indirgenir — RLS tarafı da lower() kullanıyor,
+ * iki katman aynı sonucu vermeli.
+ *
+ * @returns satır bulunamazsa false (çağıran sessizce çıkar)
+ * @throws REPORT_TEMPLATE_NOT_OWNER — şablon başkasına aitse
+ */
+async function assertTemplateOwner(id: string, ownerEmail: string): Promise<boolean> {
+  if (!supabase) return false;
+  const { data, error } = await supabase
+    .from("report_templates")
+    .select("owner_email")
+    .eq("id", id)
+    .maybeSingle();
+  if (error) { console.error("[Supabase] assertTemplateOwner:", error); throw error; }
+  if (!data) return false;
+  const owner = (data as { owner_email: string | null }).owner_email;
+  if (!sameEmail(owner, ownerEmail)) {
+    throw new Error("REPORT_TEMPLATE_NOT_OWNER");
+  }
+  return true;
 }
 
 export const supabaseAdapter: DataService = {
@@ -733,8 +765,10 @@ export const supabaseAdapter: DataService = {
     return dbToTemplate(data as DbReportTemplate);
   },
 
-  async updateReportTemplate(id: string, input: Omit<ReportTemplateInput, "ownerEmail">): Promise<void> {
+
+  async updateReportTemplate(id: string, input: Omit<ReportTemplateInput, "ownerEmail">, ownerEmail: string): Promise<void> {
     if (!supabase) return;
+    if (!(await assertTemplateOwner(id, ownerEmail))) return;
     const { name, ...config } = input;
     const { error } = await supabase
       .from("report_templates")
@@ -743,8 +777,9 @@ export const supabaseAdapter: DataService = {
     if (error) { console.error("[Supabase] updateReportTemplate:", error); throw error; }
   },
 
-  async deleteReportTemplate(id: string): Promise<void> {
+  async deleteReportTemplate(id: string, ownerEmail: string): Promise<void> {
     if (!supabase) return;
+    if (!(await assertTemplateOwner(id, ownerEmail))) return;
     const { error } = await supabase.from("report_templates").delete().eq("id", id);
     if (error) { console.error("[Supabase] deleteReportTemplate:", error); throw error; }
   },

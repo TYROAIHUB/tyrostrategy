@@ -190,7 +190,7 @@ export function useUpdateReportTemplate(ownerEmail: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ id, input }: { id: string; input: Omit<ReportTemplateInput, "ownerEmail"> }) =>
-      supabaseAdapter.updateReportTemplate(id, input),
+      supabaseAdapter.updateReportTemplate(id, input, ownerEmail),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["reportTemplates", ownerEmail] });
     },
@@ -200,7 +200,7 @@ export function useUpdateReportTemplate(ownerEmail: string) {
 export function useDeleteReportTemplate(ownerEmail: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) => supabaseAdapter.deleteReportTemplate(id),
+    mutationFn: (id: string) => supabaseAdapter.deleteReportTemplate(id, ownerEmail),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["reportTemplates", ownerEmail] });
     },

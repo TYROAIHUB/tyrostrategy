@@ -484,6 +484,7 @@
     "reportTemplate": "Report Template",
     "custom": "Custom",
     "saveTemplate": "Save Template",
+    "deleteTemplate": "Delete template",
     "updateTemplate": "Update Template",
     "templateNamePlaceholder": "Template name...",
     "close": "Close",
@@ -610,7 +611,7 @@
     "laleRuleTitle": "LALE business line restriction",
     "laleRuleDesc": "Projects with the 'LALE' business line are visible only to Admin users. For other roles they do not appear in any view — dashboard counts, cockpit lists, reports, exports or API calls.",
     "templateShareRuleTitle": "Report templates",
-    "templateShareRuleDesc": "Templates saved in the advanced filter of Report Configuration are visible and usable by every Admin, regardless of who saved them. Other roles only see their own templates. Templates owned by someone else are marked with a user icon in the list."
+    "templateShareRuleDesc": "Templates saved in the advanced filter of Report Configuration are visible and usable by every Admin, regardless of who saved them. Other roles only see their own templates. Templates owned by someone else are marked with a user icon in the list. Only the owner can delete or overwrite a template: the delete and update buttons are hidden on templates owned by someone else, and the rule is additionally enforced by a database policy."
   },
   "profile": {
     "title": "Profile",
