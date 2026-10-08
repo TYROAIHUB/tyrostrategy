@@ -6,7 +6,7 @@ import StatusBadge from "@/components/ui/StatusBadge";
 import { statusColor } from "@/lib/colorUtils";
 import { formatDate } from "@/lib/dateUtils";
 import { formatCapex } from "@/lib/money";
-import { SHOW_CAPEX_ON_ATLAS } from "@/config/tatlasDisplay";
+import { SHOW_CAPEX } from "@/config/capexDisplay";
 import {
   assetClassLabel,
   actionTypeLabel,
@@ -243,7 +243,7 @@ function ProjectCard({
           <Row label={t("common.source")} value={proje.source} />
           <Row label={t("common.owner")} value={proje.owner || "—"} />
           {/* CAPEX satırı — bkz. src/config/tatlasDisplay.ts */}
-          {SHOW_CAPEX_ON_ATLAS && (
+          {SHOW_CAPEX && (
             <Row
               label={t("common.capex")}
               value={formatCapex(proje.capexUsd, locale) || "—"}

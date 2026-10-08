@@ -373,19 +373,27 @@ table[aria-label] thead th {
 .sticky-grid table {
   min-width: 900px;
 }
+/* Yapışkan ilk/son kolon.
+   ZEMİN `inherit` DEĞİL, DONUK bir renk olmalı: HeroUI satır vurgusunu `tr`
+   üzerinde ::before ile boyuyor, dolayısıyla satırın kendi `background`'u
+   saydam kalıyor. `inherit` o saydamlığı devralınca yapışkan hücre altından
+   kayan içeriği ÖRTEMİYOR — Projeler tablosunda kontrol tarihi metni düzenle
+   ikonlarının arkasından görünüyordu (kullanıcı bildirimi 2026-10-08).
+   Hover/seçili vurgusu ::before ile bunun ÜSTÜNE bindiği için kaybolmuyor.
+   Başlık hücresi ayrıca `!bg-[var(--th-bg)]` taşıyor, o !important ile kazanıyor. */
 .sticky-grid th:first-child,
 .sticky-grid td:first-child {
   position: sticky;
   left: 0;
   z-index: 5;
-  background: inherit;
+  background-color: var(--tyro-surface);
 }
 .sticky-grid th:last-child,
 .sticky-grid td:last-child {
   position: sticky;
   right: 0;
   z-index: 5;
-  background: inherit;
+  background-color: var(--tyro-surface);
 }
 /* Scroll shadow indicators */
 .sticky-grid {

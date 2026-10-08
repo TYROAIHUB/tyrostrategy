@@ -1,5 +1,5 @@
 /**
- * Yatırım Haritası'nda CAPEX gösterilsin mi?
+ * Uygulamada CAPEX gösterilsin mi?
  *
  * Kullanıcı isteği (2026-08-27): kapatıldı. Gerekçe veriye dayanıyor —
  * projelerin HİÇBİRİNDE `capex_usd` dolu değil, dolayısıyla "Toplam CAPEX
@@ -9,6 +9,10 @@
  *   • "Toplam CAPEX" özet kartı                        → TAtlasSummary
  *   • Ülke / yatırım tipi / varlık sınıfı CAPEX panelleri → TAtlasSummary
  *   • Pin balonundaki CAPEX satırı                     → TAtlasPinPopup
+ *   • Projeler tablosundaki CAPEX kolonu               → ProjelerPage
+ *
+ * Tek bayrak olmasının sebebi: CAPEX iki ayrı anahtarla yönetilseydi biri
+ * açılıp diğeri kapalı kalır ve tutarsız bir arayüz çıkardı.
  *
  * Kart ve panel ızgaraları da bu bayrağa göre kolon sayısını ayarlıyor;
  * gizlenen kart yerine boşluk kalmıyor.
@@ -22,4 +26,4 @@
  * Tip `boolean` olarak yazıldı (literal `false` değil): bayrak kapalıyken
  * korumalı JSX dalları "hiç çalışmaz" diye işaretlenmesin.
  */
-export const SHOW_CAPEX_ON_ATLAS: boolean = false;
+export const SHOW_CAPEX: boolean = false;

@@ -27,6 +27,7 @@ import { toast } from "@/stores/toastStore";
 import { STATUS_DOT_COLOR, getStatusLabel } from "@/lib/constants";
 import { statusColor } from "@/lib/colorUtils";
 import { resolveLocationLabel } from "@/lib/locations";
+import { SHOW_CAPEX } from "@/config/capexDisplay";
 import { formatCapex, formatCapexCompact } from "@/lib/money";
 import { assetClassLabel, actionTypeLabel, assetClassCodeAndLabel, actionTypeCodeAndLabel } from "@/config/projectTaxonomy";
 import type { Proje } from "@/types";
@@ -57,7 +58,12 @@ function formatDate(dateStr: string): string {
  */
 const FILTERABLE_COLUMNS = new Set(["owner", "source", "status", "tags", "location", "assetClass", "actionType", "aksiyonCount"]);
 
-const INITIAL_VISIBLE = new Set(["name", "owner", "source", "location", "capex", "assetClass", "actionType", "tags", "status", "startDate", "endDate", "reviewDate", "aksiyonCount", "actions"]);
+// CAPEX kolonu bayrağa bağlı (bkz. src/config/capexDisplay.ts) — alan hiçbir
+// projede dolu olmadığı için gizlendi. Bayrak `true` yapılınca geri geliyor.
+const INITIAL_VISIBLE = new Set(
+  ["name", "owner", "source", "location", "capex", "assetClass", "actionType", "tags", "status", "startDate", "endDate", "reviewDate", "aksiyonCount", "actions"]
+    .filter((uid) => uid !== "capex" || SHOW_CAPEX)
+);
 
 export default function ProjelerPage() {
   const { t, i18n } = useTranslation();
@@ -70,7 +76,8 @@ export default function ProjelerPage() {
     { uid: "owner", name: t("common.owner") },
     { uid: "source", name: t("common.source") },
     { uid: "location", name: t("common.location") },
-    { uid: "capex", name: t("common.capex") },
+    // CAPEX kolonu yalnızca bayrak açıkken listeye giriyor.
+    ...(SHOW_CAPEX ? [{ uid: "capex", name: t("common.capex") }] : []),
     { uid: "assetClass", name: t("common.assetClass") },
     { uid: "actionType", name: t("common.actionType") },
     { uid: "tags", name: t("forms.objective.tags", "Etiketler") },

@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent, within } from "@testing-library/react";
 import TAtlasSummary from "../tatlas/TAtlasSummary";
-import { SHOW_CAPEX_ON_ATLAS } from "@/config/tatlasDisplay";
+import { SHOW_CAPEX } from "@/config/capexDisplay";
 import type { AtlasBreakdowns, PortfolioMetrics } from "@/lib/investmentPortfolio";
 
 vi.mock("react-i18next", () => ({
@@ -51,7 +51,7 @@ describe("TAtlasSummary — CAPEX gizleme", () => {
     // Bayrak açılırsa bu test kendini uyarlar (aşağıdaki else dalı).
     render(<TAtlasSummary metrics={metrics} breakdowns={breakdowns} />);
 
-    if (SHOW_CAPEX_ON_ATLAS) {
+    if (SHOW_CAPEX) {
       expect(screen.queryByText("tatlas.metric.totalCapex")).not.toBeNull();
       return;
     }
@@ -93,9 +93,9 @@ describe("TAtlasSummary — CAPEX gizleme", () => {
     const { container } = render(<TAtlasSummary metrics={metrics} breakdowns={breakdowns} />);
     const grid = container.querySelector(".items-stretch");
     expect(grid).not.toBeNull();
-    expect(grid!.className).toContain(SHOW_CAPEX_ON_ATLAS ? "xl:grid-cols-6" : "xl:grid-cols-5");
+    expect(grid!.className).toContain(SHOW_CAPEX ? "xl:grid-cols-6" : "xl:grid-cols-5");
     // Kart adedi de kolon sayısıyla uyumlu olmalı
-    expect(grid!.children.length).toBe(SHOW_CAPEX_ON_ATLAS ? 6 : 5);
+    expect(grid!.children.length).toBe(SHOW_CAPEX ? 6 : 5);
   });
 });
 

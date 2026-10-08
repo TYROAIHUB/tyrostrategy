@@ -18,7 +18,7 @@ import KPICard from "@/components/dashboard/KPICard";
 import { statusColor } from "@/lib/colorUtils";
 import { getStatusLabel } from "@/lib/constants";
 import { formatCapex, formatCapexCompact } from "@/lib/money";
-import { SHOW_CAPEX_ON_ATLAS } from "@/config/tatlasDisplay";
+import { SHOW_CAPEX } from "@/config/capexDisplay";
 import {
   assetClassLabel,
   actionTypeLabel,
@@ -96,7 +96,7 @@ export default function TAtlasSummary({ metrics, breakdowns }: Props) {
             ritmi — sayfalar arası görünüm tutarlı kalsın. */}
         <div
           className={`grid grid-cols-1 items-stretch gap-4 sm:grid-cols-2 lg:grid-cols-3 sm:gap-5 ${
-            SHOW_CAPEX_ON_ATLAS ? "xl:grid-cols-6" : "xl:grid-cols-5"
+            SHOW_CAPEX ? "xl:grid-cols-6" : "xl:grid-cols-5"
           }`}
         >
           <div className="flex">
@@ -108,7 +108,7 @@ export default function TAtlasSummary({ metrics, breakdowns }: Props) {
               contextText={t("tatlas.metric.projectCountNote")}
             />
           </div>
-          {SHOW_CAPEX_ON_ATLAS && (
+          {SHOW_CAPEX && (
             <div className="flex">
               <KPICard
                 label={t("tatlas.metric.totalCapex")}
@@ -167,7 +167,7 @@ export default function TAtlasSummary({ metrics, breakdowns }: Props) {
         <SectionTitle icon={Boxes}>{t("tatlas.summary.breakdowns")}</SectionTitle>
         <div
           className={`grid grid-cols-1 gap-3 lg:grid-cols-2 ${
-            SHOW_CAPEX_ON_ATLAS ? "xl:grid-cols-3" : "xl:grid-cols-2"
+            SHOW_CAPEX ? "xl:grid-cols-3" : "xl:grid-cols-2"
           }`}
         >
           <StatusDistributionPanel rows={breakdowns.byStatus} total={metrics.projectCount} />
@@ -206,7 +206,7 @@ export default function TAtlasSummary({ metrics, breakdowns }: Props) {
 
           {/* CAPEX kırılımları — bkz. src/config/tatlasDisplay.ts. Veri
               girilmeye başlandığında o bayrak `true` yapılınca geri gelir. */}
-          {SHOW_CAPEX_ON_ATLAS && (
+          {SHOW_CAPEX && (
             <>
             <BreakdownPanel
               icon={Globe2}
