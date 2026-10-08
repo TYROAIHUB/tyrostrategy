@@ -8,6 +8,7 @@ import {
   FileText, FileSpreadsheet, FileCode, Printer,
   TrendingDown, TrendingUp, Trophy, BarChart3, CircleAlert, Target,
   Bookmark, Save, Pencil, RotateCcw,
+  Users,
 } from "lucide-react";
 import SlidingPanel from "@/components/shared/SlidingPanel";
 import { useTranslation } from "react-i18next";
@@ -159,13 +160,22 @@ export default function RaporSihirbazi() {
     dateFrom: string;
     dateTo: string;
     updatedAt: string;
+    /** Şablonu kaydeden kullanıcı. Admin tüm şablonları gördüğü için
+     *  başkasına ait olanları işaretlemekte kullanılıyor. Yerel (Supabase
+     *  dışı) şablonlarda bulunmayabilir, o yüzden opsiyonel. */
+    ownerEmail?: string;
   }
 
   // Current user email — needed for owner_email in Supabase
   const currentUser = useCurrentUser();
 
   // Supabase hooks (no-ops in mock mode)
-  const { data: dbTemplates } = useReportTemplates(currentUser.email);
+  // Admin, gelişmiş filtreye kaydedilmiş TÜM şablonları görür (kullanıcı
+  // kararı 2026-10-08). Diğer roller yalnızca kendi şablonlarını görmeye
+  // devam ediyor. Kısıtlama uygulama sorgusunda; veritabanı katmanı zaten
+  // hepsine izin veriyor (bkz. supabaseAdapter.fetchReportTemplates).
+  const canSeeAllTemplates = currentUser.role === "Admin";
+  const { data: dbTemplates } = useReportTemplates(currentUser.email, canSeeAllTemplates);
   const createMutation = useCreateReportTemplate();
   const updateMutation = useUpdateReportTemplate(currentUser.email);
   const deleteMutation = useDeleteReportTemplate(currentUser.email);
@@ -1047,12 +1057,23 @@ ${clone.outerHTML}
                       <div key={tmpl.id} className="relative group">
                         <button
                           onClick={() => loadTemplate(tmpl)}
+                          /* Başkasının şablonunda sahibin e-postası ipucunda:
+                             admin tüm şablonları gördüğü için aynı isimli iki
+                             şablonu ayırt edebilmeli. */
+                          title={
+                            tmpl.ownerEmail && tmpl.ownerEmail !== currentUser.email
+                              ? `${tmpl.name} — ${tmpl.ownerEmail}`
+                              : tmpl.name
+                          }
                           className={`px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-all cursor-pointer pr-7 ${
                             activeTemplateId === tmpl.id ? "text-white shadow-sm" : "bg-tyro-bg text-tyro-text-secondary hover:bg-tyro-border/30"
                           }`}
                           style={activeTemplateId === tmpl.id ? { backgroundColor: accentColor } : undefined}
                         >
                           {tmpl.name}
+                          {tmpl.ownerEmail && tmpl.ownerEmail !== currentUser.email && (
+                            <Users size={10} className="inline ml-1 -mt-0.5 opacity-70" aria-label={t("dashboard.sharedTemplate")} />
+                          )}
                         </button>
                         <button
                           onClick={(e) => { e.stopPropagation(); deleteTemplate(tmpl.id); }}

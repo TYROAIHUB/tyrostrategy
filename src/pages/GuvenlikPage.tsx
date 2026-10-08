@@ -311,6 +311,10 @@ export default function GuvenlikPage() {
                 <span className="font-semibold text-tyro-text-primary">{t("security.laleRuleTitle")}:</span>{" "}
                 {t("security.laleRuleDesc")}
               </li>
+              <li>
+                <span className="font-semibold text-tyro-text-primary">{t("security.templateShareRuleTitle")}:</span>{" "}
+                {t("security.templateShareRuleDesc")}
+              </li>
             </ul>
           </div>
         </div>

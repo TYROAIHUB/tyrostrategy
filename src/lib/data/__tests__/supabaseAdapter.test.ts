@@ -12,13 +12,16 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
  */
 
 const captured: Record<string, unknown>[] = [];
+/** `.eq(kolon, değer)` çağrıları — hangi filtrelerin uygulandığını sınamak için. */
+const eqCalls: [string, unknown][] = [];
 
 vi.mock("@/lib/supabase", () => {
   const makeChain = () => {
     const chain: Record<string, unknown> = {};
-    for (const m of ["eq", "select", "insert", "delete", "in", "order", "limit"]) {
+    for (const m of ["select", "insert", "delete", "in", "order", "limit"]) {
       chain[m] = () => chain;
     }
+    chain.eq = (col: string, val: unknown) => { eqCalls.push([col, val]); return chain; };
     chain.update = (payload: Record<string, unknown>) => { captured.push(payload); return chain; };
     chain.single = () => Promise.resolve({ data: { id: "P26-0002" }, error: null });
     chain.then = (r: (v: unknown) => unknown) => Promise.resolve({ data: [], error: null }).then(r);
@@ -80,5 +83,23 @@ describe("supabaseAdapter.updateProje — PATCH gövdesi", () => {
     // gönderilse Postgres 22P02 (invalid input syntax for uuid) döner.
     const body = await patchBodyFor({ locationId: "" });
     expect(body.location_id).toBeNull();
+  });
+});
+
+describe("fetchReportTemplates — admin tüm şablonları görür", () => {
+  beforeEach(() => { eqCalls.length = 0; });
+
+  it("varsayılan: yalnızca kendi şablonları (owner_email filtresi var)", async () => {
+    const { supabaseAdapter } = await import("@/lib/data/supabaseAdapter");
+    await supabaseAdapter.fetchReportTemplates("busra.kaplan@tiryaki.com.tr");
+    expect(eqCalls).toContainEqual(["owner_email", "busra.kaplan@tiryaki.com.tr"]);
+  });
+
+  it("includeAllOwners: sahip filtresi UYGULANMIYOR", async () => {
+    // Kullanıcı kararı: Admin, kimin kaydettiğinden bağımsız tüm şablonları
+    // görür. Filtre uygulanırsa bu özellik sessizce çalışmaz hâle gelir.
+    const { supabaseAdapter } = await import("@/lib/data/supabaseAdapter");
+    await supabaseAdapter.fetchReportTemplates("cenk.sayli@tiryaki.com.tr", true);
+    expect(eqCalls.some(([col]) => col === "owner_email")).toBe(false);
   });
 });

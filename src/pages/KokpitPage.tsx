@@ -41,7 +41,7 @@ import AksiyonForm from "@/components/aksiyonlar/AksiyonForm";
 import { Button, Dropdown, DropdownTrigger, DropdownMenu, DropdownItem, Tooltip, DatePicker } from "@heroui/react";
 import { Check } from "lucide-react";
 import { getStatusLabel } from "@/lib/constants";
-import { formatDate } from "@/lib/dateUtils";
+import { formatDate, todayISO } from "@/lib/dateUtils";
 import { toCalendarDate, fromCalendarDate } from "@/lib/utils";
 import type { Proje, Aksiyon, EntityStatus, Source, AdvancedFilters } from "@/types";
 import i18n from "@/lib/i18n";
@@ -513,7 +513,13 @@ export default function KokpitPage() {
                     if (!canEdit || !selectedProje) return;
                     setEditMenuOpen(false);
                     setNewMenuOpen(false);
-                    setReviewDateDraft(selectedProje.reviewDate || new Date().toISOString().slice(0, 10));
+                    // Takvim BUGÜNÜN ayına açılsın diye taslak doğrudan bugün
+                    // (kullanıcı isteği 2026-10-08). Önceden projenin mevcut
+                    // kontrol tarihiyle tohumlanıyordu; tarih ileri bir aysa
+                    // takvim oraya açılıyor ve kullanıcı bugüne geri sayfalamak
+                    // zorunda kalıyordu. Kokpit master-detail'deki aynı akış
+                    // zaten böyle davranıyordu; iki yer artık tutarlı.
+                    setReviewDateDraft(todayISO());
                     setReviewPopoverOpen(true);
                   }}
                   className={`h-9 px-3.5 rounded-lg border flex items-center gap-1.5 text-[13px] font-semibold transition-all shrink-0 ${

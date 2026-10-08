@@ -700,12 +700,23 @@ export const supabaseAdapter: DataService = {
 
   // ── Report Templates ──
 
-  async fetchReportTemplates(ownerEmail: string): Promise<AppReportTemplate[]> {
+  /**
+   * Rapor şablonlarını getir.
+   *
+   * @param includeAllOwners `true` ise sahip filtresi UYGULANMAZ — tüm
+   *   kullanıcıların şablonları döner. Kullanıcı kararı 2026-10-08:
+   *   Admin rolü, gelişmiş filtreye kaydedilmiş şablonların tamamını görsün.
+   *
+   * NOT: Kısıtlama bu sorguda; veritabanı katmanı zaten izin veriyor
+   *   (migration 001, `templates_select USING (true)`). Yani bu bayrak bir
+   *   yetki KAPISI değil, bir GÖRÜNÜRLÜK tercihi — çağıran taraf rolü kontrol
+   *   etmekle yükümlü. RLS'i de daraltmak isterseniz ayrı bir migration gerekir.
+   */
+  async fetchReportTemplates(ownerEmail: string, includeAllOwners = false): Promise<AppReportTemplate[]> {
     if (!supabase) return [];
-    const { data, error } = await supabase
-      .from("report_templates")
-      .select("*")
-      .eq("owner_email", ownerEmail)
+    let query = supabase.from("report_templates").select("*");
+    if (!includeAllOwners) query = query.eq("owner_email", ownerEmail);
+    const { data, error } = await query
       .order("created_at", { ascending: false });
     if (error) { console.error("[Supabase] fetchReportTemplates:", error); return []; }
     return (data || []).map(dbToTemplate);

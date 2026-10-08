@@ -8,7 +8,7 @@ vi.mock("i18next", () => ({
 }));
 
 import i18n from "i18next";
-import { formatDate, formatDateTime } from "../dateUtils";
+import { formatDate, formatDateTime, todayISO } from "../dateUtils";
 
 beforeEach(() => {
   // Reset to Turkish
@@ -76,5 +76,27 @@ describe("formatDateTime", () => {
     const result = formatDateTime("2024-06-15T14:30:00");
     expect(result).toBeTruthy();
     expect(result).not.toBe("-");
+  });
+});
+
+describe("todayISO — YEREL tarih", () => {
+  it("yerel gün/ay/yılı YYYY-MM-DD olarak veriyor", () => {
+    expect(todayISO(new Date(2026, 9, 8, 14, 30))).toBe("2026-10-08");
+  });
+
+  it("tek haneli ay ve günü sıfırla dolduruyor", () => {
+    expect(todayISO(new Date(2026, 0, 5, 9, 0))).toBe("2026-01-05");
+  });
+
+  it("REGRESYON: gece yarısından sonra DÜNÜ göstermiyor", () => {
+    // `toISOString().slice(0,10)` UTC verir; TR (UTC+3) saat 01:00'de bir
+    // önceki günü döndürürdü. Kullanıcının takvimde gördüğü gün ile
+    // uygulamanın yazdığı gün aynı olmalı.
+    const geceYarisiSonrasi = new Date(2026, 9, 8, 1, 0); // 8 Ekim 01:00 yerel
+    expect(todayISO(geceYarisiSonrasi)).toBe("2026-10-08");
+  });
+
+  it("yıl sonunda da yerel günü koruyor", () => {
+    expect(todayISO(new Date(2026, 11, 31, 23, 30))).toBe("2026-12-31");
   });
 });

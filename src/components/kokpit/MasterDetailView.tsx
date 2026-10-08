@@ -18,7 +18,7 @@ import AksiyonForm from "@/components/aksiyonlar/AksiyonForm";
 import ProjeForm from "@/components/projeler/ProjeForm";
 import AksiyonDetail from "@/components/aksiyonlar/AksiyonDetail";
 import { progressColor } from "@/lib/colorUtils";
-import { formatDate } from "@/lib/dateUtils";
+import { formatDate, todayISO } from "@/lib/dateUtils";
 import { deptLabel } from "@/config/departments";
 import { resolveLocationLabel } from "@/lib/locations";
 import { formatCapex } from "@/lib/money";
@@ -278,7 +278,9 @@ function DetailPanel({
   const assetLabel = assetClassLabel(proje.assetClass, t);
   const actionLabel = actionTypeLabel(proje.actionType, t);
   const [reviewPopoverOpen, setReviewPopoverOpen] = useState(false);
-  const todayStr = new Date().toISOString().slice(0, 10);
+  // YEREL tarih — toISOString() UTC verir ve TR'de gece yarısı–03:00 arası
+  // dünü gösterirdi (bkz. todayISO).
+  const todayStr = todayISO();
   const [reviewDateDraft, setReviewDateDraft] = useState(todayStr);
   const [infoExpanded, setInfoExpanded] = useState(false);
 
@@ -946,7 +948,9 @@ export default function MasterDetailView({ projeler, onOpenWizard, externalSearc
   const [fabOpen, setFabOpen] = useState(false);
   const [actionsFabOpen, setActionsFabOpen] = useState(false);
   const [reviewPopoverOpen, setReviewPopoverOpen] = useState(false);
-  const todayStr = new Date().toISOString().slice(0, 10);
+  // YEREL tarih — toISOString() UTC verir ve TR'de gece yarısı–03:00 arası
+  // dünü gösterirdi (bkz. todayISO).
+  const todayStr = todayISO();
   const [reviewDateDraft, setReviewDateDraft] = useState(todayStr);
   const aksiyonCountMap = useMemo(() => {
     const map = new Map<string, number>();

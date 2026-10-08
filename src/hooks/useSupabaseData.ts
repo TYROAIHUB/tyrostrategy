@@ -162,10 +162,15 @@ export function useCreateTagDefinition() {
 
 // ===== Report Templates =====
 
-export function useReportTemplates(ownerEmail: string) {
+/**
+ * @param includeAllOwners Admin için `true` — tüm kullanıcıların şablonları.
+ *   `queryKey`'e DAHİL edilmesi şart: aksi halde admin ve normal kullanıcı
+ *   aynı önbellek girdisini paylaşır ve biri diğerinin sonucunu görürdü.
+ */
+export function useReportTemplates(ownerEmail: string, includeAllOwners = false) {
   return useQuery<AppReportTemplate[]>({
-    queryKey: ["reportTemplates", ownerEmail],
-    queryFn: () => supabaseAdapter.fetchReportTemplates(ownerEmail),
+    queryKey: ["reportTemplates", ownerEmail, includeAllOwners],
+    queryFn: () => supabaseAdapter.fetchReportTemplates(ownerEmail, includeAllOwners),
     enabled: isSupabaseMode && !!ownerEmail,
     staleTime: 60_000,
   });
