@@ -42,6 +42,18 @@ const STATUS_COLOR: Record<EntityStatus, string> = {
   "Cancelled": "#6b7280",
 };
 
+/**
+ * Rapordaki proje kartının SOL ŞERİDİ — statüye göre DEĞİL, tek bir nötr gri.
+ *
+ * Kullanıcı kararı 2026-10-08: her projenin dış sol çerçevesi aynı orta gri
+ * olsun. Şerit statüyü taşımayı bırakıyor; statü bilgisi kartta zaten iki
+ * yerde var (yüzdenin rengi ve statü çipi), dolayısıyla bilgi kaybı yok —
+ * kartlar bir arada daha sakin ve düzenli duruyor.
+ *
+ * Token kullanılıyor (sabit hex değil); koyu temada da uygun tonu alıyor.
+ */
+const PROJE_KART_SERIT_RENGI = "var(--tyro-text-muted)";
+
 const STATUS_DOT: Record<EntityStatus, typeof Check> = {
   "On Track": Clock,
   "At Risk": AlertTriangle,
@@ -1736,7 +1748,7 @@ ${clone.outerHTML}
                   const isExp = expandedIds.has(h.id);
 
                   return (
-                    <div key={h.id} className="glass-card rounded-xl overflow-hidden print:break-inside-avoid" style={{ borderLeft: `3px solid ${STATUS_COLOR[h.status]}` }}>
+                    <div key={h.id} className="glass-card rounded-xl overflow-hidden print:break-inside-avoid" style={{ borderLeft: `3px solid ${PROJE_KART_SERIT_RENGI}` }}>
                       {/* Header: Name + Description + Dates */}
                       <div className="px-4 py-3 flex items-start gap-3">
                         <div className="flex-1 min-w-0">
