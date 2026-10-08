@@ -225,9 +225,9 @@ export default function KokpitPage() {
       : "";
 
   // ─── Tabs & sort labels ──────────────────────────────────
-  const tabs: { id: TabId; label: string }[] = [
-    { id: "master", label: t("kokpit.general") },
-    { id: "tablo", label: t("kokpit.viewList") },
+  const tabs: { id: TabId; label: string; icon: typeof LayoutDashboard }[] = [
+    { id: "master", label: t("kokpit.general"), icon: LayoutDashboard },
+    { id: "tablo", label: t("kokpit.viewList"), icon: LayoutList },
   ];
   return (
     <div>
@@ -263,29 +263,42 @@ export default function KokpitPage() {
             </button>
           )}
         </div>
-        {/* View mode dropdown — desktop only */}
-        <div className="hidden sm:block">
-          <Dropdown>
-            <DropdownTrigger>
+        {/* Görünüm — iki ayrı buton (kullanıcı isteği 2026-10-08).
+            Önceden tek "Görünüm" dropdown'ıydı: kullanıcı hangi seçeneklerin
+            olduğunu açmadan göremiyordu. Artık ikisi de görünür, aktif olan
+            vurgulu. Varsayılan değişmedi (activeTab = "master" = Genel).
+            Görsel dil Proje Dağılım Matrisi'ndeki sekme satırıyla aynı.
+
+            Eskiden `hidden sm:block` idi, yani MOBİLDE görünüm değiştirmenin
+            hiçbir yolu yoktu (setActiveTab'ı çağıran tek yer burasıydı).
+            Artık mobilde de var; etiket dar ekranda gizlenip ikon kalıyor. */}
+        <div
+          className="flex items-center gap-1 shrink-0 rounded-lg border border-tyro-border bg-tyro-surface p-0.5"
+          role="group"
+          aria-label={t("common.view")}
+        >
+          {tabs.map((tab) => {
+            const Icon = tab.icon;
+            const isActive = activeTab === tab.id;
+            return (
               <button
+                key={tab.id}
                 type="button"
-                className="h-9 px-3 rounded-lg border border-tyro-border bg-tyro-surface flex items-center gap-1.5 cursor-pointer hover:bg-tyro-navy/5 transition-all shrink-0"
+                onClick={() => setActiveTab(tab.id)}
+                aria-pressed={isActive}
+                title={tab.label}
+                className={`h-8 px-2.5 rounded-md flex items-center gap-1.5 text-[13px] font-semibold transition-all cursor-pointer ${
+                  isActive
+                    ? "shadow-sm text-white"
+                    : "text-tyro-text-muted hover:bg-tyro-bg hover:text-tyro-text-secondary"
+                }`}
+                style={isActive ? { backgroundColor: accentColor } : undefined}
               >
-                {activeTab === "master" ? <LayoutDashboard size={14} className="text-tyro-text-secondary" /> : <LayoutList size={14} className="text-tyro-text-secondary" />}
-                <span className="text-[13px] font-medium text-tyro-text-secondary">{t("common.view")}</span>
-                <ChevronDown size={12} className="text-tyro-text-muted" />
+                <Icon size={14} className="shrink-0" />
+                <span className="hidden sm:inline">{tab.label}</span>
               </button>
-            </DropdownTrigger>
-            <DropdownMenu
-              aria-label={t("common.view")}
-              selectionMode="single"
-              selectedKeys={new Set([activeTab])}
-              onSelectionChange={(keys) => setActiveTab(Array.from(keys)[0] as TabId)}
-            >
-              <DropdownItem key="master" startContent={<LayoutDashboard size={14} />}>{t("kokpit.general")}</DropdownItem>
-              <DropdownItem key="tablo" startContent={<LayoutList size={14} />}>{t("kokpit.viewList")}</DropdownItem>
-            </DropdownMenu>
-          </Dropdown>
+            );
+          })}
         </div>
         {/* Advanced filter button */}
         <Tooltip content={t("kokpit.filter.tooltip")} placement="bottom" delay={500} closeDelay={0}>
