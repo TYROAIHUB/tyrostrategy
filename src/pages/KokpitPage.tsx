@@ -484,24 +484,49 @@ export default function KokpitPage() {
                       <Pencil size={16} className="text-amber-500" />
                       {t("kokpit.editProject")}
                     </button>
-                    <div className="h-px bg-tyro-border/20 mx-3" />
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setEditMenuOpen(false);
-                        setReviewDateDraft(selectedProje.reviewDate || new Date().toISOString().slice(0, 10));
-                        setReviewPopoverOpen(true);
-                      }}
-                      className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-tyro-text-primary hover:bg-tyro-navy/5 transition-colors cursor-pointer"
-                    >
-                      <CalendarCheck size={16} className="text-teal-500" />
-                      {t("kokpit.updateReviewDate")}
-                    </button>
                   </motion.div>
                 </>
               )}
             </AnimatePresence>
           </div>
+            );
+          })()}
+
+          {/* Kontrol tarihi — Düzenle menüsünden ÇIKARILIP bağımsız butona
+              alındı (kullanıcı isteği 2026-10-08). Sık kullanılan bir işlem,
+              iki tıklama arkasında durmasın. Yetki ve seçim koşulları Düzenle
+              ile aynı, görünümü de aynı (h-9, çerçeveli); dar ekranda etiket
+              gizlenip ikon kalıyor. */}
+          {(() => {
+            const canEdit = !!selectedProje && canEditProje(selectedProje.id);
+            return (
+              <Tooltip
+                content={!selectedProje ? t("kokpit.selectProjectFirst") : canEdit ? t("kokpit.updateReviewDate") : t("permissions.noEditPermission", "Düzenleme yetkiniz yok.")}
+                placement="bottom"
+                delay={500}
+                closeDelay={0}
+              >
+                <motion.button
+                  type="button"
+                  disabled={!canEdit}
+                  onClick={() => {
+                    if (!canEdit || !selectedProje) return;
+                    setEditMenuOpen(false);
+                    setNewMenuOpen(false);
+                    setReviewDateDraft(selectedProje.reviewDate || new Date().toISOString().slice(0, 10));
+                    setReviewPopoverOpen(true);
+                  }}
+                  className={`h-9 px-3.5 rounded-lg border flex items-center gap-1.5 text-[13px] font-semibold transition-all shrink-0 ${
+                    canEdit
+                      ? "border-tyro-border text-tyro-text-primary hover:bg-tyro-navy/5 cursor-pointer"
+                      : "border-tyro-border/40 text-tyro-text-muted/40 cursor-not-allowed"
+                  }`}
+                  whileTap={canEdit ? { scale: 0.96 } : {}}
+                >
+                  <CalendarCheck size={14} className={canEdit ? "text-teal-500" : undefined} />
+                  <span className="hidden lg:inline">{t("kokpit.reviewDateShort")}</span>
+                </motion.button>
+              </Tooltip>
             );
           })()}
           {/* Sil — desktop only, seçili proje + delete yetkisi */}
