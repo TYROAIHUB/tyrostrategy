@@ -1,5 +1,6 @@
 import { useState, useMemo, useCallback, useEffect, type Key } from "react";
 import { useTranslation } from "react-i18next";
+import StatusBadge from "@/components/ui/StatusBadge";
 import { useSearchParams } from "react-router-dom";
 import {
   Table, TableHeader, TableColumn, TableBody, TableRow, TableCell,
@@ -21,7 +22,6 @@ import CreateButton from "@/components/shared/CreateButton";
 import ConfirmDialog from "@/components/shared/ConfirmDialog";
 import EmptyState from "@/components/shared/EmptyState";
 import { toast } from "@/stores/toastStore";
-import { STATUS_DOT_COLOR, getStatusLabel } from "@/lib/constants";
 import type { Aksiyon } from "@/types";
 
 type ViewTab = "list" | "kanban";
@@ -187,16 +187,10 @@ export default function AksiyonlarPage() {
             <span className="text-[11px] tabular-nums">%{aksiyon.progress}</span>
           </div>
         );
-      case "status": {
-        const dot = STATUS_DOT_COLOR[aksiyon.status];
-        const label = getStatusLabel(aksiyon.status, t);
-        return (
-          <div className="flex items-center gap-2">
-            <span className={`w-2 h-2 rounded-full shrink-0 ${dot}`} />
-            <span className="text-[13px] text-tyro-text-primary">{label}</span>
-          </div>
-        );
-      }
+      case "status":
+        // Elle nokta+etiket yerine ortak StatusBadge: statüye ait ikon,
+        // renk ve tooltip tek yerden geliyor (src/components/ui/StatusBadge).
+        return <StatusBadge status={aksiyon.status} />;
       case "startDate":
         return <span className="text-[13px] text-tyro-text-secondary">{formatDate(aksiyon.startDate)}</span>;
       case "endDate":

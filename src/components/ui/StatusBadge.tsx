@@ -1,43 +1,38 @@
 import { Tooltip } from "@heroui/react";
 import { useTranslation } from "react-i18next";
 import { getStatusLabel } from "@/lib/constants";
+import { statusIcon } from "@/config/statusIcons";
 import type { EntityStatus } from "@/types";
 
-const statusConfig: Record<EntityStatus, { bg: string; text: string; dot: string }> = {
+// `dot` alanı kaldırıldı: statü artık renkli nokta yerine ikonla gösteriliyor.
+const statusConfig: Record<EntityStatus, { bg: string; text: string }> = {
   "On Track": {
     bg: "bg-emerald-50",
     text: "text-emerald-600",
-    dot: "bg-emerald-500",
   },
   Achieved: {
     bg: "bg-blue-50",
     text: "text-blue-600",
-    dot: "bg-blue-500",
   },
   "High Risk": {
     bg: "bg-red-50",
     text: "text-red-600",
-    dot: "bg-red-500",
   },
   "At Risk": {
     bg: "bg-amber-50",
     text: "text-amber-600",
-    dot: "bg-amber-500",
   },
   "Not Started": {
     bg: "bg-slate-100",
     text: "text-tyro-text-muted",
-    dot: "bg-slate-400",
   },
   Cancelled: {
     bg: "bg-gray-100",
     text: "text-gray-500",
-    dot: "bg-gray-400",
   },
   "On Hold": {
     bg: "bg-violet-50",
     text: "text-violet-600",
-    dot: "bg-violet-500",
   },
 };
 
@@ -83,11 +78,16 @@ export default function StatusBadge({ status, showTooltip = true }: StatusBadgeP
   const lang = i18n.language === "en" ? "en" : "tr";
   const tooltip = statusTooltips[status]?.[lang] ?? "";
 
+  // Statüye ait ikon (bkz. src/config/statusIcons.ts). Önceden tüm statüler
+  // aynı dolu daireydi; yalnızca renk ayırt ediyordu. İkon siluetiyle birlikte
+  // renge bakmadan da ayırt edilebiliyor. Renk sınıfı (`cfg.text`) ikona da
+  // uygulandığı için ayrı bir renk tanımı gerekmedi.
+  const Icon = statusIcon(status);
   const badge = (
     <span
       className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold ${cfg.bg} ${cfg.text} cursor-default`}
     >
-      <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
+      <Icon size={12} strokeWidth={2.4} className="shrink-0" aria-hidden />
       {getStatusLabel(status, t)}
     </span>
   );

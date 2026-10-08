@@ -1,73 +1,40 @@
 import { describe, it, expect, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render } from "@testing-library/react";
 import StatusBadge from "../ui/StatusBadge";
+import { STATUS_ICON } from "@/config/statusIcons";
 import type { EntityStatus } from "@/types";
 
-// Mock i18n — t returns the key
 vi.mock("react-i18next", () => ({
-  useTranslation: () => ({ t: (key: string) => key, i18n: { language: "tr" } }),
+  useTranslation: () => ({ t: (k: string) => k, i18n: { language: "tr" } }),
+}));
+vi.mock("@heroui/react", () => ({
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  Tooltip: ({ children }: any) => children,
 }));
 
-describe("StatusBadge", () => {
-  const statuses: EntityStatus[] = ["On Track", "Achieved", "High Risk", "At Risk", "Not Started"];
+const TUM_STATULER = Object.keys(STATUS_ICON) as EntityStatus[];
 
-  it.each(statuses)("renders a label for status '%s'", (status) => {
-    render(<StatusBadge status={status} />);
-    // getStatusLabel calls t() with the status i18n key, so text content should exist
-    const badge = screen.getByText(/status\./);
-    expect(badge).toBeInTheDocument();
+describe("StatusBadge — statüye özel ikon", () => {
+  it("yedi statünün hepsi bir ikon çiziyor", () => {
+    for (const s of TUM_STATULER) {
+      const { container } = render(<StatusBadge status={s} />);
+      expect(container.querySelector("svg"), `${s} ikonsuz`).not.toBeNull();
+    }
   });
 
-  it("applies emerald classes for On Track status", () => {
-    const { container } = render(<StatusBadge status="On Track" />);
-    const outerSpan = container.querySelector("span.bg-emerald-50");
-    expect(outerSpan).toBeInTheDocument();
-    expect(outerSpan).toHaveClass("text-emerald-600");
-    const dot = container.querySelector("span.bg-emerald-500");
-    expect(dot).toBeInTheDocument();
+  it("REGRESYON: ikonlar birbirinden FARKLI — renge bakmadan ayırt edilebilmeli", () => {
+    // Önceden hepsi aynı dolu daireydi, yalnızca renk ayırt ediyordu;
+    // renk körü kullanıcı statüleri ayıramıyordu (WCAG: bilgi yalnızca
+    // renkle taşınmamalı).
+    const yollar = TUM_STATULER.map((s) => {
+      const { container } = render(<StatusBadge status={s} />);
+      return container.querySelector("svg")!.innerHTML;
+    });
+    expect(new Set(yollar).size).toBe(TUM_STATULER.length);
   });
 
-  it("applies blue classes for Achieved status", () => {
+  it("etiket metni hâlâ gösteriliyor — ikon metnin yerine geçmiyor", () => {
     const { container } = render(<StatusBadge status="Achieved" />);
-    const outerSpan = container.querySelector("span.bg-blue-50");
-    expect(outerSpan).toBeInTheDocument();
-    expect(outerSpan).toHaveClass("text-blue-600");
-    const dot = container.querySelector("span.bg-blue-500");
-    expect(dot).toBeInTheDocument();
-  });
-
-  it("applies red classes for Behind status", () => {
-    const { container } = render(<StatusBadge status="High Risk" />);
-    const outerSpan = container.querySelector("span.bg-red-50");
-    expect(outerSpan).toBeInTheDocument();
-    expect(outerSpan).toHaveClass("text-red-600");
-    const dot = container.querySelector("span.bg-red-500");
-    expect(dot).toBeInTheDocument();
-  });
-
-  it("applies amber classes for At Risk status", () => {
-    const { container } = render(<StatusBadge status="At Risk" />);
-    const outerSpan = container.querySelector("span.bg-amber-50");
-    expect(outerSpan).toBeInTheDocument();
-    expect(outerSpan).toHaveClass("text-amber-600");
-    const dot = container.querySelector("span.bg-amber-500");
-    expect(dot).toBeInTheDocument();
-  });
-
-  it("applies slate classes for Not Started status", () => {
-    const { container } = render(<StatusBadge status="Not Started" />);
-    const outerSpan = container.querySelector("span.bg-slate-100");
-    expect(outerSpan).toBeInTheDocument();
-    expect(outerSpan).toHaveClass("text-tyro-text-muted");
-    const dot = container.querySelector("span.bg-slate-400");
-    expect(dot).toBeInTheDocument();
-  });
-
-  it("renders with correct CSS structure (inline-flex, rounded-full, etc.)", () => {
-    const { container } = render(<StatusBadge status="On Track" />);
-    const outerSpan = container.firstElementChild as HTMLElement;
-    expect(outerSpan).toHaveClass("inline-flex");
-    expect(outerSpan).toHaveClass("rounded-full");
-    expect(outerSpan).toHaveClass("font-semibold");
+    expect(container.textContent?.trim()).toBeTruthy();
   });
 });

@@ -1,5 +1,6 @@
 import { useState, useMemo, useCallback, useEffect, type Key } from "react";
 import { useTranslation } from "react-i18next";
+import StatusBadge from "@/components/ui/StatusBadge";
 import { useSearchParams } from "react-router-dom";
 import {
   Table, TableHeader, TableColumn, TableBody, TableRow, TableCell,
@@ -24,7 +25,7 @@ import CreateButton from "@/components/shared/CreateButton";
 import ConfirmDialog from "@/components/shared/ConfirmDialog";
 import EmptyState from "@/components/shared/EmptyState";
 import { toast } from "@/stores/toastStore";
-import { STATUS_DOT_COLOR, getStatusLabel } from "@/lib/constants";
+import { getStatusLabel } from "@/lib/constants";
 import { statusColor } from "@/lib/colorUtils";
 import { resolveLocationLabel } from "@/lib/locations";
 import { SHOW_CAPEX } from "@/config/capexDisplay";
@@ -378,16 +379,10 @@ export default function ProjelerPage() {
             {(!proje.tags || proje.tags.length === 0) && <span className="text-[12px] text-tyro-text-muted">-</span>}
           </div>
         );
-      case "status": {
-        const dot = STATUS_DOT_COLOR[proje.status];
-        const label = getStatusLabel(proje.status, t);
-        return (
-          <div className="flex items-center gap-2">
-            <span className={`w-2 h-2 rounded-full shrink-0 ${dot}`} />
-            <span className="text-[13px] text-tyro-text-primary">{label}</span>
-          </div>
-        );
-      }
+      case "status":
+        // Elle nokta+etiket yerine ortak StatusBadge: statüye ait ikon,
+        // renk ve tooltip tek yerden geliyor (src/components/ui/StatusBadge).
+        return <StatusBadge status={proje.status} />;
       case "startDate":
         return <span className="text-[13px] text-tyro-text-secondary">{formatDate(proje.startDate)}</span>;
       case "endDate":
