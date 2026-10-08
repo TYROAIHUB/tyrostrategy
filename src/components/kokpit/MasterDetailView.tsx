@@ -457,7 +457,11 @@ function DetailPanel({
            Açık gri zemin (slate-50/70) — üstteki proje adı + statü
            kartından görsel olarak ayrılsın (2026-05-08), 2026-05-09'da
            daha açık tona çekildi (slate-100/60 → slate-50/70). */}
-      <div className="rounded-2xl bg-slate-50/70 dark:bg-white/5 backdrop-blur-xl border border-tyro-border/40 dark:border-white/10 shadow-[0_4px_20px_rgba(0,0,0,0.08)]">
+      {/* Zemin bilerek beyazdan BİR TON koyu: kutu, çevresindeki beyaz
+          yüzeylerden (kart, panel) rahat ayırt edilsin — kullanıcı isteği
+          2026-10-08. Önceki `bg-slate-50/70` neredeyse beyazdı ve sınır
+          yalnızca ince çerçeveden okunuyordu. Çerçeve de bir tık belirgin. */}
+      <div className="rounded-2xl bg-slate-100/80 dark:bg-white/[0.07] backdrop-blur-xl border border-tyro-border/60 dark:border-white/10 shadow-[0_4px_20px_rgba(0,0,0,0.08)]">
         {/* Always visible: 4 dates */}
         <div className="grid grid-cols-2 sm:grid-cols-4 divide-x divide-tyro-border/40">
           <InfoCell icon={<Calendar size={12} />} label={t("common.startDate")} value={formatDate(proje.startDate)} />
